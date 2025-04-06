@@ -18,6 +18,12 @@ rm -rf "$TMP_CLONE_DIR"
 
 echo "✅ Dotfiles installed to ~/.dotfiles"
 
+SOURCE_DIR="$HOME/.dotfiles/nix"
+TARGET_DIR="$HOME/nix"
+echo "🔗 Symlinking $SOURCE_DIR → $TARGET_DIR"
+ln -s "$SOURCE_DIR" "$TARGET_DIR"
+
+
 echo "🚀 fetching nix"
 sh <(curl -L https://nixos.org/nix/install) --daemon
 
