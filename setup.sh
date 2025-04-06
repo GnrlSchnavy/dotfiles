@@ -7,23 +7,13 @@ echo "🚀 installing xcode"
 xcode-select --install
 
 echo "🚀 Start fetching dotfiles"
-# Exit on error and print commands
+
 set -ex
-
-# Temp directory for cloning
 TMP_CLONE_DIR=$(mktemp -d)
-
-# Clone the repo (master branch only, no history)
 git clone --depth 1 --branch master https://gitlab.com/YvanStemmerik/dotfiles.git "$TMP_CLONE_DIR"
-
-# Create target directory (skip if already exists)
 mkdir -p ~/.dotfiles
-
-# Move all files (including hidden) except .git
 shopt -s dotglob  # Include hidden files in globbing
 mv -f "$TMP_CLONE_DIR"/* ~/.dotfiles/
-
-# Clean up
 rm -rf "$TMP_CLONE_DIR"
 
 echo "✅ Dotfiles installed to ~/.dotfiles"
