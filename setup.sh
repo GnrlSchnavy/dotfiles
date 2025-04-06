@@ -25,17 +25,10 @@ sudo mkdir -p /etc/nix-darwin
 sudo chown $(id -nu):$(id -ng) /etc/nix-darwin
 cd /etc/nix-darwin
 
-# To use Nixpkgs unstable:
 nix flake init -t nix-darwin/master --extra-experimental-features nix-command --extra-experimental-features flakes
-# To use Nixpkgs 24.11:
-# nix flake init -t nix-darwin/nix-darwin-24.11
-
 sed -i '' "s/simple/$(scutil --get LocalHostName)/" flake.nix
 
-# To use Nixpkgs unstable:
-# nix run nix-darwin/master#darwin-rebuild -- switch
-# To use Nixpkgs 24.11:
-nix run --extra-experimental-features nix-command --extra-experimental-features flakes nix-darwin/nix-darwin-24.11#darwin-rebuild -- switch
+nix run --extra-experimental-features nix-command --extra-experimental-features flakes nix-darwin/master#darwin-rebuild -- switch
 echo "✅ done fetching default nix"
 
 echo "🚀 starting own nix build"
