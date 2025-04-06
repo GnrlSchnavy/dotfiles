@@ -1,4 +1,4 @@
-echo "Hello!"
+echo "Good morning Yvan!"
 eval "$(/opt/homebrew/bin/brew shellenv)"
 [ -f /opt/homebrew/etc/profile.d/autojump.sh ] && . /opt/homebrew/etc/profile.d/autojump.sh
   export NVM_DIR=/Users/yvan/.nvm
