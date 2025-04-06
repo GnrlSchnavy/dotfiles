@@ -12,8 +12,10 @@ set -ex
 TMP_CLONE_DIR=$(mktemp -d)
 git clone --depth 1 --branch master https://gitlab.com/YvanStemmerik/dotfiles.git "$TMP_CLONE_DIR"
 mkdir -p ~/.dotfiles
-shopt -s dotglob  # Include hidden files in globbing
-mv -f "$TMP_CLONE_DIR"/* ~/.dotfiles/
+(
+  shopt -s dotglob
+  mv -f "$TMP_CLONE_DIR"/* ~/.dotfiles/
+)
 rm -rf "$TMP_CLONE_DIR"
 
 echo "✅ Dotfiles installed to ~/.dotfiles"
