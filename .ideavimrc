@@ -1,0 +1,4 @@
+nnoremap p "0p 
+nnoremap P "0P
+:set number relativenumber
+set ideajoin
