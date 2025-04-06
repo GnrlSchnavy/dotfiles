@@ -1,5 +1,4 @@
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | \
-  sh -s -- install
+sh <(curl -L https://nixos.org/nix/install) --daemon
 
 sudo mkdir -p /etc/nix-darwin
 sudo chown $(id -nu):$(id -ng) /etc/nix-darwin
