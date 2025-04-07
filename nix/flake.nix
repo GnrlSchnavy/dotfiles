@@ -73,6 +73,7 @@
       	      "nordvpn"
 	            "android-studio"
               "crossover"
+
               # Logius
               "mattermost"
               "webex"
