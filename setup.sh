@@ -8,17 +8,21 @@ xcode-select --install
 
 echo "🚀 Start fetching dotfiles"
 
-set -ex
-TMP_CLONE_DIR=$(mktemp -d)
-git clone --depth 1 --branch master https://gitlab.com/YvanStemmerik/dotfiles.git "$TMP_CLONE_DIR"
-mkdir -p ~/.dotfiles
-(
-  shopt -s dotglob
-  mv -f "$TMP_CLONE_DIR"/* ~/.dotfiles/
-)
-rm -rf "$TMP_CLONE_DIR"
+REPO_URL="https://gitlab.com/YvanStemmerik/dotfiles.git"
+TARGET_DIR="$HOME/.dotfiles"
+if [ -d "$TARGET_DIR" ]; then
+    echo "Error: $TARGET_DIR already exists."
+    echo "Please remove or backup the existing directory before running this script."
+    exit 1
+fi
+TEMP_DIR=$(mktemp -d)
+echo "Cloning repository to temporary location: $TEMP_DIR"
+git clone "$REPO_URL" "$TEMP_DIR"
 
-echo "✅ Dotfiles installed to ~/.dotfiles"
+echo "Moving repository to $TARGET_DIR"
+mv "$TEMP_DIR" "$TARGET_DIR"
+
+echo "✅ Dotfiles successfully installed to $TARGET_DIR"
 
 SOURCE_DIR="$HOME/.dotfiles/nix"
 TARGET_DIR="$HOME/nix"
