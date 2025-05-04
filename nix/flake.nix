@@ -52,6 +52,7 @@
             casks = [
               "mindmac"
 	            "signal"
+              "cyberduck"
 		          "postman"
               "docker"
               "alfred"
@@ -81,6 +82,8 @@
               "omnissa-horizon-client"
             ];
             brews = [
+              "tmux"
+              "helm"
               "stow"
 	            "kdoctor"
               "pyenv"
