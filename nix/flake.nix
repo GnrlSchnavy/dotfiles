@@ -50,6 +50,7 @@
           homebrew = {
             enable = true;
             casks = [
+              "openlens"
               "mindmac"
 	            "signal"
               "cyberduck"
