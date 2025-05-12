@@ -50,6 +50,7 @@
           homebrew = {
             enable = true;
             casks = [
+	    "teamviewer"
               "openlens"
               "mindmac"
 	            "signal"
