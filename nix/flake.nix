@@ -50,12 +50,15 @@
           homebrew = {
             enable = true;
             casks = [
-	    "teamviewer"
+	      #temp 
+	      "teamviewer"
+	      "figma"
+
               "openlens"
               "mindmac"
-	            "signal"
+	      "signal"
               "cyberduck"
-		          "postman"
+	      "postman"
               "docker"
               "alfred"
               "openvpn-connect"
@@ -74,7 +77,7 @@
               "whatsapp"
               "mattermost"
       	      "nordvpn"
-	            "android-studio"
+              "android-studio"
               "crossover"
 
               # Logius
@@ -84,10 +87,11 @@
               "omnissa-horizon-client"
             ];
             brews = [
+	      "jenv"
               "tmux"
               "helm"
               "stow"
-	            "kdoctor"
+              "kdoctor"
               "pyenv"
               "autojump"
               "nvm"
