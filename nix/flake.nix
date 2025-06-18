@@ -87,6 +87,8 @@
               "omnissa-horizon-client"
             ];
             brews = [
+	      "pgloader"
+	      "p7zip"
 	      "jenv"
               "tmux"
               "helm"
