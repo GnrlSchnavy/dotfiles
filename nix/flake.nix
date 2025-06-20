@@ -53,7 +53,6 @@
 	      #temp 
 	      "teamviewer"
 	      "figma"
-
               "openlens"
               "mindmac"
 	      "signal"
@@ -87,6 +86,8 @@
               "omnissa-horizon-client"
             ];
             brews = [
+	      "kubeseal"
+	      "fluxcd/tap/flux"
 	      "pgloader"
 	      "p7zip"
 	      "jenv"
