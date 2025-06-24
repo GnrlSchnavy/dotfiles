@@ -86,7 +86,9 @@
               "omnissa-horizon-client"
             ];
             brews = [
+       "sshpass"
 	      "kubeseal"
+	      "tree"
 	      "fluxcd/tap/flux"
 	      "pgloader"
 	      "p7zip"
