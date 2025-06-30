@@ -1,13 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)",
-      "Bash(find /Users/yvan/.dotfiles -type f -name \".*\")",
-      "Bash(tree:*)",
-      "Bash(grep:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(cp:*)"
+      "Bash(ls:*)",
+      "Bash(stow:*)",
+      "Bash(source:*)"
     ],
     "deny": []
   }

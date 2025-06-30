@@ -29,10 +29,17 @@ darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
 ```
 
 ### Dotfile Management
-This repository uses GNU Stow for symlinking dotfiles. After making changes to dotfiles:
+This repository uses GNU Stow for symlinking dotfiles organized by category. After making changes to dotfiles:
 ```bash
 cd ~/.dotfiles
-stow .
+# Stow specific categories
+stow shell        # Shell configurations (.zprofile)
+stow editors      # Editor configurations (.ideavimrc)
+stow development  # Development tools (.docker)
+stow system       # System configurations (.claude)
+
+# Or stow all categories at once
+stow shell editors development system
 ```
 
 ## Architecture
@@ -55,10 +62,19 @@ stow .
 - **Homebrew formulas**: CLI tools (tmux, helm, kubectl tools)
 - **Mac App Store**: Apps via `masApps` configuration
 
-#### Configuration Files
+#### Configuration Files Organization
+**Shell Configuration** (`shell/`)
 - `.zprofile`: Shell environment setup with Homebrew, NVM, kubectl aliases
+
+**Editor Configuration** (`editors/`)
 - `.ideavimrc`: IntelliJ IDEA Vim plugin configuration
 - `nix/nixvim/config/`: Neovim configuration with Catppuccin theme, LSP, Telescope
+
+**Development Configuration** (`development/`)
+- `.docker/`: Docker configuration and settings
+
+**System Configuration** (`system/`)
+- `.claude/`: Claude Code settings and permissions
 
 ### System Customizations
 - **macOS defaults**: Dock on right, dark mode, optimized animations
