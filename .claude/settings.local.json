@@ -4,7 +4,9 @@
       "Bash(ls:*)",
       "Bash(stow:*)",
       "Bash(source:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(chmod:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }
