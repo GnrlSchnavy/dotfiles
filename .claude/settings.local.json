@@ -3,7 +3,8 @@
     "allow": [
       "Bash(ls:*)",
       "Bash(stow:*)",
-      "Bash(source:*)"
+      "Bash(source:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

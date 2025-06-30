@@ -74,7 +74,9 @@ stow shell editors development system
 - `.docker/`: Docker configuration and settings
 
 **System Configuration** (`system/`)
-- `.claude/`: Claude Code settings and permissions
+- `.claude/settings.local.json`: Claude Code permissions and tool access
+- `.claude/README.md`: Documentation for Claude configuration management
+- `.claude/settings.template.json`: Template for environment-specific settings
 
 ### System Customizations
 - **macOS defaults**: Dock on right, dark mode, optimized animations
@@ -96,6 +98,44 @@ stow shell editors development system
 - **Neovim**: Configured via NixVim with LSP, Treesitter, Telescope
 - **IntelliJ IDEA**: With IdeaVim plugin configured
 - **VSCode**: Available via Homebrew
+
+## Claude Code Integration
+
+### Configuration Management
+Claude Code settings are version-controlled and managed through Stow:
+- **Location**: `system/.claude/settings.local.json`
+- **Symlinked to**: `~/.claude/settings.local.json`
+- **Purpose**: Consistent Claude Code experience across machines
+
+### Claude Settings
+The current configuration includes:
+- **Permissions**: Allowed bash commands for system operations
+- **Tool Access**: Controlled access to system commands
+- **Version Control**: Settings changes are tracked in git
+
+### Working with Claude Settings
+```bash
+# View current Claude permissions
+cat ~/.claude/settings.local.json
+
+# Edit Claude settings (changes will be tracked in git)
+$EDITOR ~/.dotfiles/system/.claude/settings.local.json
+
+# Use template for new environments
+cp ~/.dotfiles/system/.claude/settings.template.json ~/.dotfiles/system/.claude/settings.local.json
+
+# Re-stow after making changes
+cd ~/.dotfiles && stow system
+
+# View Claude configuration documentation
+cat ~/.dotfiles/system/.claude/README.md
+```
+
+### Benefits
+- **Consistency**: Same Claude permissions across different machines
+- **Version Control**: Track changes to Claude configuration over time
+- **Portability**: Easy to replicate Claude setup on new machines
+- **Collaboration**: Share Claude configurations with team members
 
 ## Common Commands
 
