@@ -163,9 +163,42 @@ j <partial-name>  # autojump navigation
 ```
 
 ### Package Management
-- **Nix packages**: Add to `environment.systemPackages` in `nix/flake.nix`
-- **Homebrew casks**: Add to `homebrew.casks` array
-- **Homebrew formulas**: Add to `homebrew.brews` array
+
+This repository uses a strategic approach to package management across Nix and Homebrew:
+
+#### Package Sources Strategy
+- **Nix packages** (`nix/modules/packages.nix`): CLI tools, development libraries, system utilities
+- **Homebrew casks** (`nix/modules/homebrew.nix`): GUI applications, proprietary software  
+- **Homebrew brews** (`nix/modules/homebrew.nix`): Tools requiring taps, version managers
+- **Mac App Store** (`nix/modules/homebrew.nix`): Apps exclusive to App Store
+
+#### Decision Matrix
+| Tool Type | Nix | Homebrew | App Store |
+|-----------|-----|----------|-----------|
+| CLI development tools | ✅ Preferred | If not available | Never |
+| GUI applications | Never | ✅ Preferred | If exclusive |
+| Version managers | Avoid | ✅ Shell integration | Never |
+| System utilities | ✅ Preferred | If macOS-specific | Rarely |
+
+#### Adding Packages
+```bash
+# Nix packages (CLI tools, development)
+vim ~/.dotfiles/nix/modules/packages.nix
+
+# Homebrew (GUI apps, specialized tools)  
+vim ~/.dotfiles/nix/modules/homebrew.nix
+
+# Apply changes
+darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
+```
+
+#### Examples by Category
+- **Development**: git, rustc, nodejs (Nix) + IntelliJ IDEA, VSCode (Homebrew)
+- **Containers**: docker CLI (Nix) + Docker Desktop (Homebrew)  
+- **Languages**: python3 (Nix) + pyenv (Homebrew for version management)
+- **Kubernetes**: kubectl (Nix) + helm, flux (Homebrew for taps)
+
+See `nix/PACKAGE-STRATEGY.md` and `nix/modules/README.md` for complete guidelines.
 
 ## Notes
 

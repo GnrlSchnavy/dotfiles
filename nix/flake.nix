@@ -57,6 +57,7 @@
           casks = [
             # Temporary applications
             "teamviewer"
+	    "claude"
             "figma"
             "openlens"
             "mindmac"
