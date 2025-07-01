@@ -53,11 +53,10 @@
       homebrewModule = { ... }: {
         homebrew = {
           enable = true;
-          
           casks = [
             # Temporary applications
             "teamviewer"
-	    "claude"
+	          "claude"
             "figma"
             "openlens"
             "mindmac"
