@@ -37,9 +37,9 @@
           pkgs.rustc                  # Rust compiler
           pkgs.nodejs_20              # Node.js runtime
           
-          # Container ecosystem (Nix for CLI consistency)
-          pkgs.docker                 # Docker CLI
-          pkgs.docker-compose         # Container orchestration
+          # Container ecosystem
+          # pkgs.docker               # Docker CLI - provided by Docker Desktop
+          # pkgs.docker-compose       # Container orchestration - provided by Docker Desktop  
           pkgs.minikube               # Local Kubernetes
           
           # Language runtimes and compilers
@@ -81,8 +81,8 @@
             "cyberduck"
             "postman"
             
-            # Core applications
-            "docker"
+            # Core applications  
+            "docker-desktop"            # Docker Desktop (GUI + CLI)
             "alfred"
             "openvpn-connect"
             "rectangle"
@@ -229,13 +229,13 @@
           autohide-delay = 0.01;
           autohide-time-modifier = 0.1;
           
-          # Persistent applications
+          # Persistent applications (using Homebrew-installed apps)
           persistent-apps = [
-            "${pkgs.brave}/Applications/Brave Browser.app"
-            "${pkgs.spotify}/Applications/Spotify.app"
-            "${pkgs.slack}/Applications/Slack.app"
-            "${pkgs.obsidian}/Applications/Obsidian.app"
-            "/Applications/IntelliJ IDEA.app"
+            "${pkgs.brave}/Applications/Brave Browser.app"  # Nix package
+            "/Applications/Spotify.app"                     # Homebrew cask
+            "/Applications/Slack.app"                       # Homebrew cask  
+            "/Applications/Obsidian.app"                    # Homebrew cask
+            "/Applications/IntelliJ IDEA.app"               # Homebrew cask
           ];
         };
       };
