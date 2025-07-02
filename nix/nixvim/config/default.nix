@@ -143,8 +143,8 @@
         diagnostic = {
           "[d" = "goto_prev";            # Previous diagnostic
           "]d" = "goto_next";            # Next diagnostic
-          "<leader>e" = "open_float";    # Show diagnostic popup
-          "<leader>q" = "setloclist";    # Add diagnostics to location list
+          "<leader>de" = "open_float";   # Show diagnostic popup
+          "<leader>dq" = "setloclist";   # Add diagnostics to location list
         };
       };
     };
