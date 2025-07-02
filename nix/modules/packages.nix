@@ -11,9 +11,9 @@
     pkgs.rustc                  # Rust compiler
     pkgs.nodejs_20              # Node.js runtime
     
-    # Container ecosystem (Nix for CLI consistency)
-    pkgs.docker                 # Docker CLI
-    pkgs.docker-compose         # Container orchestration
+    # Container ecosystem
+    # pkgs.docker               # Docker CLI - provided by Docker Desktop
+    # pkgs.docker-compose       # Container orchestration - provided by Docker Desktop  
     pkgs.minikube               # Local Kubernetes
     
     # Language runtimes and compilers

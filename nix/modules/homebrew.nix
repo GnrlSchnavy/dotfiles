@@ -26,6 +26,7 @@
       "alfred"                    # Application launcher
       "rectangle"                 # Window management
       "1password"                 # Password manager
+      "1password-cli"             # 1Password command line (cask)
       "obsidian"                  # Note-taking
       "notion"                    # All-in-one workspace
       
@@ -34,7 +35,7 @@
       "vlc"                       # Media player
       
       # Development tools (GUI)
-      "docker"                    # Docker Desktop (GUI)
+      "docker-desktop"            # Docker Desktop (GUI + CLI)
       "postman"                   # API testing
       "bruno"                     # API testing alternative
       "cyberduck"                 # FTP/cloud storage
@@ -55,6 +56,7 @@
       # Temporary/project-specific
       "openlens"                  # Kubernetes GUI
       "mindmac"                   # AI assistant
+      "claude"                    # Claude AI assistant
       
       # Work-specific (Logius)
       "webex"                     # Video conferencing
@@ -90,7 +92,8 @@
       
       # Development utilities not in Nix or outdated
       "gh"                        # GitHub CLI
-      "aws-cli"                   # AWS command line
+      "awscli"                    # AWS command line (correct name)
+      # "1password-cli"           # Not available as brew formula - use cask instead
     ];
     
     # Mac App Store apps - only available through App Store
