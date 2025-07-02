@@ -78,8 +78,8 @@
               expr = "import <nixpkgs> { }";
             };
             options = {
-              nixos = {
-                expr = "(builtins.getFlake \"/Users/yvan/.dotfiles/nix\").nixosConfigurations.m4.options";
+              darwin = {
+                expr = "(builtins.getFlake \"/Users/yvan/.dotfiles/nix\").darwinConfigurations.m4.options";
               };
             };
           };
