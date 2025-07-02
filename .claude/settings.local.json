@@ -11,7 +11,9 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nRefactor package management with strategic Nix/Homebrew distribution\n\n- Reorganize packages.nix with clear categorization and comments\n- Restructure homebrew.nix by tool purpose (GUI apps, CLI tools, App Store)\n- Add comprehensive package management strategy documentation\n- Update CLAUDE.md with detailed package management guidelines\n- Include decision matrix for choosing between Nix/Homebrew/App Store\n- Add Claude desktop app to casks for AI assistant access\n\n🤖 Generated with [Claude Code](https://claude.ai/code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git push:*)",
       "Bash(git commit:*)",
-      "Bash(nvim:*)"
+      "Bash(nvim:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }
