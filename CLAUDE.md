@@ -33,13 +33,14 @@ This repository uses GNU Stow for symlinking dotfiles organized by category. Aft
 ```bash
 cd ~/.dotfiles
 # Stow specific categories
-stow shell        # Shell configurations (.zprofile)
+stow shell        # Shell configurations (.zprofile, .zshrc)
+stow git          # Git configurations (.gitconfig, .gitignore_global)
 stow editors      # Editor configurations (.ideavimrc)
 stow development  # Development tools (.docker)
 stow system       # System configurations (.claude)
 
 # Or stow all categories at once
-stow shell editors development system
+stow shell git editors development system
 ```
 
 ## Architecture
@@ -65,6 +66,12 @@ stow shell editors development system
 #### Configuration Files Organization
 **Shell Configuration** (`shell/`)
 - `.zprofile`: Shell environment setup with Homebrew, NVM, kubectl aliases
+- `.zshrc`: Zsh shell configuration with jenv and kubectl completion
+
+**Git Configuration** (`git/`)
+- `.gitconfig`: Personal git configuration (user, core settings)
+- `.gitignore_global`: Global gitignore patterns
+- `.config/git/ignore`: Git-specific ignore patterns for Claude settings
 
 **Editor Configuration** (`editors/`)
 - `.ideavimrc`: IntelliJ IDEA Vim plugin configuration

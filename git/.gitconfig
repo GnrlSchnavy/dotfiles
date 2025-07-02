@@ -1,0 +1,5 @@
+[user]
+	name = Yvan
+	email = yvanstemmerik@gmail.com
+[core]
+	excludesfile = /Users/yvan/.gitignore_global
