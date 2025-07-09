@@ -54,7 +54,7 @@
       "teamviewer"                # Remote access
       
       # Temporary/project-specific
-      "openlens"                  # Kubernetes GUI
+      "lens"                      # Kubernetes GUI
       "mindmac"                   # AI assistant
       "claude"                    # Claude AI assistant
       
