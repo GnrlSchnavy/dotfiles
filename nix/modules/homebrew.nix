@@ -27,9 +27,11 @@
       "rectangle"                 # Window management
       "1password"                 # Password manager
       "1password-cli"             # 1Password command line (cask)
+      "bitwarden"		  # bitwarden
       "obsidian"                  # Note-taking
-      "notion"                    # All-in-one workspace
+      "balenaetcher" 
       
+
       # Media and entertainment
       "spotify"                   # Music streaming
       "vlc"                       # Media player
@@ -47,7 +49,6 @@
       "openvpn-connect"           # VPN client
       "nordvpn"                   # VPN service
       "warp"                      # Cloudflare WARP
-      "wireshark"                 # Network analysis
       
       # Virtualization and remote access
       "crossover"                 # Windows compatibility
@@ -55,13 +56,15 @@
       
       # Temporary/project-specific
       "lens"                      # Kubernetes GUI
-      "mindmac"                   # AI assistant
       "claude"                    # Claude AI assistant
       
       # Work-specific (Logius)
       "webex"                     # Video conferencing
       "citrix-workspace"          # Enterprise access
       "omnissa-horizon-client"    # Virtual desktop
+
+      # Random dev tools 
+      "chromedriver"		  # Chromedrive
     ];
     
     # CLI Tools (brews) - use when not available in Nix or need Homebrew features
@@ -89,11 +92,11 @@
       # Specialized CLI tools
       "sshpass"                   # SSH password authentication
       "pgloader"                  # PostgreSQL data loading
+      "bitwarden-cli"
       
       # Development utilities not in Nix or outdated
       "gh"                        # GitHub CLI
       "awscli"                    # AWS command line (correct name)
-      # "1password-cli"           # Not available as brew formula - use cask instead
     ];
     
     # Mac App Store apps - only available through App Store
