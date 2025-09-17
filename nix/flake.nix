@@ -8,8 +8,7 @@
       url = "./nixvim";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # nix-darwin.url = "github:LnL7/nix-darwin";
-    nix-darwin.url = "github:LnL7/nix-darwin/d06cf700ee589527fde4bd9b91f899e7137c05a6";
+    nix-darwin.url = "github:LnL7/nix-darwin";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
   };
@@ -33,12 +32,15 @@
 
         # Set Git commit hash for darwin-version
         system.configurationRevision = self.rev or self.dirtyRev or null;
-        
+
         # Used for backwards compatibility, please read the changelog before changing
         system.stateVersion = 5;
-        
+
         # The platform the configuration will be used on
         nixpkgs.hostPlatform = "aarch64-darwin";
+
+        # Primary user for system-wide options
+        system.primaryUser = "yvan";
       };
 
     in

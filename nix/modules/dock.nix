@@ -22,7 +22,7 @@
     # Persistent applications
     persistent-apps = [
       "${pkgs.brave}/Applications/Brave Browser.app"
-      "${pkgs.spotify}/Applications/Spotify.app"
+      "/Applications/Spotify.app"  # Installed via Homebrew
       "${pkgs.slack}/Applications/Slack.app"
       "${pkgs.obsidian}/Applications/Obsidian.app"
       "/Applications/IntelliJ IDEA.app"
