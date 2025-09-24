@@ -12,8 +12,6 @@
     pkgs.nodejs_20              # Node.js runtime
     
     # Container ecosystem
-    # pkgs.docker               # Docker CLI - provided by Docker Desktop
-    # pkgs.docker-compose       # Container orchestration - provided by Docker Desktop  
     pkgs.minikube               # Local Kubernetes
     
     # Language runtimes and compilers
@@ -37,8 +35,5 @@
     pkgs.mkalias                # macOS alias creation
     pkgs.htop                   # Process monitor
     pkgs.neofetch               # System information
-
-    # CI/CD tools
-    pkgs.gitlab-runner          # GitLab CI/CD runner
   ];
 }
