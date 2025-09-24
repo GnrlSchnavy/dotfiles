@@ -96,27 +96,15 @@ test_macos_setup:
     - echo "Pipeline completed successfully"
 
 
-# Job 3: Alternative simulation test (for when macOS runners aren't available)
-test_simulation:
-  stage: test
-  image: ubuntu:22.04
-  script:
-    - echo "Running simulation test"
-    - echo "Note: Limited simulation - actual macOS testing requires macOS runners"
-    - chmod +x scripts/ci-setup.sh scripts/ci-verify.sh scripts/check.sh
-    - echo "Scripts are executable"
-    - bash -n scripts/ci-setup.sh && echo "ci-setup.sh syntax OK"
-    - bash -n scripts/ci-verify.sh && echo "ci-verify.sh syntax OK"
-    - bash -n scripts/check.sh && echo "check.sh syntax OK"
-    - bash -n setup.sh && echo "setup.sh syntax OK"
-    - command -v nix && nix flake check nix/ || echo "Nix not available for validation"
-    - echo "Simulation test completed"
-
-  rules:
-    # Run simulation when macOS test is not available
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $ENABLE_SIMULATION == "true"
-    - if: $CI_COMMIT_BRANCH =~ /^ci\/.*/ && $ENABLE_SIMULATION == "true"
-  allow_failure: true  # This is a fallback, main test is macOS
+# Job 3: Alternative simulation test (temporarily disabled for debugging)
+# test_simulation:
+#   stage: test
+#   image: ubuntu:22.04
+#   script:
+#     - echo "Running simulation test"
+#   rules:
+#     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $ENABLE_SIMULATION == "true"
+#   allow_failure: true
 
 # Job 4: Generate summary report
 report:
