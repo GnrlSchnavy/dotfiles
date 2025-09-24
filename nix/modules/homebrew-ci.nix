@@ -7,7 +7,8 @@
     # Minimal GUI Applications (casks) - only essential tools for CI testing
     casks = [
       # Essential development tools only
-      "visual-studio-code"        # Microsoft editor (smaller than IntelliJ)
+      "intellij-idea"             # JetBrains IDE (has config files to test)
+      "visual-studio-code"        # Microsoft editor
       "docker-desktop"            # Docker Desktop (needed for container testing)
 
       # Essential utilities only
