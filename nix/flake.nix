@@ -22,7 +22,7 @@
       nixvim,
     }:
     let
-      # Get the current user (supports both local and CI environments)
+      # Get the current user - fallback to "yvan" if USER env var is empty
       currentUser = builtins.getEnv "USER";
       primaryUser = if currentUser != "" then currentUser else "yvan";
 

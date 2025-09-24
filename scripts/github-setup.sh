@@ -198,9 +198,12 @@ if [[ "$GITHUB_ACTIONS" == "true" ]]; then
     # First time setup
     if ! command -v darwin-rebuild >/dev/null 2>&1; then
         print_step "Initial nix-darwin bootstrap (with sudo)..."
-        sudo nix run nix-darwin -- switch --flake ./nix#m4
+        # Export USER to ensure it's available during Nix evaluation
+        export USER=$(whoami)
+        sudo -E nix run nix-darwin -- switch --flake ./nix#m4
     else
-        sudo darwin-rebuild switch --flake ./nix#m4
+        export USER=$(whoami)
+        sudo -E darwin-rebuild switch --flake ./nix#m4
     fi
 
     print_success "nix-darwin configuration applied successfully"
