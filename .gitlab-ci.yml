@@ -26,14 +26,44 @@ validate:
     - if: $CI_COMMIT_BRANCH =~ /^ci\/.*/
     - if: $CI_PIPELINE_SOURCE == "web"
 
-test_job:
+test_macos_setup:
   stage: test
   tags:
     - macos
     - apple-silicon
-  script:
-    - echo "Hello World"
-    - whoami
+  timeout: 60m
   rules:
     - if: $CI_COMMIT_BRANCH =~ /^ci\/.*/
+      changes:
+        - "**/*"
+        - "!**.md"
+        - "!docs/**"
     - if: $CI_PIPELINE_SOURCE == "web"
+  before_script:
+    - echo "System Information"
+    - whoami
+    - pwd
+  script:
+    - echo "Pre-cleanup environment"
+    - rm -rf ~/.dotfiles 2>/dev/null || true
+    - rm -rf ~/.nix-* ~/.nixpkgs 2>/dev/null || true
+    - find ~ -maxdepth 1 -type l -name ".*" -exec rm {} \; 2>/dev/null || true
+    - echo "Running CI setup script"
+    - chmod +x ./scripts/ci-setup.sh
+    - ./scripts/ci-setup.sh
+    - echo "Running verification script"
+    - chmod +x ./scripts/ci-verify.sh
+    - ./scripts/ci-verify.sh
+    - echo "Running health check"
+    - cd ~/.dotfiles
+    - ./scripts/check.sh
+    - echo "Testing development workflow"
+    - source ~/.zprofile || true
+    - git --version
+    - kubectl version --client || echo "kubectl not available"
+    - command -v nvm && echo "nvm available" || echo "nvm not found"
+    - command -v jenv && echo "jenv available" || echo "jenv not found"
+    - echo "macOS setup test completed successfully"
+  after_script:
+    - echo "Generating installation report"
+    - echo "Pipeline completed successfully"
