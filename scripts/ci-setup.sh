@@ -121,10 +121,11 @@ if [[ "$CI" == "true" ]]; then
     # In GitLab CI, we're already in the repo directory
     TARGET_DIR="$HOME/.dotfiles"
     if [[ ! -d "$TARGET_DIR" ]]; then
-        print_step "Creating symlink to current directory for GitLab CI"
-        # GitLab CI uses CI_PROJECT_DIR
-        WORKSPACE_DIR="${CI_PROJECT_DIR:-$(pwd)}"
-        ln -s "$WORKSPACE_DIR" "$TARGET_DIR"
+        print_step "Creating shorter symlink for GitLab CI to avoid path length issues"
+        # Create a temp directory with shorter path
+        TEMP_DIR="/tmp/dotfiles-ci-$$"
+        cp -r . "$TEMP_DIR"
+        ln -s "$TEMP_DIR" "$TARGET_DIR"
     fi
     print_success "Dotfiles directory prepared for GitLab CI: $TARGET_DIR"
 else
