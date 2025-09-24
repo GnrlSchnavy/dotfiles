@@ -11,6 +11,21 @@ variables:
   HOMEBREW_NO_ANALYTICS: "1"
   NONINTERACTIVE: "1"
 
+validate:
+  stage: validate
+  image: alpine:latest
+  script:
+    - echo "Validating repository structure"
+    - test -f "setup.sh" || (echo "setup.sh not found" && exit 1)
+    - test -d "nix" || (echo "nix directory not found" && exit 1)
+    - test -d "scripts" || (echo "scripts directory not found" && exit 1)
+    - test -f "scripts/ci-setup.sh" || (echo "ci-setup.sh not found" && exit 1)
+    - test -f "scripts/ci-verify.sh" || (echo "ci-verify.sh not found" && exit 1)
+    - echo "Repository structure validation passed"
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^ci\/.*/
+    - if: $CI_PIPELINE_SOURCE == "web"
+
 test_job:
   stage: test
   tags:
