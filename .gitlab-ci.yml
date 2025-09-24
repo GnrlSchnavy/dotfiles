@@ -67,3 +67,15 @@ test_macos_setup:
   after_script:
     - echo "Generating installation report"
     - echo "Pipeline completed successfully"
+
+report:
+  stage: report
+  image: alpine:latest
+  script:
+    - echo "Pipeline Summary Report"
+    - echo "All dotfiles installation testing completed"
+    - echo "Report completed"
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /^ci\/.*/
+    - if: $CI_PIPELINE_SOURCE == "web"
+  when: always
