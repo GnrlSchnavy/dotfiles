@@ -44,10 +44,20 @@ test_macos_setup:
     - whoami
     - pwd
   script:
-    - echo "Pre-cleanup environment"
-    - rm -rf ~/.dotfiles 2>/dev/null || true
-    - rm -rf ~/.nix-* ~/.nixpkgs 2>/dev/null || true
-    - find ~ -maxdepth 1 -type l -name ".*" -exec rm {} \; 2>/dev/null || true
+    - echo "Pre-cleanup environment (CI safety checks enabled)"
+    - |
+      if [[ "$CI" == "true" && "$CI_PROJECT_DIR" != "$HOME/.dotfiles" ]]; then
+        echo "Safe to cleanup - running in isolated CI environment"
+        rm -rf ~/.dotfiles 2>/dev/null || true
+        rm -rf ~/.nix-* ~/.nixpkgs 2>/dev/null || true
+        find ~ -maxdepth 1 -type l -name ".*" -exec rm {} \; 2>/dev/null || true
+      else
+        echo "⚠️  SKIPPING cleanup - running locally or unsafe environment detected"
+        echo "  CI=$CI"
+        echo "  CI_PROJECT_DIR=$CI_PROJECT_DIR"
+        echo "  HOME=$HOME"
+        echo "  Current dir: $(pwd)"
+      fi
     - echo "Running CI setup script"
     - chmod +x ./scripts/ci-setup.sh
     - ./scripts/ci-setup.sh
