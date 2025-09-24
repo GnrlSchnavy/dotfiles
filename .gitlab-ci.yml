@@ -9,4 +9,5 @@ test_job:
     - echo "Hello World"
     - whoami
   rules:
+    - if: $CI_COMMIT_BRANCH =~ /^ci\/.*/
     - if: $CI_PIPELINE_SOURCE == "web"
