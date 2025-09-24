@@ -69,33 +69,27 @@ test_macos_setup:
     - whoami
     - pwd
   script:
-    - echo "🧹 Pre-cleanup environment"
-    # Clean environment for fresh install simulation
+    - echo "Pre-cleanup environment"
     - rm -rf ~/.dotfiles 2>/dev/null || true
     - rm -rf ~/.nix-* ~/.nixpkgs 2>/dev/null || true
     - find ~ -maxdepth 1 -type l -name ".*" -exec rm {} \; 2>/dev/null || true
-
-    - echo "🚀 Running CI setup script"
+    - echo "Running CI setup script"
     - chmod +x ./scripts/ci-setup.sh
     - ./scripts/ci-setup.sh
-
-    - echo "🔍 Running verification script"
+    - echo "Running verification script"
     - chmod +x ./scripts/ci-verify.sh
     - ./scripts/ci-verify.sh
-
-    - echo "🏥 Running health check"
+    - echo "Running health check"
     - cd ~/.dotfiles
     - ./scripts/check.sh
-
-    - echo "⚡ Testing development workflow"
+    - echo "Testing development workflow"
     - source ~/.zprofile || true
     - git --version
-    - kubectl version --client || echo "⚠️ kubectl not available"
-    - command -v nvm && echo "✅ nvm available" || echo "⚠️ nvm not found"
-    - command -v jenv && echo "✅ jenv available" || echo "⚠️ jenv not found"
-    - alias k >/dev/null 2>&1 && echo "✅ kubectl alias works" || echo "⚠️ kubectl alias not found"
-
-    - echo "✅ macOS setup test completed successfully"
+    - kubectl version --client || echo "kubectl not available"
+    - command -v nvm && echo "nvm available" || echo "nvm not found"
+    - command -v jenv && echo "jenv available" || echo "jenv not found"
+    - alias k >/dev/null 2>&1 && echo "kubectl alias works" || echo "kubectl alias not found"
+    - echo "macOS setup test completed successfully"
 
   after_script:
     - echo "Generating installation report"
@@ -107,23 +101,16 @@ test_simulation:
   stage: test
   image: ubuntu:22.04
   script:
-    - echo "🔄 Running simulation test (Linux environment)"
-    - echo "⚠️  Note: This is a limited simulation - actual macOS testing requires macOS runners"
-
-    # Basic validation that scripts are executable and don't have obvious syntax errors
+    - echo "Running simulation test"
+    - echo "Note: Limited simulation - actual macOS testing requires macOS runners"
     - chmod +x scripts/ci-setup.sh scripts/ci-verify.sh scripts/check.sh
-    - echo "✅ Scripts are executable"
-
-    # Check script syntax (basic validation)
-    - bash -n scripts/ci-setup.sh && echo "✅ ci-setup.sh syntax OK"
-    - bash -n scripts/ci-verify.sh && echo "✅ ci-verify.sh syntax OK"
-    - bash -n scripts/check.sh && echo "✅ check.sh syntax OK"
-    - bash -n setup.sh && echo "✅ setup.sh syntax OK"
-
-    # Validate Nix flake (if nix is available)
+    - echo "Scripts are executable"
+    - bash -n scripts/ci-setup.sh && echo "ci-setup.sh syntax OK"
+    - bash -n scripts/ci-verify.sh && echo "ci-verify.sh syntax OK"
+    - bash -n scripts/check.sh && echo "check.sh syntax OK"
+    - bash -n setup.sh && echo "setup.sh syntax OK"
     - command -v nix && nix flake check nix/ || echo "Nix not available for validation"
-
-    - echo "✅ Simulation test completed"
+    - echo "Simulation test completed"
 
   rules:
     # Run simulation when macOS test is not available
