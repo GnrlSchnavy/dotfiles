@@ -22,6 +22,10 @@
       nixvim,
     }:
     let
+      # Get the current user (supports both local and CI environments)
+      currentUser = builtins.getEnv "USER";
+      primaryUser = if currentUser != "" then currentUser else "yvan";
+
       # Host-specific configuration (kept inline as it's unique to this host)
       hostModule = { ... }: {
         # Allow 'paid' applications to be set in flake config
@@ -39,8 +43,8 @@
         # The platform the configuration will be used on
         nixpkgs.hostPlatform = "aarch64-darwin";
 
-        # Primary user for system-wide options
-        system.primaryUser = "yvan";
+        # Primary user for system-wide options (dynamic based on current user)
+        system.primaryUser = primaryUser;
       };
 
     in
@@ -63,8 +67,8 @@
               enable = true;
               # Apple Silicon Only
               enableRosetta = true;
-              # User owning the homebrew prefix
-              user = "yvan";
+              # User owning the homebrew prefix (dynamic based on current user)
+              user = primaryUser;
               autoMigrate = true;
               # extraFlags = [];
             };
