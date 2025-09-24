@@ -169,7 +169,7 @@ fi
 print_step "Setting up nix-darwin..."
 cd "$TARGET_DIR"
 
-print_step "Validating Nix configuration...")
+print_step "Validating Nix configuration..."
 if nix flake check ./nix; then
     print_success "Nix flake configuration is valid"
 else
