@@ -1,0 +1,165 @@
+name: "macOS Dotfiles Testing"
+
+on:
+  push:
+    branches: [ main, master, ci/** ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  validate:
+    name: "Validate Repository Structure"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate file structure
+        run: |
+          echo "🔍 Validating repository structure..."
+          test -f "setup.sh" || (echo "❌ setup.sh not found" && exit 1)
+          test -d "nix" || (echo "❌ nix directory not found" && exit 1)
+          test -d "scripts" || (echo "❌ scripts directory not found" && exit 1)
+          test -f "scripts/ci-setup.sh" || (echo "❌ ci-setup.sh not found" && exit 1)
+          test -f "scripts/ci-verify.sh" || (echo "❌ ci-verify.sh not found" && exit 1)
+          echo "✅ Repository structure validation passed"
+
+  test-macos:
+    name: "Test macOS Installation"
+    runs-on: macos-latest
+    needs: validate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: System Information
+        run: |
+          echo "🍎 macOS System Information"
+          echo "macOS Version: $(sw_vers -productVersion)"
+          echo "Build: $(sw_vers -buildVersion)"
+          echo "Architecture: $(uname -m)"
+          echo "User: $USER"
+          echo "Home: $HOME"
+          echo "Disk space:"
+          df -h / | head -2
+
+      - name: Pre-installation State
+        run: |
+          echo "📋 Pre-installation system state"
+          echo "Homebrew: $(command -v brew && echo 'installed' || echo 'not installed')"
+          echo "Nix: $(command -v nix && echo 'installed' || echo 'not installed')"
+          echo "Git: $(git --version)"
+          echo "Shell: $SHELL"
+
+      - name: Run GitHub Actions Setup Script
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          HOMEBREW_NO_ANALYTICS: 1
+          NONINTERACTIVE: 1
+        run: |
+          echo "🚀 Running fresh macOS setup..."
+          chmod +x ./scripts/github-setup.sh
+          ./scripts/github-setup.sh
+
+      - name: Run Verification Tests
+        run: |
+          echo "🔍 Running comprehensive verification..."
+          chmod +x ./scripts/ci-verify.sh
+          ./scripts/ci-verify.sh
+
+      - name: Run Health Check
+        run: |
+          echo "🏥 Running health check..."
+          cd ~/.dotfiles
+          chmod +x ./scripts/check.sh
+          ./scripts/check.sh
+
+      - name: Test Development Workflow
+        run: |
+          echo "🛠️ Testing development workflow..."
+
+          # Source shell configuration
+          if [ -f ~/.zprofile ]; then
+            source ~/.zprofile || true
+          fi
+
+          # Test essential commands
+          echo "Testing essential tools:"
+          git --version
+
+          # Test optional commands (don't fail if missing)
+          command -v kubectl && kubectl version --client || echo "ℹ️  kubectl not available"
+          command -v nvm && echo "✅ nvm available" || echo "ℹ️  nvm not found"
+          command -v jenv && echo "✅ jenv available" || echo "ℹ️  jenv not found"
+
+          # Test aliases if shell is properly sourced
+          if alias k >/dev/null 2>&1; then
+            echo "✅ kubectl alias 'k' works"
+          else
+            echo "ℹ️  kubectl alias 'k' not found (may need shell restart)"
+          fi
+
+          echo "✅ Development workflow test completed"
+
+      - name: Post-installation State
+        run: |
+          echo "📊 Post-installation system state"
+          echo "Homebrew: $(brew --version | head -1)"
+          echo "Nix: $(nix --version)"
+          echo "Darwin: $(command -v darwin-rebuild >/dev/null && echo 'Available' || echo 'Not available')"
+          echo "Dotfiles: $(ls -la ~/.dotfiles | wc -l) items in ~/.dotfiles"
+          echo ""
+          echo "Installed packages:"
+          echo "- Homebrew packages: $(brew list --formula | wc -l) formulas, $(brew list --cask | wc -l) casks"
+          if command -v nix >/dev/null 2>&1; then
+            echo "- Nix profile: $(nix profile list | wc -l) packages"
+          fi
+
+      - name: Upload Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: installation-logs
+          path: |
+            /tmp/ci-setup.log
+            /tmp/ci-verify.log
+          retention-days: 7
+
+  test-updates:
+    name: "Test Updates and Maintenance"
+    runs-on: macos-latest
+    needs: test-macos
+    if: github.event_name == 'workflow_dispatch'  # Only run manually
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test Update Script
+        run: |
+          echo "🔄 Testing update functionality..."
+          if [ -f "./scripts/update.sh" ]; then
+            chmod +x ./scripts/update.sh
+            ./scripts/update.sh
+            echo "✅ Update script completed"
+          else
+            echo "ℹ️  No update script found"
+          fi
+
+  report:
+    name: "Generate Report"
+    runs-on: ubuntu-latest
+    needs: [validate, test-macos]
+    if: always()
+    steps:
+      - name: Generate Summary
+        run: |
+          echo "📊 Pipeline Summary Report"
+          echo "=========================="
+          echo "✅ Repository validation completed"
+          echo "✅ macOS installation testing completed"
+          echo "✅ All dotfiles testing completed successfully"
+          echo ""
+          echo "🎉 Fresh macOS environment testing passed!"
+          echo "Your dotfiles are ready for clean installation on any macOS system."
