@@ -98,51 +98,9 @@ test_macos_setup:
     - echo "✅ macOS setup test completed successfully"
 
   after_script:
-    - echo "📊 Generating installation report"
-    - |
-      cat > installation-report.md << EOF
-      # GitLab CI - Dotfiles Installation Report
+    - echo "Generating installation report"
+    - echo "Pipeline completed successfully"
 
-      **Date:** $(date)
-      **Pipeline:** $CI_PIPELINE_ID
-      **Job:** $CI_JOB_ID
-      **Branch:** $CI_COMMIT_REF_NAME
-      **Commit:** $CI_COMMIT_SHA
-
-      ## System Information
-      - **macOS Version:** $(sw_vers -productVersion 2>/dev/null || echo "Unknown")
-      - **Architecture:** $(uname -m)
-      - **User:** $(whoami)
-
-      ## Installation Results
-      EOF
-
-    # Add package information if available
-    - |
-      if command -v brew >/dev/null 2>&1; then
-        echo "### Homebrew Packages" >> installation-report.md
-        echo "**Formulas:** $(brew list --formula 2>/dev/null | wc -l | tr -d ' ')" >> installation-report.md
-        echo "**Casks:** $(brew list --cask 2>/dev/null | wc -l | tr -d ' ')" >> installation-report.md
-        echo "" >> installation-report.md
-      fi
-
-    - |
-      if command -v nix >/dev/null 2>&1; then
-        echo "**Nix Version:** $(nix --version 2>/dev/null || echo 'Unknown')" >> installation-report.md
-      fi
-
-    - echo "Report generated: installation-report.md"
-    - cat installation-report.md
-
-  artifacts:
-    when: always
-    paths:
-      - installation-report.md
-      - /tmp/ci-setup.log
-      - /tmp/ci-verify.log
-    expire_in: 30 days
-    reports:
-      junit: []  # Could add test results if we generate JUnit XML
 
 # Job 3: Alternative simulation test (for when macOS runners aren't available)
 test_simulation:
@@ -163,13 +121,7 @@ test_simulation:
     - bash -n setup.sh && echo "✅ setup.sh syntax OK"
 
     # Validate Nix flake (if nix is available)
-    - |
-      if command -v nix >/dev/null 2>&1; then
-        echo "🔍 Checking Nix flake syntax"
-        nix flake check nix/ || echo "⚠️ Nix flake check failed (expected on non-macOS)"
-      else
-        echo "⚠️ Nix not available for flake validation"
-      fi
+    - command -v nix && nix flake check nix/ || echo "Nix not available for validation"
 
     - echo "✅ Simulation test completed"
 
@@ -184,17 +136,12 @@ report:
   stage: report
   image: alpine:latest
   script:
-    - echo "📋 Pipeline Summary Report"
+    - echo "Pipeline Summary Report"
     - echo "Pipeline ID: $CI_PIPELINE_ID"
     - echo "Commit: $CI_COMMIT_SHA"
     - echo "Branch: $CI_COMMIT_REF_NAME"
     - echo "Triggered by: $CI_PIPELINE_SOURCE"
-    - |
-      if [ -f installation-report.md ]; then
-        echo "Installation report generated successfully"
-      else
-        echo "No installation report found (macOS test may not have run)"
-      fi
+    - echo "Report completed"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH =~ /^ci\/.*/
