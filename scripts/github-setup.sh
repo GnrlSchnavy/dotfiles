@@ -179,7 +179,7 @@ fi
 
 if [[ "$GITHUB_ACTIONS" == "true" ]]; then
     # In GitHub Actions, we can actually run the full system activation
-    print_step "Applying nix-darwin configuration (full system activation)...")
+    print_step "Applying nix-darwin configuration (full system activation)..."
 
     # First time setup
     if ! command -v darwin-rebuild >/dev/null 2>&1; then
