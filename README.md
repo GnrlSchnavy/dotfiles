@@ -68,24 +68,41 @@ darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
 stow shell editors development system
 ```
 
-## What's Included
+## Architecture
 
-### Development Tools
-- **Nix packages**: Git, Maven, Docker, Rust, Java 23, and more
-- **Homebrew apps**: IntelliJ IDEA, VSCode, browsers, productivity tools
-- **Shell setup**: zsh with kubectl aliases, autojump, and environment configuration
+This repository uses a **modular architecture** with three main components:
 
-### System Configuration
-- **macOS defaults**: Optimized settings for development workflow
-- **Dock configuration**: Right-side dock with essential applications
-- **Keyboard**: Caps Lock remapped to Escape
-- **Security**: Screen saver password protection
+### 1. Nix Darwin (System Configuration)
+Modular Nix configuration split across focused files:
+- **`nix/flake.nix`**: Main system flake with host configuration
+- **`nix/modules/packages.nix`**: CLI tools and development packages
+- **`nix/modules/homebrew.nix`**: GUI apps, specialized tools, and Mac App Store apps
+- **`nix/modules/system.nix`**: macOS system defaults and preferences
+- **`nix/modules/dock.nix`**: Dock configuration and app layout
+- **`nix/modules/environment.nix`**: Environment variables and system paths
 
-### Dotfiles Organization
-- **shell/**: Shell configuration and aliases (.zprofile)
-- **editors/**: Editor configurations (.ideavimrc)
-- **development/**: Development tool configs (.docker/)
-- **system/**: System-level settings (.claude/)
+### 2. Homebrew Integration
+Strategic package management via nix-homebrew:
+- **CLI tools**: Prefer Nix for reproducibility (git, rustc, nodejs)
+- **GUI applications**: Use Homebrew casks (IntelliJ IDEA, VSCode, browsers)
+- **Specialized tools**: Homebrew formulas for tools requiring taps (helm, kubectl)
+- **Mac App Store**: Apps only available through App Store (Xcode, WireGuard)
+
+### 3. Stow Dotfiles Management
+Category-based dotfile organization:
+- **`shell/`**: Shell configuration (.zprofile, .zshrc) and aliases
+- **`git/`**: Git configuration (.gitconfig, .gitignore_global)
+- **`editors/`**: Editor configurations (.ideavimrc)
+- **`development/`**: Development tool configs (.docker/)
+- **`system/`**: System-level settings (.claude/)
+
+### Key Features
+- ✅ **Modular Nix configuration** with clear separation of concerns
+- ✅ **Strategic package management** with documented decision criteria
+- ✅ **Category-based dotfiles** managed via GNU Stow
+- ✅ **Automated setup script** for fresh macOS installations
+- ✅ **Version-controlled Claude Code settings** for consistent AI tooling
+- ✅ **Comprehensive documentation** with usage guidelines
 
 ## Usage
 
@@ -112,7 +129,7 @@ stow shell editors development system
 ## Documentation
 
 - **Complete guide**: See [CLAUDE.md](CLAUDE.md) for detailed documentation
-- **Improvement roadmap**: See [improvement-plan.md](improvement-plan.md)
+- **Package strategy**: See [nix/PACKAGE-STRATEGY.md](nix/PACKAGE-STRATEGY.md) for package management guidelines
 - **Claude integration**: See [system/.claude/README.md](system/.claude/README.md)
 
 ## Troubleshooting

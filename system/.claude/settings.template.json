@@ -1,35 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "// Basic file operations",
       "Bash(ls:*)",
-      "Bash(cat:*)",
-      "Bash(find:*)",
-      "Bash(tree:*)",
-      "Bash(grep:*)",
-      
-      "// Version control",
-      "Bash(git:*)",
-      
-      "// Development tools",
       "Bash(stow:*)",
       "Bash(source:*)",
-      
-      "// System operations (customize based on needs)",
-      "Bash(cp:*)",
-      "Bash(mv:*)",
-      "Bash(mkdir:*)",
-      
-      "// Project-specific tools (uncomment as needed)",
-      "// Bash(npm:*)",
-      "// Bash(yarn:*)", 
-      "// Bash(docker:*)",
-      "// Bash(kubectl:*)",
-      "// Bash(terraform:*)"
+      "Bash(cat:*)",
+      "Bash(chmod:*)",
+      "Bash(rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(nvim:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(nix flake check:*)",
+      "Bash(darwin-rebuild:*)"
     ],
-    "deny": [
-      "// Add any commands you want to explicitly deny",
-      "// Example: Bash(rm:*) - prevent file deletion"
-    ]
+    "deny": []
   }
 }

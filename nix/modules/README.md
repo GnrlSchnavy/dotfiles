@@ -86,9 +86,9 @@ darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
 - **Build Tools**: Nix (maven, gradle, cargo)
 
 #### Container Tools
-- **CLI**: Nix (docker, docker-compose, kubectl)
-- **GUI**: Homebrew (docker desktop, lens)
-- **Specialized**: Homebrew with taps (kubeseal, flux)
+- **CLI**: Nix (minikube) + Homebrew (kubectl for frequent updates)
+- **GUI**: Homebrew (docker-desktop, lens)
+- **Specialized**: Homebrew with taps (kubeseal, flux, kdoctor)
 
 #### Development Environment
 - **Editors (CLI)**: Nix (vim, emacs, nano)
@@ -111,6 +111,32 @@ darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
 1. Check Nix Darwin logs: `darwin-rebuild --show-trace`
 2. Verify package exists for aarch64-darwin (Apple Silicon)
 3. Consider fallback to Homebrew for problematic packages
+
+## Rationale for Specific Choices
+
+### Why Both Password Managers?
+- **1Password**: Primary password manager with family/team sharing features
+- **Bitwarden**: Open-source alternative and backup option for cross-platform use
+
+### Why Multiple API Testing Tools?
+- **Postman**: Industry standard with team collaboration and cloud sync
+- **Bruno**: Open-source, offline-first alternative with Git-friendly storage
+
+### Why Docker CLI via Nix + Docker Desktop via Homebrew?
+- **Docker CLI (commented out)**: Would provide reproducible CLI for scripts
+- **Docker Desktop (Homebrew)**: GUI management with seamless macOS integration
+- Currently using Docker Desktop's bundled CLI for simplicity
+
+### Version Managers via Homebrew?
+Despite Nix providing language runtimes, version managers use Homebrew for:
+- Automatic shell integration and PATH management
+- Project-specific `.nvmrc`, `.python-version` file support
+- Compatibility with existing development workflows
+
+### Kubernetes Tools Split?
+- **kubectl (Homebrew)**: Frequent updates, better macOS integration
+- **minikube (Nix)**: Stable local Kubernetes, less frequent updates needed
+- **Specialized tools (Homebrew)**: Many require custom taps not available in Nix
 
 ## Best Practices
 

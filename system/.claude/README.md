@@ -1,56 +1,50 @@
-# Claude Code Configuration
+# Claude Code Configuration Management
 
-This directory contains Claude Code settings that are version-controlled and managed through dotfiles.
+This directory contains Claude Code settings that are managed through the dotfiles system using Stow.
+
+## Overview
+
+Claude Code settings are version-controlled and symlinked to ensure consistent AI assistant configuration across different machines.
 
 ## Files
 
-### `settings.local.json`
-Main Claude Code configuration file containing:
-- **Permissions**: Bash commands that Claude is allowed to execute
-- **Tool Access**: Fine-grained control over system operations
-- **Security**: Controlled access to prevent unauthorized commands
+- **`settings.local.json`**: Active Claude Code permissions and tool access settings
+- **`settings.template.json`**: Template file for setting up Claude on new machines
+- **`README.md`**: This documentation file
 
 ## Usage
 
 ### Current Configuration
-The active configuration grants Claude access to essential development commands:
-- File operations (`ls`, `cat`, `find`, `tree`, `grep`)
-- Version control (`git add`, `git commit`, `git push`)
-- System management (`stow`, `cp`, `mv`, `mkdir`)
-- Shell operations (`source`)
+The active settings include permissions for common development tasks:
+- File operations (ls, cat, chmod, rm)
+- Git operations (add, commit, push)
+- Package management (stow)
+- System tools (nvim, find, grep)
+- Nix operations (flake check)
 
-### Modifying Permissions
-To add or remove Claude permissions:
+### Setting Up on New Machines
+1. Run the main setup script which handles Stow configuration
+2. Or manually symlink: `cd ~/.dotfiles && stow system`
+3. Settings will be symlinked to `~/.claude/settings.local.json`
 
-1. Edit the settings file:
-   ```bash
-   $EDITOR ~/.dotfiles/system/.claude/settings.local.json
-   ```
-
-2. Re-stow to apply changes:
-   ```bash
-   cd ~/.dotfiles && stow system
-   ```
-
-3. Restart Claude Code to pick up new settings
-
-### Environment-Specific Settings
-For different environments (work vs personal), consider:
-- Creating separate permission profiles
-- Using different allowed command sets
-- Maintaining minimal permissions for security
-
-## Security Considerations
-
-- **Principle of Least Privilege**: Only grant necessary permissions
-- **Command Specificity**: Use specific patterns rather than wildcards when possible
-- **Regular Review**: Periodically audit allowed commands
-- **Version Control**: All changes are tracked for accountability
+### Modifying Settings
+1. Edit `~/.dotfiles/system/.claude/settings.local.json`
+2. Changes are automatically tracked in git
+3. Re-run `stow system` if needed to ensure symlinks are correct
 
 ## Benefits
 
-- **Consistency**: Same Claude behavior across machines
-- **Portability**: Easy setup on new systems
-- **Collaboration**: Share configurations with team members
-- **Security**: Controlled and auditable permissions
-- **Backup**: Settings preserved in version control
+- **Consistency**: Same Claude permissions across all machines
+- **Version Control**: Track changes to Claude configuration over time
+- **Portability**: Easy to replicate Claude setup on new machines
+- **Documentation**: Settings are documented and reviewable
+
+## Integration with Dotfiles
+
+This configuration is part of the system category in the Stow setup:
+```bash
+cd ~/.dotfiles
+stow system  # This will symlink .claude/ to ~/.claude/
+```
+
+The settings become active immediately after symlinking.

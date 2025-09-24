@@ -27,10 +27,9 @@
       "rectangle"                 # Window management
       "1password"                 # Password manager
       "1password-cli"             # 1Password command line (cask)
-      "bitwarden"		  # bitwarden
+      "bitwarden"                 # Password manager (alternative)
       "obsidian"                  # Note-taking
-      "balenaetcher" 
-      
+      "balenaetcher"              # USB/SD card flashing tool
 
       # Media and entertainment
       "spotify"                   # Music streaming
@@ -64,7 +63,7 @@
       "omnissa-horizon-client"    # Virtual desktop
 
       # Random dev tools 
-      "chromedriver"		  # Chromedrive
+      "chromedriver"              # Chrome WebDriver for automation
     ];
     
     # CLI Tools (brews) - use when not available in Nix or need Homebrew features
@@ -92,7 +91,7 @@
       # Specialized CLI tools
       "sshpass"                   # SSH password authentication
       "pgloader"                  # PostgreSQL data loading
-      "bitwarden-cli"
+      "bitwarden-cli"             # Bitwarden password manager CLI
       
       # Development utilities not in Nix or outdated
       "gh"                        # GitHub CLI
