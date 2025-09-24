@@ -37,5 +37,8 @@
     pkgs.mkalias                # macOS alias creation
     pkgs.htop                   # Process monitor
     pkgs.neofetch               # System information
+
+    # CI/CD tools
+    pkgs.gitlab-runner          # GitLab CI/CD runner
   ];
 }
