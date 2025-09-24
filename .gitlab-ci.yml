@@ -1,10 +1,21 @@
 stages:
+  - validate
   - test
+  - report
+
+variables:
+  CI: "true"
+  DOTFILES_CI: "true"
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+  HOMEBREW_NO_INSTALL_CLEANUP: "1"
+  HOMEBREW_NO_ANALYTICS: "1"
+  NONINTERACTIVE: "1"
 
 test_job:
   stage: test
   tags:
     - macos
+    - apple-silicon
   script:
     - echo "Hello World"
     - whoami
