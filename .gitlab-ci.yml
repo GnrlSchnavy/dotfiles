@@ -46,7 +46,7 @@ test_macos_setup:
     - echo "System Information"
     - whoami
     - pwd
-    - echo "Creating isolated test environment in: $TEST_HOME"
+    - echo "Creating isolated test environment"
     - mkdir -p "$TEST_HOME"
   script:
     # Copy everything to isolated location and test there
