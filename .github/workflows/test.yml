@@ -20,7 +20,7 @@ jobs:
           echo "🔍 Validating repository structure..."
           test -f "setup.sh" || (echo "❌ setup.sh not found" && exit 1)
           test -d "nix" || (echo "❌ nix directory not found" && exit 1)
-          test -d "scripts" || (echo "❌ scripts directory not found" && exit 1)
+          test -d "scripts" || (echo "❌ scripts directory not fuund" && exit 1)
           test -f "scripts/ci-setup.sh" || (echo "❌ ci-setup.sh not found" && exit 1)
           test -f "scripts/ci-verify.sh" || (echo "❌ ci-verify.sh not found" && exit 1)
           echo "✅ Repository structure validation passed"

@@ -104,7 +104,7 @@
         modules = [
           # Import modular configurations from files
           ./modules/packages.nix
-          ./modules/homebrew.nix
+          ./modules/homebrew-ci.nix      # Use lightweight homebrew config for CI
           ./modules/system.nix
           ./modules/dock.nix
           ./modules/environment.nix
