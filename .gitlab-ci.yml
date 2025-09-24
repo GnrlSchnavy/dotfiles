@@ -47,7 +47,9 @@ validate:
 # Job 2: Full macOS installation test (requires macOS runner)
 test_macos_setup:
   stage: test
-  <<: *macos_template
+  tags:
+    - macos       # Requires self-hosted runner with 'macos' tag
+    - apple-silicon  # Optional: specific architecture tag
   timeout: 60m
   rules:
     # Run on merge requests (except docs-only changes)
