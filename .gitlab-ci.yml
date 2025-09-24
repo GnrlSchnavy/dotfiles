@@ -26,23 +26,6 @@ variables:
   tags:
     - macos       # Requires self-hosted runner with 'macos' tag
     - apple-silicon  # Optional: specific architecture tag
-  rules:
-    # Run on merge requests (except docs-only changes)
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      changes:
-        - "**/*"
-        - "!**.md"
-        - "!docs/**"
-    # Run on CI branches (except docs-only changes)
-    - if: $CI_COMMIT_BRANCH =~ /^ci\/.*/
-      changes:
-        - "**/*"
-        - "!**.md"
-        - "!docs/**"
-    # Manual pipeline runs
-    - if: $CI_PIPELINE_SOURCE == "web"
-    # Scheduled pipelines
-    - if: $CI_PIPELINE_SOURCE == "schedule"
 
 # Job 1: Quick validation (can run on any runner)
 validate:
@@ -66,6 +49,23 @@ test_macos_setup:
   stage: test
   <<: *macos_template
   timeout: 60m
+  rules:
+    # Run on merge requests (except docs-only changes)
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - "**/*"
+        - "!**.md"
+        - "!docs/**"
+    # Run on CI branches (except docs-only changes)
+    - if: $CI_COMMIT_BRANCH =~ /^ci\/.*/
+      changes:
+        - "**/*"
+        - "!**.md"
+        - "!docs/**"
+    # Manual pipeline runs
+    - if: $CI_PIPELINE_SOURCE == "web"
+    # Scheduled pipelines
+    - if: $CI_PIPELINE_SOURCE == "schedule"
   before_script:
     - echo "🖥️  System Information"
     - sw_vers || echo "Not on macOS - this job requires macOS runner"
