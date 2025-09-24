@@ -52,12 +52,21 @@ jobs:
           echo "Git: $(git --version)"
           echo "Shell: $SHELL"
 
+      - name: Configure Nix for GitHub API access
+        run: |
+          echo "🔧 Configuring Nix for GitHub API access..."
+          mkdir -p ~/.config/nix
+          echo "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}" >> ~/.config/nix/nix.conf
+          echo "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf
+
       - name: Run GitHub Actions Setup Script
         env:
           HOMEBREW_NO_AUTO_UPDATE: 1
           HOMEBREW_NO_INSTALL_CLEANUP: 1
           HOMEBREW_NO_ANALYTICS: 1
           NONINTERACTIVE: 1
+          # Pass GitHub token for API access
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "🚀 Running fresh macOS setup..."
           chmod +x ./scripts/github-setup.sh

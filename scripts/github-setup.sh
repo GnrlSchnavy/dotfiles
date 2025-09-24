@@ -165,6 +165,20 @@ else
     print_success "Nix version: $NIX_VERSION"
 fi
 
+# Configure Nix for GitHub API access (avoid rate limits)
+if [[ "$GITHUB_ACTIONS" == "true" && -n "$GITHUB_TOKEN" ]]; then
+    print_step "Configuring Nix with GitHub token for API access..."
+    mkdir -p ~/.config/nix
+
+    # Set up Nix configuration with GitHub token
+    cat > ~/.config/nix/nix.conf << EOF
+access-tokens = github.com=$GITHUB_TOKEN
+experimental-features = nix-command flakes
+EOF
+
+    print_success "Nix configured with GitHub API access"
+fi
+
 # Apply nix-darwin configuration
 print_step "Setting up nix-darwin..."
 cd "$TARGET_DIR"
