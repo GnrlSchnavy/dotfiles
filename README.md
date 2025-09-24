@@ -131,6 +131,7 @@ stow shell editors development system
 - **Complete guide**: See [CLAUDE.md](CLAUDE.md) for detailed documentation
 - **Package strategy**: See [nix/PACKAGE-STRATEGY.md](nix/PACKAGE-STRATEGY.md) for package management guidelines
 - **Claude integration**: See [system/.claude/README.md](system/.claude/README.md)
+- **GitLab CI pipeline**: See [docs/CI.md](docs/CI.md) for automated testing documentation
 
 ## Troubleshooting
 
@@ -162,3 +163,4 @@ stow shell editors development system
 - ✅ **Comprehensive development environment**
 - ✅ **Version-controlled configurations**
 - ✅ **Cross-machine consistency**
+- ✅ **Automated testing** with GitLab CI pipeline for macOS 26

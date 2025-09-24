@@ -1,0 +1,219 @@
+# GitLab CI/CD Pipeline for macOS Dotfiles Testing
+#
+# Note: This pipeline requires macOS runners to be available.
+# GitLab.com shared runners don't support macOS, so you'll need:
+# 1. Self-hosted GitLab Runner on macOS, or
+# 2. GitLab SaaS with macOS runners (if available), or
+# 3. Alternative testing approach using Docker/VM simulation
+
+stages:
+  - validate
+  - test
+  - report
+
+# Global variables
+variables:
+  # CI environment flags
+  CI: "true"
+  DOTFILES_CI: "true"
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+  HOMEBREW_NO_INSTALL_CLEANUP: "1"
+  HOMEBREW_NO_ANALYTICS: "1"
+  NONINTERACTIVE: "1"
+
+# Template for macOS jobs (requires self-hosted runner with macOS tag)
+.macos_template: &macos_template
+  tags:
+    - macos       # Requires self-hosted runner with 'macos' tag
+    - apple-silicon  # Optional: specific architecture tag
+  rules:
+    # Run on merge requests
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - "**/*"
+      except:
+        changes:
+          - "**.md"
+          - "docs/**"
+    # Run on CI branches
+    - if: $CI_COMMIT_BRANCH =~ /^ci\/.*/
+      changes:
+        - "**/*"
+      except:
+        changes:
+          - "**.md"
+          - "docs/**"
+    # Manual pipeline runs
+    - if: $CI_PIPELINE_SOURCE == "web"
+    # Scheduled pipelines
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+
+# Job 1: Quick validation (can run on any runner)
+validate:
+  stage: validate
+  image: alpine:latest
+  script:
+    - echo "🔍 Validating repository structure..."
+    - test -f "setup.sh" || (echo "❌ setup.sh not found" && exit 1)
+    - test -d "nix" || (echo "❌ nix directory not found" && exit 1)
+    - test -d "scripts" || (echo "❌ scripts directory not found" && exit 1)
+    - test -f "scripts/ci-setup.sh" || (echo "❌ ci-setup.sh not found" && exit 1)
+    - test -f "scripts/ci-verify.sh" || (echo "❌ ci-verify.sh not found" && exit 1)
+    - echo "✅ Repository structure validation passed"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH =~ /^ci\/.*/
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+# Job 2: Full macOS installation test (requires macOS runner)
+test_macos_setup:
+  stage: test
+  <<: *macos_template
+  timeout: 60m
+  before_script:
+    - echo "🖥️  System Information"
+    - sw_vers || echo "Not on macOS - this job requires macOS runner"
+    - uname -m
+    - whoami
+    - echo "Current directory: $(pwd)"
+    - echo "Available space: $(df -h . | tail -1 | awk '{print $4}')"
+
+  script:
+    - echo "🧹 Pre-cleanup environment"
+    # Clean environment for fresh install simulation
+    - rm -rf ~/.dotfiles 2>/dev/null || true
+    - rm -rf ~/.nix-* ~/.nixpkgs 2>/dev/null || true
+    - find ~ -maxdepth 1 -type l -name ".*" -exec rm {} \; 2>/dev/null || true
+
+    - echo "🚀 Running CI setup script"
+    - chmod +x ./scripts/ci-setup.sh
+    - ./scripts/ci-setup.sh
+
+    - echo "🔍 Running verification script"
+    - chmod +x ./scripts/ci-verify.sh
+    - ./scripts/ci-verify.sh
+
+    - echo "🏥 Running health check"
+    - cd ~/.dotfiles
+    - ./scripts/check.sh
+
+    - echo "⚡ Testing development workflow"
+    - source ~/.zprofile || true
+    - git --version
+    - kubectl version --client || echo "⚠️ kubectl not available"
+    - command -v nvm && echo "✅ nvm available" || echo "⚠️ nvm not found"
+    - command -v jenv && echo "✅ jenv available" || echo "⚠️ jenv not found"
+    - alias k >/dev/null 2>&1 && echo "✅ kubectl alias works" || echo "⚠️ kubectl alias not found"
+
+    - echo "✅ macOS setup test completed successfully"
+
+  after_script:
+    - echo "📊 Generating installation report"
+    - |
+      cat > installation-report.md << EOF
+      # GitLab CI - Dotfiles Installation Report
+
+      **Date:** $(date)
+      **Pipeline:** $CI_PIPELINE_ID
+      **Job:** $CI_JOB_ID
+      **Branch:** $CI_COMMIT_REF_NAME
+      **Commit:** $CI_COMMIT_SHA
+
+      ## System Information
+      - **macOS Version:** $(sw_vers -productVersion 2>/dev/null || echo "Unknown")
+      - **Architecture:** $(uname -m)
+      - **User:** $(whoami)
+
+      ## Installation Results
+      EOF
+
+    # Add package information if available
+    - |
+      if command -v brew >/dev/null 2>&1; then
+        echo "### Homebrew Packages" >> installation-report.md
+        echo "**Formulas:** $(brew list --formula 2>/dev/null | wc -l | tr -d ' ')" >> installation-report.md
+        echo "**Casks:** $(brew list --cask 2>/dev/null | wc -l | tr -d ' ')" >> installation-report.md
+        echo "" >> installation-report.md
+      fi
+
+    - |
+      if command -v nix >/dev/null 2>&1; then
+        echo "**Nix Version:** $(nix --version 2>/dev/null || echo 'Unknown')" >> installation-report.md
+      fi
+
+    - echo "Report generated: installation-report.md"
+    - cat installation-report.md
+
+  artifacts:
+    when: always
+    paths:
+      - installation-report.md
+      - /tmp/ci-setup.log
+      - /tmp/ci-verify.log
+    expire_in: 30 days
+    reports:
+      junit: []  # Could add test results if we generate JUnit XML
+
+# Job 3: Alternative simulation test (for when macOS runners aren't available)
+test_simulation:
+  stage: test
+  image: ubuntu:22.04
+  script:
+    - echo "🔄 Running simulation test (Linux environment)"
+    - echo "⚠️  Note: This is a limited simulation - actual macOS testing requires macOS runners"
+
+    # Basic validation that scripts are executable and don't have obvious syntax errors
+    - chmod +x scripts/ci-setup.sh scripts/ci-verify.sh scripts/check.sh
+    - echo "✅ Scripts are executable"
+
+    # Check script syntax (basic validation)
+    - bash -n scripts/ci-setup.sh && echo "✅ ci-setup.sh syntax OK"
+    - bash -n scripts/ci-verify.sh && echo "✅ ci-verify.sh syntax OK"
+    - bash -n scripts/check.sh && echo "✅ check.sh syntax OK"
+    - bash -n setup.sh && echo "✅ setup.sh syntax OK"
+
+    # Validate Nix flake (if nix is available)
+    - |
+      if command -v nix >/dev/null 2>&1; then
+        echo "🔍 Checking Nix flake syntax"
+        nix flake check nix/ || echo "⚠️ Nix flake check failed (expected on non-macOS)"
+      else
+        echo "⚠️ Nix not available for flake validation"
+      fi
+
+    - echo "✅ Simulation test completed"
+
+  rules:
+    # Run simulation when macOS test is not available
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $ENABLE_SIMULATION == "true"
+    - if: $CI_COMMIT_BRANCH =~ /^ci\/.*/ && $ENABLE_SIMULATION == "true"
+  allow_failure: true  # This is a fallback, main test is macOS
+
+# Job 4: Generate summary report
+report:
+  stage: report
+  image: alpine:latest
+  script:
+    - echo "📋 Pipeline Summary Report"
+    - echo "Pipeline ID: $CI_PIPELINE_ID"
+    - echo "Commit: $CI_COMMIT_SHA"
+    - echo "Branch: $CI_COMMIT_REF_NAME"
+    - echo "Triggered by: $CI_PIPELINE_SOURCE"
+    - |
+      if [ -f installation-report.md ]; then
+        echo "Installation report generated successfully"
+      else
+        echo "No installation report found (macOS test may not have run)"
+      fi
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH =~ /^ci\/.*/
+    - if: $CI_PIPELINE_SOURCE == "web"
+  when: always
+
+# Include additional configuration for specific environments
+include:
+  # Could include templates for different environments
+  - local: '.gitlab-ci-templates.yml'
+    rules:
+      - if: $CI_PROJECT_PATH == "YvanStemmerik/dotfiles"  # Only for your specific project
