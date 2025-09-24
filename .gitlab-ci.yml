@@ -212,8 +212,8 @@ report:
   when: always
 
 # Include additional configuration for specific environments
-include:
-  # Could include templates for different environments
-  - local: '.gitlab-ci-templates.yml'
-    rules:
-      - if: $CI_PROJECT_PATH == "YvanStemmerik/dotfiles"  # Only for your specific project
+# include:
+#   # Could include templates for different environments
+#   - local: '.gitlab-ci-templates.yml'
+#     rules:
+#       - if: $CI_PROJECT_PATH == "YvanStemmerik/dotfiles"  # Only for your specific project
