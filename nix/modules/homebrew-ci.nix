@@ -55,7 +55,6 @@
       # "Xcode" = 497799835;                # Apple development tools (very large - skip in CI)
       # "Outlook" = 985367838;              # Microsoft email (large - skip in CI)
       # "Windows Remote Desktop" = 1295203466;  # Microsoft RDP (skip in CI)
-      "WireGuard" = 1451685025;           # VPN client (small, useful for testing)
     };
 
     # Homebrew maintenance settings
