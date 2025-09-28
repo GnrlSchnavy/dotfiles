@@ -12,8 +12,6 @@
     pkgs.nodejs_20              # Node.js runtime
     
     # Container ecosystem
-    # pkgs.docker               # Docker CLI - provided by Docker Desktop
-    # pkgs.docker-compose       # Container orchestration - provided by Docker Desktop  
     pkgs.minikube               # Local Kubernetes
     
     # Language runtimes and compilers

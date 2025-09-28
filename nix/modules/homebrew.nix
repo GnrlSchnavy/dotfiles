@@ -20,16 +20,14 @@
       "discord"                   # Gaming/community chat
       "whatsapp"                  # Messaging
       "signal"                    # Secure messaging
-      "mattermost"                # Enterprise chat
-      
+
       # Productivity and utilities
-      "alfred"                    # Application launcher
-      "rectangle"                 # Window management
       "1password"                 # Password manager
       "1password-cli"             # 1Password command line (cask)
+      "alfred"                    # Application launcher
+      "rectangle"                 # Window management
       "bitwarden"                 # Password manager (alternative)
       "obsidian"                  # Note-taking
-      "balenaetcher"              # USB/SD card flashing tool
 
       # Media and entertainment
       "spotify"                   # Music streaming
@@ -41,28 +39,18 @@
       "bruno"                     # API testing alternative
       "cyberduck"                 # FTP/cloud storage
       
-      # Design and creativity
-      "figma"                     # Design tool
-      
       # System and network tools
-      "openvpn-connect"           # VPN client
       "nordvpn"                   # VPN service
       "warp"                      # Cloudflare WARP
       
       # Virtualization and remote access
       "crossover"                 # Windows compatibility
-      "teamviewer"                # Remote access
-      
+
       # Temporary/project-specific
       "lens"                      # Kubernetes GUI
       "claude"                    # Claude AI assistant
       
-      # Work-specific (Logius)
-      "webex"                     # Video conferencing
-      "citrix-workspace"          # Enterprise access
-      "omnissa-horizon-client"    # Virtual desktop
-
-      # Random dev tools 
+      # Random dev tools
       "chromedriver"              # Chrome WebDriver for automation
     ];
     
@@ -95,7 +83,6 @@
       
       # Development utilities not in Nix or outdated
       "gh"                        # GitHub CLI
-      "awscli"                    # AWS command line (correct name)
     ];
     
     # Mac App Store apps - only available through App Store
@@ -103,7 +90,6 @@
       "WireGuard" = 1451685025;           # VPN client
       "Outlook" = 985367838;              # Microsoft email
       "Windows Remote Desktop" = 1295203466;  # Microsoft RDP
-      "TestFlight" = 899247664;           # Beta app testing
       "Xcode" = 497799835;                # Apple development tools
     };
     

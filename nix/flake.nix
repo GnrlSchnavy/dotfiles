@@ -22,6 +22,10 @@
       nixvim,
     }:
     let
+      # Get the current user - fallback to "yvan" if USER env var is empty
+      currentUser = builtins.getEnv "USER";
+      primaryUser = if currentUser != "" then currentUser else "yvan";
+
       # Host-specific configuration (kept inline as it's unique to this host)
       hostModule = { ... }: {
         # Allow 'paid' applications to be set in flake config
@@ -39,12 +43,34 @@
         # The platform the configuration will be used on
         nixpkgs.hostPlatform = "aarch64-darwin";
 
-        # Primary user for system-wide options
-        system.primaryUser = "yvan";
+        # Primary user for system-wide options (dynamic based on current user)
+        system.primaryUser = primaryUser;
+      };
+
+      # Create CI-specific configuration
+      ciHostModule = { ... }: {
+        # Allow 'paid' applications to be set in flake config
+        nixpkgs.config.allowUnfree = true;
+
+        # Necessary for using flakes on this system
+        nix.settings.experimental-features = "nix-command flakes";
+
+        # Set Git commit hash for darwin-version
+        system.configurationRevision = self.rev or self.dirtyRev or null;
+
+        # Used for backwards compatibility, please read the changelog before changing
+        system.stateVersion = 5;
+
+        # The platform the configuration will be used on
+        nixpkgs.hostPlatform = "aarch64-darwin";
+
+        # Primary user for CI (always runner)
+        system.primaryUser = "runner";
       };
 
     in
     {
+      # Default configuration for local use (yvan)
       darwinConfigurations."m4" = nix-darwin.lib.darwinSystem {
         specialArgs = { inherit inputs; };
         modules = [
@@ -55,7 +81,7 @@
           ./modules/dock.nix
           ./modules/environment.nix
           hostModule
-          
+
           # nix-homebrew configuration
           nix-homebrew.darwinModules.nix-homebrew
           {
@@ -63,8 +89,36 @@
               enable = true;
               # Apple Silicon Only
               enableRosetta = true;
-              # User owning the homebrew prefix
-              user = "yvan";
+              # User owning the homebrew prefix (dynamic based on current user)
+              user = primaryUser;
+              autoMigrate = true;
+              # extraFlags = [];
+            };
+          }
+        ];
+      };
+
+      # CI-specific configuration for GitHub Actions (runner user)
+      darwinConfigurations."ci" = nix-darwin.lib.darwinSystem {
+        specialArgs = { inherit inputs; };
+        modules = [
+          # Import modular configurations from files
+          ./modules/packages.nix
+          ./modules/homebrew-ci.nix      # Use lightweight homebrew config for CI
+          ./modules/system.nix
+          ./modules/dock.nix
+          ./modules/environment.nix
+          ciHostModule
+
+          # nix-homebrew configuration
+          nix-homebrew.darwinModules.nix-homebrew
+          {
+            nix-homebrew = {
+              enable = true;
+              # Apple Silicon Only
+              enableRosetta = true;
+              # User owning the homebrew prefix (CI user)
+              user = "runner";
               autoMigrate = true;
               # extraFlags = [];
             };
