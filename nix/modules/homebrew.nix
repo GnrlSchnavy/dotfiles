@@ -22,6 +22,8 @@
       "signal"                    # Secure messaging
 
       # Productivity and utilities
+      "1password"                 # Password manager
+      "1password-cli"             # 1Password command line (cask)
       "alfred"                    # Application launcher
       "rectangle"                 # Window management
       "bitwarden"                 # Password manager (alternative)

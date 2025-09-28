@@ -9,13 +9,13 @@ A comprehensive macOS development environment setup using Nix Darwin, Homebrew, 
 For a fresh macOS installation, run the automated setup script:
 
 ```bash
-curl -fsSL https://gitlab.com/YvanStemmerik/dotfiles/-/raw/master/setup.sh | bash
+curl -fsSL https://github.com/GnrlSchnavy/dotfiles/raw/master/setup.sh | bash
 ```
 
 Or clone first and run locally:
 
 ```bash
-git clone https://gitlab.com/YvanStemmerik/dotfiles.git ~/.dotfiles
+git clone https://github.com/GnrlSchnavy/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 chmod +x setup.sh
 ./setup.sh
@@ -58,7 +58,7 @@ sh <(curl -L https://nixos.org/nix/install) --daemon
 ### Apply Configuration
 ```bash
 # Clone repository
-git clone https://gitlab.com/YvanStemmerik/dotfiles.git ~/.dotfiles
+git clone https://github.com/GnrlSchnavy/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
 # Apply nix-darwin configuration
@@ -131,7 +131,7 @@ stow shell editors development system
 - **Complete guide**: See [CLAUDE.md](CLAUDE.md) for detailed documentation
 - **Package strategy**: See [nix/PACKAGE-STRATEGY.md](nix/PACKAGE-STRATEGY.md) for package management guidelines
 - **Claude integration**: See [system/.claude/README.md](system/.claude/README.md)
-- **GitLab CI pipeline**: See [docs/CI.md](docs/CI.md) for automated testing documentation
+- **GitHub Actions**: Automated testing with GitHub Actions for macOS testing
 
 ## Troubleshooting
 
@@ -163,4 +163,4 @@ stow shell editors development system
 - ✅ **Comprehensive development environment**
 - ✅ **Version-controlled configurations**
 - ✅ **Cross-machine consistency**
-- ✅ **Automated testing** with GitLab CI pipeline for macOS 26
+- ✅ **Automated testing** with GitHub Actions for macOS

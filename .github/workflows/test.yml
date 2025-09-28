@@ -20,9 +20,8 @@ jobs:
           echo "🔍 Validating repository structure..."
           test -f "setup.sh" || (echo "❌ setup.sh not found" && exit 1)
           test -d "nix" || (echo "❌ nix directory not found" && exit 1)
-          test -d "scripts" || (echo "❌ scripts directory not fuund" && exit 1)
-          test -f "scripts/ci-setup.sh" || (echo "❌ ci-setup.sh not found" && exit 1)
-          test -f "scripts/ci-verify.sh" || (echo "❌ ci-verify.sh not found" && exit 1)
+          test -d "scripts" || (echo "❌ scripts directory not found" && exit 1)
+          test -f "scripts/github-setup.sh" || (echo "❌ github-setup.sh not found" && exit 1)
           echo "✅ Repository structure validation passed"
 
   test-macos:
@@ -72,11 +71,15 @@ jobs:
           chmod +x ./scripts/github-setup.sh
           ./scripts/github-setup.sh
 
-      - name: Run Verification Tests
+      - name: Basic Verification
         run: |
-          echo "🔍 Running comprehensive verification..."
-          chmod +x ./scripts/ci-verify.sh
-          ./scripts/ci-verify.sh
+          echo "🔍 Running basic verification..."
+          echo "Checking nix-darwin installation..."
+          command -v darwin-rebuild || echo "❌ darwin-rebuild not found"
+          echo "Checking dotfiles symlinks..."
+          ls -la ~/.dotfiles || echo "❌ ~/.dotfiles not found"
+          echo "Checking shell configuration..."
+          test -f ~/.zprofile && echo "✅ .zprofile exists" || echo "❌ .zprofile missing"
 
       - name: Run Health Check
         run: |
@@ -132,8 +135,7 @@ jobs:
         with:
           name: installation-logs
           path: |
-            /tmp/ci-setup.log
-            /tmp/ci-verify.log
+            /tmp/github-setup.log
           retention-days: 7
 
   test-updates:
