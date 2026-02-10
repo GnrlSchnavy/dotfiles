@@ -3,7 +3,7 @@
 # GitHub Actions optimized setup script
 # Designed for fresh macOS runners with full system access
 
-set -e  # Exit on any error
+set -euo pipefail
 
 echo "🚀 GitHub Actions Dotfiles Setup Script"
 echo "Running on fresh macOS environment..."

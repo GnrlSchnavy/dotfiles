@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e  # Exit on any error
+set -euo pipefail
 
 echo "🚀 macOS Dotfiles Setup Script"
 echo "Setting up development environment from scratch..."
