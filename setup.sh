@@ -77,12 +77,7 @@ if [ -d "$TARGET_DIR" ]; then
     exit 1
 fi
 
-TEMP_DIR=$(mktemp -d)
-print_step "Cloning repository to temporary location: $TEMP_DIR"
-git clone "$REPO_URL" "$TEMP_DIR"
-
-print_step "Moving repository to $TARGET_DIR"
-mv "$TEMP_DIR" "$TARGET_DIR"
+git clone "$REPO_URL" "$TARGET_DIR"
 print_success "Dotfiles successfully installed to $TARGET_DIR"
 
 # Create nix symlink (required for nix-darwin)
