@@ -9,12 +9,10 @@
     pkgs.git                    # Version control
     pkgs.maven                  # Java build tool
     pkgs.rustc                  # Rust compiler
-    pkgs.nodejs_20              # Node.js runtime
     
     # Container ecosystem
     # pkgs.docker               # Docker CLI - provided by Docker Desktop
     # pkgs.docker-compose       # Container orchestration - provided by Docker Desktop  
-    pkgs.minikube               # Local Kubernetes
     
     # Language runtimes and compilers
     pkgs.zulu23                 # Java 23 JDK
