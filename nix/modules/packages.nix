@@ -3,7 +3,7 @@
 {
   environment.systemPackages = [
     # Nixvim configuration
-    inputs.nixvim.packages.aarch64-darwin.default
+    inputs.nixvim.packages.${pkgs.system}.default
     
     # Core development tools (prefer Nix for reproducibility)
     pkgs.git                    # Version control
