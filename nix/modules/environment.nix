@@ -2,8 +2,7 @@
 
 {
   environment.variables = {
-    # Placeholder for future environment variables
-    # Example:
-    # YVAN_TEST = "TEST";
+    EDITOR = "nvim";
+    VISUAL = "nvim";
   };
 }
