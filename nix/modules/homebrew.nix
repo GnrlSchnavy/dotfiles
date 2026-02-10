@@ -102,10 +102,7 @@
     # Mac App Store apps - only available through App Store
     masApps = {
       "WireGuard" = 1451685025;           # VPN client
-      "Outlook" = 985367838;              # Microsoft email
       "Windows Remote Desktop" = 1295203466;  # Microsoft RDP
-      "TestFlight" = 899247664;           # Beta app testing
-      "Xcode" = 497799835;                # Apple development tools
     };
     
     # Homebrew maintenance settings
