@@ -90,7 +90,7 @@
       "tmux"                      # Terminal multiplexer
       
       # Specialized CLI tools
-      "sshpass"                   # SSH password authentication
+      #"sshpass"                   # SSH password authentication (prefer SSH keys)
       "pgloader"                  # PostgreSQL data loading
       #"bitwarden-cli"             # Bitwarden password manager CLI
       
