@@ -34,6 +34,6 @@
     # Development utilities
     pkgs.mkalias                # macOS alias creation
     pkgs.htop                   # Process monitor
-    pkgs.neofetch               # System information
+    pkgs.fastfetch              # System information
   ];
 }
