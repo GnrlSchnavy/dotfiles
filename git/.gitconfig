@@ -2,4 +2,16 @@
 	name = Yvan
 	email = yvanstemmerik@gmail.com
 [core]
-	excludesfile = /Users/yvan/.gitignore_global
+	excludesfile = ~/.gitignore_global
+[init]
+	defaultBranch = main
+[pull]
+	rebase = true
+[push]
+	autoSetupRemote = true
+[merge]
+	conflictstyle = diff3
+[diff]
+	algorithm = histogram
+[rerere]
+	enabled = true
