@@ -79,6 +79,7 @@
             };
             options = {
               darwin = {
+                # NOTE: Hardcoded path required by builtins.getFlake (no ~ expansion)
                 expr = "(builtins.getFlake \"/Users/yvan/.dotfiles/nix\").darwinConfigurations.m4.options";
               };
             };
