@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ ... }:
 
 {
   system.defaults.dock = {
@@ -19,12 +19,12 @@
     autohide-delay = 0.01;
     autohide-time-modifier = 0.1;
     
-    # Persistent applications
+    # Persistent applications (all installed via Homebrew casks)
     persistent-apps = [
-      "${pkgs.brave}/Applications/Brave Browser.app"
-      "/Applications/Spotify.app"  # Installed via Homebrew
-      "${pkgs.slack}/Applications/Slack.app"
-      "${pkgs.obsidian}/Applications/Obsidian.app"
+      "/Applications/Brave Browser.app"
+      "/Applications/Spotify.app"
+      "/Applications/Slack.app"
+      "/Applications/Obsidian.app"
       "/Applications/IntelliJ IDEA.app"
     ];
   };

@@ -9,31 +9,30 @@
       # Development environments
       "intellij-idea"             # JetBrains IDE
       "visual-studio-code"        # Microsoft editor
-      "android-studio"            # Android development
       
       # Browsers
       "google-chrome"             # Google browser
       "brave-browser"             # Privacy-focused browser
+      "firefox"
       
       # Communication and collaboration
       "slack"                     # Team communication
       "discord"                   # Gaming/community chat
       "whatsapp"                  # Messaging
       "signal"                    # Secure messaging
-      "mattermost"                # Enterprise chat
+      #"mattermost"                # Enterprise chat
       
       # Productivity and utilities
       "alfred"                    # Application launcher
       "rectangle"                 # Window management
       "1password"                 # Password manager
       "1password-cli"             # 1Password command line (cask)
-      "bitwarden"                 # Password manager (alternative)
       "obsidian"                  # Note-taking
-      "balenaetcher"              # USB/SD card flashing tool
 
       # Media and entertainment
       "spotify"                   # Music streaming
       "vlc"                       # Media player
+      "jellyfin-media-player"
       
       # Development tools (GUI)
       "docker-desktop"            # Docker Desktop (GUI + CLI)
@@ -42,28 +41,30 @@
       "cyberduck"                 # FTP/cloud storage
       
       # Design and creativity
-      "figma"                     # Design tool
+      #"figma"                     # Design tool
       
       # System and network tools
-      "openvpn-connect"           # VPN client
       "nordvpn"                   # VPN service
       "warp"                      # Cloudflare WARP
       
       # Virtualization and remote access
       "crossover"                 # Windows compatibility
+      "nvidia-geforce-now"        # Geforce Now Gaming
       "teamviewer"                # Remote access
       
       # Temporary/project-specific
       "lens"                      # Kubernetes GUI
       "claude"                    # Claude AI assistant
       
-      # Work-specific (Logius)
-      "webex"                     # Video conferencing
-      "citrix-workspace"          # Enterprise access
-      "omnissa-horizon-client"    # Virtual desktop
-
       # Random dev tools 
       "chromedriver"              # Chrome WebDriver for automation
+
+      # Proton
+      "proton-mail"
+      "proton-mail-bridge"
+      "protonvpn"
+      "proton-drive"
+      "proton-pass"
     ];
     
     # CLI Tools (brews) - use when not available in Nix or need Homebrew features
@@ -91,11 +92,11 @@
       # Specialized CLI tools
       "sshpass"                   # SSH password authentication
       "pgloader"                  # PostgreSQL data loading
-      "bitwarden-cli"             # Bitwarden password manager CLI
+      #"bitwarden-cli"             # Bitwarden password manager CLI
       
       # Development utilities not in Nix or outdated
       "gh"                        # GitHub CLI
-      "awscli"                    # AWS command line (correct name)
+      #"awscli"                    # AWS command line (correct name)
     ];
     
     # Mac App Store apps - only available through App Store
