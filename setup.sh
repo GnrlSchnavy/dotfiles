@@ -167,7 +167,8 @@ fi
 # Stow all categories
 print_step "Stowing dotfile categories..."
 stow shell
-stow editors  
+stow git
+stow editors
 stow development
 stow system
 
