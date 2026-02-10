@@ -7,10 +7,17 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 # Autojump configuration for smart directory navigation
 [ -f /opt/homebrew/etc/profile.d/autojump.sh ] && . /opt/homebrew/etc/profile.d/autojump.sh
 
-# NVM (Node Version Manager) setup
+# NVM (Node Version Manager) - lazy-loaded for faster shell startup
 export NVM_DIR="${HOME}/.nvm"
-[ -s /opt/homebrew/opt/nvm/nvm.sh ] && \. /opt/homebrew/opt/nvm/nvm.sh
-[ -s /opt/homebrew/opt/nvm/etc/bash_completion.d/nvm ] && \. /opt/homebrew/opt/nvm/etc/bash_completion.d/nvm
+lazy_load_nvm() {
+  unset -f nvm node npm npx
+  [ -s /opt/homebrew/opt/nvm/nvm.sh ] && \. /opt/homebrew/opt/nvm/nvm.sh
+  [ -s /opt/homebrew/opt/nvm/etc/bash_completion.d/nvm ] && \. /opt/homebrew/opt/nvm/etc/bash_completion.d/nvm
+}
+nvm() { lazy_load_nvm && nvm "$@"; }
+node() { lazy_load_nvm && node "$@"; }
+npm() { lazy_load_nvm && npm "$@"; }
+npx() { lazy_load_nvm && npx "$@"; }
 
 
 # Additional PATH entries (legacy tools)
