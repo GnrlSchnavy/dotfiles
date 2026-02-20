@@ -23,18 +23,3 @@ nvm() { lazy_load_nvm && nvm "$@"; }
 node() { lazy_load_nvm && node "$@"; }
 npm() { lazy_load_nvm && npm "$@"; }
 npx() { lazy_load_nvm && npx "$@"; }
-
-
-# Additional PATH entries (legacy tools)
-export PATH="$PATH:/usr/local/bin"
-
-# Kubernetes aliases for faster workflow
-alias k="kubectl"
-alias kg="kubectl get"
-alias kgp="kubectl get pods"
-alias kgd="kubectl get deployments"
-alias kgs="kubectl get services"
-alias kga="kubectl get all"
-alias kd="kubectl describe"
-alias kaf="kubectl apply -f"
-alias kdf="kubectl delete -f"

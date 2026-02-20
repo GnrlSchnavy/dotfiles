@@ -68,7 +68,7 @@ fi
 
 # Clone dotfiles repository
 print_step "Cloning dotfiles repository..."
-REPO_URL="https://gitlab.com/YvanStemmerik/dotfiles.git"
+REPO_URL="https://github.com/GnrlSchnavy/dotfiles.git"
 TARGET_DIR="$HOME/.dotfiles"
 
 if [ -d "$TARGET_DIR" ]; then

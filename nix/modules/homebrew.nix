@@ -3,113 +3,102 @@
 {
   homebrew = {
     enable = true;
-    
-    # GUI Applications (casks) - prefer for macOS native apps
+
+    # GUI Applications (casks) - grouped alphabetically within categories
     casks = [
-      # Development environments
-      "intellij-idea"             # JetBrains IDE
-      "visual-studio-code"        # Microsoft editor
-      
       # Browsers
-      "google-chrome"             # Google browser
-      "brave-browser"             # Privacy-focused browser
+      "brave-browser"
       "firefox"
-      
-      # Communication and collaboration
-      "slack"                     # Team communication
-      "discord"                   # Gaming/community chat
-      "whatsapp"                  # Messaging
-      "signal"                    # Secure messaging
-      #"mattermost"                # Enterprise chat
-      
-      # Productivity and utilities
-      "alfred"                    # Application launcher
-      "rectangle"                 # Window management
-      "1password"                 # Password manager
-      "1password-cli"             # 1Password command line (cask)
-      "obsidian"                  # Note-taking
+      "google-chrome"
 
-      # Media and entertainment
-      "spotify"                   # Music streaming
-      "vlc"                       # Media player
+      # Communication
+      "discord"
+      "microsoft-teams"
+      "signal"
+      "slack"
+      "whatsapp"
+      #"mattermost"               # No longer used
+
+      # Productivity
+      "1password"
+      "1password-cli"
+      "alfred"
+      "obsidian"
+      "rectangle"
+
+      # Development
+      "bruno"
+      "chromedriver"
+      "claude"
+      "cyberduck"
+      "docker-desktop"
+      "intellij-idea"
+      "lens"
+      "postman"
+      "visual-studio-code"
+      #"figma"                    # Not currently needed
+
+      # Media
       "jellyfin-media-player"
-      
-      # Development tools (GUI)
-      "docker-desktop"            # Docker Desktop (GUI + CLI)
-      "postman"                   # API testing
-      "bruno"                     # API testing alternative
-      "cyberduck"                 # FTP/cloud storage
-      
-      # Design and creativity
-      #"figma"                     # Design tool
-      
-      # System and network tools
-      "nordvpn"                   # VPN service
-      "warp"                      # Cloudflare WARP
-      
-      # Virtualization and remote access
-      "crossover"                 # Windows compatibility
-      "nvidia-geforce-now"        # Geforce Now Gaming
-      "teamviewer"                # Remote access
-      
-      # Temporary/project-specific
-      "lens"                      # Kubernetes GUI
-      "claude"                    # Claude AI assistant
-      
-      # Random dev tools 
-      "chromedriver"              # Chrome WebDriver for automation
+      "spotify"
+      "vlc"
 
-      # Proton
+      # Networking & Security
+      "nordvpn"
+      "proton-drive"
       "proton-mail"
       "proton-mail-bridge"
-      "protonvpn"
-      "proton-drive"
       "proton-pass"
+      "protonvpn"
+      "warp"
+
+      # Virtualization & Remote
+      "crossover"
+      "nvidia-geforce-now"
+      "teamviewer"
     ];
-    
+
     # CLI Tools (brews) - use when not available in Nix or need Homebrew features
     brews = [
-      # Version and environment managers (need shell integration)
-      "pyenv"                     # Python version manager
-      "nvm"                       # Node version manager  
-      "jenv"                      # Java version manager
-      
-      # Kubernetes ecosystem (specialized tools/taps)
-      "helm"                      # Kubernetes package manager
-      "kubectl"                   # Kubernetes CLI
-      "kubeseal"                  # Sealed secrets
-      "fluxcd/tap/flux"           # GitOps tool (requires tap)
-      "kdoctor"                   # Kubernetes diagnostics
-      
+      # Version managers (need shell integration for lazy-loading)
+      "jenv"
+      "nvm"
+      "pyenv"
+
+      # Kubernetes ecosystem
+      "fluxcd/tap/flux"
+      "helm"
+      "kdoctor"
+      "kubectl"
+      "kubeseal"
+
       # macOS-specific tools
-      "mas"                       # Mac App Store CLI
-      "stow"                      # Symlink farm manager (better macOS integration)
-      
+      "mas"
+      "stow"
+
       # Shell enhancements
-      "autojump"                  # Smart directory jumping
-      "tmux"                      # Terminal multiplexer
-      
-      # Specialized CLI tools
-      #"sshpass"                   # SSH password authentication (prefer SSH keys)
-      "pgloader"                  # PostgreSQL data loading
-      #"bitwarden-cli"             # Bitwarden password manager CLI
-      
-      # Development utilities not in Nix or outdated
-      "gh"                        # GitHub CLI
-      #"awscli"                    # AWS command line (correct name)
+      "autojump"
+      "tmux"
+
+      # Development utilities
+      "gh"
+      "pgloader"
+      #"sshpass"                  # Prefer SSH keys
+      #"bitwarden-cli"            # Using 1password-cli instead
+      #"awscli"                   # Not currently working with AWS
     ];
-    
+
     # Mac App Store apps - only available through App Store
     masApps = {
-      "WireGuard" = 1451685025;           # VPN client
-      "Windows Remote Desktop" = 1295203466;  # Microsoft RDP
+      "WireGuard" = 1451685025;
+      "Windows Remote Desktop" = 1295203466;
     };
-    
+
     # Homebrew maintenance settings
     onActivation = {
-      cleanup = "zap";          # Remove unlisted packages
-      autoUpdate = true;        # Update Homebrew automatically
-      upgrade = true;           # Upgrade packages automatically
+      cleanup = "zap";
+      autoUpdate = true;
+      upgrade = true;
     };
   };
 }

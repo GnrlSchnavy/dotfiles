@@ -2,6 +2,9 @@
   description = "A nixvim configuration";
 
   inputs = {
+    # When consumed by the parent flake (nix/flake.nix), nixpkgs is overridden
+    # via `inputs.nixpkgs.follows` to use a single nixpkgs source.
+    # This declaration is only used for standalone builds (e.g., `cd nixvim && nix run .`).
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixvim.url = "github:nix-community/nixvim";
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -27,7 +30,8 @@
             module = import ./config; # import the module directly
             # You can use `extraSpecialArgs` to pass additional arguments to your module files
             extraSpecialArgs = {
-              # inherit (inputs) foo;
+              flakePath = "/Users/yvan/.dotfiles/nix";
+              darwinHost = "m4";
             };
           };
           nvim = nixvim'.makeNixvimWithModule nixvimModule;

@@ -8,7 +8,7 @@ This directory contains modular Nix Darwin configuration files organized by func
 **Nix packages for CLI tools and development utilities**
 
 - **Core development tools**: git, rustc, nodejs, maven
-- **Container ecosystem**: docker, docker-compose, minikube  
+- **Container ecosystem**: minikube (Docker via Docker Desktop cask)
 - **System utilities**: tree, jq, curl, ripgrep, fd
 - **Language runtimes**: Java 23, Python 3
 
@@ -19,7 +19,7 @@ This directory contains modular Nix Darwin configuration files organized by func
 
 - **GUI Applications (casks)**: IntelliJ IDEA, VSCode, browsers, Slack
 - **CLI Tools (brews)**: kubectl, helm (with taps), version managers  
-- **Mac App Store (masApps)**: WireGuard, Outlook, Xcode
+- **Mac App Store (masApps)**: WireGuard, Windows Remote Desktop
 
 **Strategy**: Use Homebrew for GUI applications, tools requiring taps, and macOS-specific software.
 
@@ -39,11 +39,17 @@ This directory contains modular Nix Darwin configuration files organized by func
 - Animation and timing settings
 
 ### `environment.nix`
-**Environment variables and shell configuration**
+**Environment variables, shell aliases, and system PATH**
 
-- System-wide environment variables
-- PATH modifications
-- Shell integration settings
+- System-wide environment variables (EDITOR, VISUAL)
+- Shell aliases (kubectl shortcuts)
+- Additional PATH entries
+
+### `programs.nix`
+**Declarative program configurations**
+
+- Git: user, pull/push/merge settings, diff algorithm, rerere
+- Future: additional program configs can be added here
 
 ## Package Management Guidelines
 

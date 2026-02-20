@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, flakePath ? "/Users/yvan/.dotfiles/nix", darwinHost ? "m4", ... }:
 {
   # Import existing bufferline config only for now
   imports = [ ./bufferline.nix ];
@@ -79,8 +79,7 @@
             };
             options = {
               darwin = {
-                # NOTE: Hardcoded path required by builtins.getFlake (no ~ expansion)
-                expr = "(builtins.getFlake \"/Users/yvan/.dotfiles/nix\").darwinConfigurations.m4.options";
+                expr = "(builtins.getFlake \"${flakePath}\").darwinConfigurations.${darwinHost}.options";
               };
             };
           };

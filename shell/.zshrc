@@ -1,3 +1,7 @@
+# Intentionally imperative: version managers and completions require runtime
+# shell function wrappers that cannot be expressed in nix-darwin.
+# Declarative config (aliases, env vars, PATH) lives in nix/modules/environment.nix
+
 # Java version management with jenv - lazy-loaded for faster shell startup
 export PATH="$HOME/.jenv/bin:$PATH"
 lazy_load_jenv() {

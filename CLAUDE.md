@@ -34,7 +34,7 @@ This repository uses GNU Stow for symlinking dotfiles organized by category. Aft
 cd ~/.dotfiles
 # Stow specific categories
 stow shell        # Shell configurations (.zprofile, .zshrc)
-stow git          # Git configurations (.gitconfig, .gitignore_global)
+stow git          # Git configurations (.gitignore_global)
 stow editors      # Editor configurations (.ideavimrc)
 stow development  # Development tools (.docker)
 stow system       # System configurations (.claude)
@@ -65,13 +65,14 @@ stow shell git editors development system
 
 #### Configuration Files Organization
 **Shell Configuration** (`shell/`)
-- `.zprofile`: Shell environment setup with Homebrew, NVM, kubectl aliases
-- `.zshrc`: Zsh shell configuration with jenv and kubectl completion
+- `.zprofile`: Imperative shell integrations only (Homebrew init, NVM/autojump lazy-loading)
+- `.zshrc`: Imperative shell integrations only (jenv lazy-loading, kubectl completion cache)
+- Shell aliases and PATH are declared in `nix/modules/environment.nix`
 
-**Git Configuration** (`git/`)
-- `.gitconfig`: Personal git configuration (user, core settings)
-- `.gitignore_global`: Global gitignore patterns
-- `.config/git/ignore`: Git-specific ignore patterns for Claude settings
+**Git Configuration**
+- Git settings (user, pull.rebase, diff.algorithm, etc.) are declared in `nix/modules/programs.nix`
+- `git/.gitignore_global`: Global gitignore patterns (Stow-managed)
+- `git/.config/git/ignore`: Git-specific ignore patterns for Claude settings (Stow-managed)
 
 **Editor Configuration** (`editors/`)
 - `.ideavimrc`: IntelliJ IDEA Vim plugin configuration
@@ -98,7 +99,7 @@ stow shell git editors development system
 - **Rust**: rustc compiler
 - **Node.js**: via nvm
 - **Python**: via pyenv
-- **Docker**: Both Nix package and Homebrew cask
+- **Docker**: Docker Desktop via Homebrew cask
 - **Kubernetes**: kubectl, helm, kubeseal, flux, kdoctor
 
 ### Editor Configuration
@@ -160,7 +161,7 @@ nix flake check ~/.dotfiles/nix/nixvim
 
 ### Development Environment
 ```bash
-# Kubernetes shortcuts (defined in .zprofile)
+# Kubernetes shortcuts (defined in nix/modules/environment.nix)
 k get pods    # kubectl get pods
 kgp          # kubectl get pods
 kaf file.yml # kubectl apply -f file.yml

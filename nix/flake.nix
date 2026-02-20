@@ -22,6 +22,10 @@
       nixvim,
     }:
     let
+      # Central configuration — change these when setting up a new host
+      hostname = "m4";
+      username = "yvan";
+
       # Host-specific configuration (kept inline as it's unique to this host)
       hostModule = { ... }: {
         # Allow 'paid' applications to be set in flake config
@@ -40,12 +44,12 @@
         nixpkgs.hostPlatform = "aarch64-darwin";
 
         # Primary user for system-wide options
-        system.primaryUser = "yvan";
+        system.primaryUser = username;
       };
 
     in
     {
-      darwinConfigurations."m4" = nix-darwin.lib.darwinSystem {
+      darwinConfigurations.${hostname} = nix-darwin.lib.darwinSystem {
         specialArgs = { inherit inputs; };
         modules = [
           # Import modular configurations from files
@@ -54,23 +58,20 @@
           ./modules/system.nix
           ./modules/dock.nix
           ./modules/environment.nix
+          ./modules/programs.nix
           hostModule
-          
+
           # nix-homebrew configuration
           nix-homebrew.darwinModules.nix-homebrew
           {
             nix-homebrew = {
               enable = true;
-              # Apple Silicon Only
               enableRosetta = true;
-              # User owning the homebrew prefix
-              user = "yvan";
+              user = username;
               autoMigrate = true;
-              # extraFlags = [];
             };
           }
         ];
       };
     };
 }
-
