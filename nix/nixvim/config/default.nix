@@ -55,8 +55,8 @@
               configuration = {
                 runtimes = [
                   {
-                    name = "JavaSE-23";
-                    path = "${pkgs.zulu23}";
+                    name = "JavaSE-25";
+                    path = "${pkgs.zulu25}";
                     default = true;
                   }
                 ];

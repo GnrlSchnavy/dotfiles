@@ -6,7 +6,10 @@
     # via `inputs.nixpkgs.follows` to use a single nixpkgs source.
     # This declaration is only used for standalone builds (e.g., `cd nixvim && nix run .`).
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixvim.url = "github:nix-community/nixvim";
+    nixvim = {
+      url = "github:nix-community/nixvim";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     flake-parts.url = "github:hercules-ci/flake-parts";
   };
 

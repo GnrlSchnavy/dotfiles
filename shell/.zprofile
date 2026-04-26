@@ -12,14 +12,10 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 # Autojump configuration for smart directory navigation
 [ -f /opt/homebrew/etc/profile.d/autojump.sh ] && . /opt/homebrew/etc/profile.d/autojump.sh
 
-# NVM (Node Version Manager) - lazy-loaded for faster shell startup
+# NVM (Node Version Manager)
 export NVM_DIR="${HOME}/.nvm"
-lazy_load_nvm() {
-  unset -f nvm node npm npx
-  [ -s /opt/homebrew/opt/nvm/nvm.sh ] && \. /opt/homebrew/opt/nvm/nvm.sh
-  [ -s /opt/homebrew/opt/nvm/etc/bash_completion.d/nvm ] && \. /opt/homebrew/opt/nvm/etc/bash_completion.d/nvm
-}
-nvm() { lazy_load_nvm && nvm "$@"; }
-node() { lazy_load_nvm && node "$@"; }
-npm() { lazy_load_nvm && npm "$@"; }
-npx() { lazy_load_nvm && npx "$@"; }
+[ -s /opt/homebrew/opt/nvm/nvm.sh ] && \. /opt/homebrew/opt/nvm/nvm.sh
+[ -s /opt/homebrew/opt/nvm/etc/bash_completion.d/nvm ] && \. /opt/homebrew/opt/nvm/etc/bash_completion.d/nvm
+
+# Added by Obsidian
+export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"

@@ -2,8 +2,9 @@
 
 {
   environment.systemPackages = [
-    # Nixvim configuration
-    inputs.nixvim.packages.${pkgs.system}.default
+    # Nixvim configuration (temporarily disabled while debugging pname issue)
+    # inputs.nixvim.packages.${pkgs.system}.default
+    pkgs.neovim
     
     # Core development tools (prefer Nix for reproducibility)
     pkgs.git                    # Version control
@@ -15,7 +16,7 @@
     # pkgs.docker-compose       # Container orchestration - provided by Docker Desktop  
     
     # Language runtimes and compilers
-    pkgs.zulu23                 # Java 23 JDK
+    pkgs.zulu25                 # Java 25 LTS JDK
     pkgs.python3                # Python runtime
     
     # System utilities (Nix for cross-platform consistency)
@@ -35,5 +36,8 @@
     pkgs.mkalias                # macOS alias creation
     pkgs.htop                   # Process monitor
     pkgs.fastfetch              # System information
+
+    # Networking
+    pkgs.wireguard-tools        # wg / wg-quick CLI for WireGuard tunnels
   ];
 }

@@ -7,6 +7,7 @@
     # GUI Applications (casks) - grouped alphabetically within categories
     casks = [
       # Browsers
+      "tor-browser"
       "brave-browser"
       "firefox"
       "google-chrome"
@@ -44,7 +45,6 @@
       "vlc"
 
       # Networking & Security
-      "nordvpn"
       "proton-drive"
       "proton-mail"
       "proton-mail-bridge"
@@ -56,11 +56,25 @@
       "crossover"
       "nvidia-geforce-now"
       "teamviewer"
+
+      # Programming languages
+      "temurin@25"
     ];
 
     # CLI Tools (brews) - use when not available in Nix or need Homebrew features
     brews = [
+      #"android-platform-tools"
+      "python-tk"
+
+      # Programming languages
+      "kotlin"
+
+      # Security / hacker stuff
+      "gnupg"
+      "tor"
+
       # Version managers (need shell integration for lazy-loading)
+      "pipx"
       "jenv"
       "nvm"
       "pyenv"
@@ -83,6 +97,7 @@
       # Development utilities
       "gh"
       "pgloader"
+      "stripe-cli"
       #"sshpass"                  # Prefer SSH keys
       #"bitwarden-cli"            # Using 1password-cli instead
       #"awscli"                   # Not currently working with AWS
@@ -90,8 +105,6 @@
 
     # Mac App Store apps - only available through App Store
     masApps = {
-      "WireGuard" = 1451685025;
-      "Windows Remote Desktop" = 1295203466;
     };
 
     # Homebrew maintenance settings
