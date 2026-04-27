@@ -9,16 +9,10 @@
     # Core development tools (prefer Nix for reproducibility)
     pkgs.git                    # Version control
     pkgs.maven                  # Java build tool
-    pkgs.rustc                  # Rust compiler
-    
-    # Container ecosystem
-    # pkgs.docker               # Docker CLI - provided by Docker Desktop
-    # pkgs.docker-compose       # Container orchestration - provided by Docker Desktop  
-    
-    # Language runtimes and compilers
-    pkgs.zulu25                 # Java 25 LTS JDK
-    pkgs.python3                # Python runtime
-    
+
+    # Language runtimes are managed by version managers (jenv, nvm, pyenv)
+    # not nix, to allow per-project version switching.
+
     # System utilities (Nix for cross-platform consistency)
     pkgs.tree                   # Directory tree visualization
     pkgs.jq                     # JSON processor
