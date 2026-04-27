@@ -18,9 +18,4 @@
     kaf = "kubectl apply -f";
     kdf = "kubectl delete -f";
   };
-
-  # Additional PATH entries
-  environment.systemPath = [
-    "/usr/local/bin"
-  ];
 }
