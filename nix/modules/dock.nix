@@ -6,7 +6,6 @@
     show-recents = false;
     static-only = true;
     minimize-to-application = true;
-    mineffect = null;
     launchanim = false;
     autohide = true;
     
