@@ -4,7 +4,6 @@
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
     trusted-users = [ "@admin" "yvan" ];
-    auto-optimise-store = true;
     warn-dirty = false;
   };
 
