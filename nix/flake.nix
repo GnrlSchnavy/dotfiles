@@ -62,6 +62,11 @@
               home-manager = {
                 useGlobalPkgs = true;
                 useUserPackages = true;
+                # Auto-back up files home-manager would otherwise refuse
+                # to overwrite (e.g. an existing ~/.zshenv from nix-darwin
+                # or a stale Stow symlink). Backups land alongside the
+                # original with the .hm-backup suffix.
+                backupFileExtension = "hm-backup";
                 extraSpecialArgs = { inherit inputs; };
                 users.${host.username} = import ./home;
               };

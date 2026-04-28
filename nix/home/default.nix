@@ -11,6 +11,7 @@
 {
   imports = [
     ./git.nix
+    ./zsh.nix
   ];
 
   # First state version we ship under home-manager. Don't change without
