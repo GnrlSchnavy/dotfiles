@@ -2,9 +2,8 @@
 
 {
   environment.systemPackages = [
-    # Nixvim configuration (temporarily disabled while debugging pname issue)
-    # inputs.nixvim.packages.${pkgs.system}.default
-    pkgs.neovim
+    # Nixvim configuration
+    inputs.nixvim.packages.${pkgs.system}.default
     
     # Core development tools (prefer Nix for reproducibility)
     pkgs.git                    # Version control

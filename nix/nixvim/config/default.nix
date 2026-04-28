@@ -47,22 +47,10 @@
       
       # Language servers for your main languages
       servers = {
-        # Java development
+        # Java development. Runtime auto-discovered from JAVA_HOME
+        # (set by jenv via .zshrc) — no hardcoded JDK path here.
         jdtls = {
           enable = true;
-          settings = {
-            java = {
-              configuration = {
-                runtimes = [
-                  {
-                    name = "JavaSE-25";
-                    path = "${pkgs.zulu25}";
-                    default = true;
-                  }
-                ];
-              };
-            };
-          };
         };
         
         # Kotlin

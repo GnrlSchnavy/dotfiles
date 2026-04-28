@@ -7,7 +7,7 @@
     # This declaration is only used for standalone builds (e.g., `cd nixvim && nix run .`).
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     nixvim = {
-      url = "github:nix-community/nixvim";
+      url = "github:nix-community/nixvim/nixos-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     flake-parts.url = "github:hercules-ci/flake-parts";
