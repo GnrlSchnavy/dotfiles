@@ -18,7 +18,6 @@
       "signal"
       "slack"
       "whatsapp"
-      #"mattermost"               # No longer used
 
       # Productivity
       "1password"
@@ -37,7 +36,6 @@
       "lens"
       "postman"
       "visual-studio-code"
-      #"figma"                    # Not currently needed
 
       # Media
       "jellyfin-media-player"
@@ -63,20 +61,18 @@
 
     # CLI Tools (brews) - use when not available in Nix or need Homebrew features
     brews = [
-      #"android-platform-tools"
-      "python-tk"
-
       # Programming languages
       "kotlin"
+      "python-tk"
 
-      # Security / hacker stuff
+      # Security
       "gnupg"
       "tor"
 
       # Version managers (need shell integration for lazy-loading)
-      "pipx"
       "jenv"
       "nvm"
+      "pipx"
       "pyenv"
 
       # Kubernetes ecosystem
@@ -98,9 +94,6 @@
       "gh"
       "pgloader"
       "stripe-cli"
-      #"sshpass"                  # Prefer SSH keys
-      #"bitwarden-cli"            # Using 1password-cli instead
-      #"awscli"                   # Not currently working with AWS
     ];
 
     # Mac App Store apps - only available through App Store
