@@ -1,5 +1,9 @@
 { ... }:
 
+let
+  # Build a /Applications path from an app name (without `.app`).
+  app = name: "/Applications/${name}.app";
+in
 {
   system.defaults.dock = {
     # Dock behavior
@@ -8,23 +12,23 @@
     minimize-to-application = true;
     launchanim = false;
     autohide = true;
-    
+
     # Dock appearance
     orientation = "right";
     tilesize = 36;
     magnification = false;
-    
+
     # Dock timing
     autohide-delay = 0.01;
     autohide-time-modifier = 0.1;
-    
+
     # Persistent applications (all installed via Homebrew casks)
-    persistent-apps = [
-      "/Applications/Brave Browser.app"
-      "/Applications/Spotify.app"
-      "/Applications/Slack.app"
-      "/Applications/Obsidian.app"
-      "/Applications/IntelliJ IDEA.app"
+    persistent-apps = map app [
+      "Brave Browser"
+      "Spotify"
+      "Slack"
+      "Obsidian"
+      "IntelliJ IDEA"
     ];
   };
 }
