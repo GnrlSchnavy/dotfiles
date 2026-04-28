@@ -1,11 +1,3 @@
-# Welcome message with current user
-HOUR=$(date +%H)
-if   (( HOUR < 12 )); then GREETING="Good morning"
-elif (( HOUR < 18 )); then GREETING="Good afternoon"
-else GREETING="Good evening"; fi
-echo "$GREETING ${USER:-$(whoami)}!"
-unset HOUR GREETING
-
 # Homebrew environment setup
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
