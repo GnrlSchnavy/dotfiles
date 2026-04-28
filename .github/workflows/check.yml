@@ -1,0 +1,54 @@
+name: nix flake check
+
+# Run on every push to master and on pull requests so eval errors
+# get caught before they hit a laptop. Uses macOS runner because
+# darwinConfigurations only evaluate on darwin.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  # Allow manual triggering from the Actions tab.
+  workflow_dispatch:
+
+jobs:
+  flake-check:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v32
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            # Trust the GitHub Actions runner user so substituters work.
+            trusted-users = root runner
+
+      - name: Use the public Nix cache
+        uses: cachix/cachix-action@v15
+        with:
+          name: nix-community
+          # No auth token needed for read-only access to a public cache.
+          skipPush: true
+
+      - name: Evaluate every host configuration
+        # `nix flake check` would also evaluate the nixvim checks output,
+        # which requires aarch64-darwin specifically. Iterate hosts and
+        # evaluate each toplevel derivation path instead — that catches
+        # config typos and module errors without forcing a full build.
+        working-directory: nix
+        run: |
+          set -euo pipefail
+          for host in $(nix eval --raw --apply 'attrs: builtins.concatStringsSep " " (builtins.attrNames attrs)' .#darwinConfigurations); do
+            echo "::group::Evaluating darwinConfigurations.$host"
+            nix eval --raw ".#darwinConfigurations.$host.config.system.build.toplevel.drvPath"
+            echo "::endgroup::"
+          done
+
+      - name: Run flake-level checks
+        working-directory: nix
+        # --no-build skips building check derivations; we only want
+        # to verify the flake evaluates and produces well-typed checks.
+        run: nix flake check --no-build
