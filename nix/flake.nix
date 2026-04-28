@@ -17,58 +17,50 @@
     inputs@{
       self,
       nix-darwin,
-      nixpkgs,
       nix-homebrew,
-      nixvim,
+      ...
     }:
     let
-      # Central configuration — change these when setting up a new host
-      hostname = "m4";
-      username = "yvan";
+      # Modules shared across every host. Anything machine-specific
+      # (hostname, primary user, arch) lives in hosts/<name>/default.nix.
+      sharedModules = [
+        ./modules/packages.nix
+        ./modules/homebrew.nix
+        ./modules/nix.nix
+        ./modules/system.nix
+        ./modules/dock.nix
+        ./modules/environment.nix
+      ];
 
-      # Host-specific configuration (kept inline as it's unique to this host)
-      hostModule = { ... }: {
-        # Allow 'paid' applications to be set in flake config
-        nixpkgs.config.allowUnfree = true;
+      # Build a darwin configuration from a host descriptor.
+      # See hosts/m4/default.nix for the expected shape.
+      mkDarwin =
+        host:
+        nix-darwin.lib.darwinSystem {
+          specialArgs = { inherit inputs; };
+          modules = sharedModules ++ [
+            host.module
+            { system.configurationRevision = self.rev or self.dirtyRev or null; }
 
-        # Set Git commit hash for darwin-version
-        system.configurationRevision = self.rev or self.dirtyRev or null;
+            nix-homebrew.darwinModules.nix-homebrew
+            {
+              nix-homebrew = {
+                enable = true;
+                enableRosetta = true;
+                user = host.username;
+                autoMigrate = true;
+              };
+            }
+          ];
+        };
 
-        # Used for backwards compatibility, please read the changelog before changing
-        system.stateVersion = 5;
-
-        # The platform the configuration will be used on
-        nixpkgs.hostPlatform = "aarch64-darwin";
-
-        # Primary user for system-wide options
-        system.primaryUser = username;
+      hosts = {
+        m4 = import ./hosts/m4;
+        # Add additional hosts here, e.g.:
+        # m5 = import ./hosts/m5;
       };
-
     in
     {
-      darwinConfigurations.${hostname} = nix-darwin.lib.darwinSystem {
-        specialArgs = { inherit inputs; };
-        modules = [
-          # Import modular configurations from files
-          ./modules/packages.nix
-          ./modules/homebrew.nix
-          ./modules/nix.nix
-          ./modules/system.nix
-          ./modules/dock.nix
-          ./modules/environment.nix
-          hostModule
-
-          # nix-homebrew configuration
-          nix-homebrew.darwinModules.nix-homebrew
-          {
-            nix-homebrew = {
-              enable = true;
-              enableRosetta = true;
-              user = username;
-              autoMigrate = true;
-            };
-          }
-        ];
-      };
+      darwinConfigurations = builtins.mapAttrs (_: host: mkDarwin host) hosts;
     };
 }
