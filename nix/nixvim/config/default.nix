@@ -286,27 +286,29 @@
     # File Explorer
     neo-tree = {
       enable = true;
-      closeIfLastWindow = true;
-      window = {
-        width = 30;
-        autoExpandWidth = false;
-      };
-      filesystem = {
-        filteredItems = {
-          hideDotfiles = false;
-          hideGitignored = false;
-          hideHidden = false;
+      settings = {
+        close_if_last_window = true;
+        window = {
+          width = 30;
+          auto_expand_width = false;
         };
-        followCurrentFile = {
-          enabled = true;
-          leaveDirsOpen = false;
+        filesystem = {
+          filtered_items = {
+            hide_dotfiles = false;
+            hide_gitignored = false;
+            hide_hidden = false;
+          };
+          follow_current_file = {
+            enabled = true;
+            leave_dirs_open = false;
+          };
+          use_libuv_file_watcher = true;
         };
-        useLibuvFileWatcher = true;
-      };
-      buffers = {
-        followCurrentFile = {
-          enabled = true;
-          leaveDirsOpen = false;
+        buffers = {
+          follow_current_file = {
+            enabled = true;
+            leave_dirs_open = false;
+          };
         };
       };
     };
@@ -389,42 +391,44 @@
     # Separate treesitter-textobjects plugin
     treesitter-textobjects = {
       enable = true;
-      select = {
-        enable = true;
-        lookahead = true;
-        keymaps = {
-          # Functions
-          "af" = "@function.outer";
-          "if" = "@function.inner";
-          # Classes  
-          "ac" = "@class.outer";
-          "ic" = "@class.inner";
-          # Parameters/arguments
-          "aa" = "@parameter.outer";
-          "ia" = "@parameter.inner";
-          # Comments
-          "aC" = "@comment.outer";
+      settings = {
+        select = {
+          enable = true;
+          lookahead = true;
+          keymaps = {
+            # Functions
+            "af" = "@function.outer";
+            "if" = "@function.inner";
+            # Classes
+            "ac" = "@class.outer";
+            "ic" = "@class.inner";
+            # Parameters/arguments
+            "aa" = "@parameter.outer";
+            "ia" = "@parameter.inner";
+            # Comments
+            "aC" = "@comment.outer";
+          };
         };
-      };
-      
-      move = {
-        enable = true;
-        setJumps = true;
-        gotoNextStart = {
-          "]m" = "@function.outer";
-          "]]" = "@class.outer";
-        };
-        gotoNextEnd = {
-          "]M" = "@function.outer";
-          "][" = "@class.outer";
-        };
-        gotoPreviousStart = {
-          "[m" = "@function.outer";
-          "[[" = "@class.outer";
-        };
-        gotoPreviousEnd = {
-          "[M" = "@function.outer";
-          "[]" = "@class.outer";
+
+        move = {
+          enable = true;
+          set_jumps = true;
+          goto_next_start = {
+            "]m" = "@function.outer";
+            "]]" = "@class.outer";
+          };
+          goto_next_end = {
+            "]M" = "@function.outer";
+            "][" = "@class.outer";
+          };
+          goto_previous_start = {
+            "[m" = "@function.outer";
+            "[[" = "@class.outer";
+          };
+          goto_previous_end = {
+            "[M" = "@function.outer";
+            "[]" = "@class.outer";
+          };
         };
       };
     };
