@@ -1,10 +1,9 @@
-{ pkgs, inputs, ... }:
+{ pkgs, ... }:
 
 {
+  # Note: nvim is added per-host in flake.nix (mkNvim) so flakePath/
+  # darwinHost can be parameterized.
   environment.systemPackages = [
-    # Nixvim configuration
-    inputs.nixvim.packages.${pkgs.system}.default
-
     # Core development tools
     pkgs.git
     pkgs.maven

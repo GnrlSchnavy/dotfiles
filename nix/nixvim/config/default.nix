@@ -1,4 +1,4 @@
-{ pkgs, flakePath ? "/Users/yvan/.dotfiles/nix", darwinHost ? "m4", ... }:
+{ pkgs, flakePath, darwinHost, ... }:
 {
   # Import existing bufferline config only for now
   imports = [ ./bufferline.nix ];
