@@ -180,8 +180,6 @@ echo "     jenv global temurin-25  # adjust to whichever JDK you installed"
 echo "     nvm install --lts"
 echo "     pyenv install 3.13"
 echo "     pyenv global 3.13"
-echo "3. (Optional) Install bun for the claude-mem alias:"
-echo "     curl -fsSL https://bun.sh/install | bash"
 echo
 echo "Configuration: ~/.dotfiles/"
 echo "Documentation: ~/.dotfiles/CLAUDE.md"

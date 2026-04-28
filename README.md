@@ -60,9 +60,6 @@ nvm install --lts
 # Python
 pyenv install 3.13
 pyenv global 3.13
-
-# (Optional) Bun, used by the claude-mem alias
-curl -fsSL https://bun.sh/install | bash
 ```
 
 ## Manual rebuild
