@@ -116,7 +116,6 @@ This document defines the strategy for choosing between Nix packages, Homebrew f
 4. **Consider dependencies** that might break
 
 ### Example migrations:
-- `stow` Nix → Homebrew (better macOS integration)
 - `kubectl` Homebrew → Nix (version consistency)
 - GUI `docker` Cask → keep (GUI application)
 - CLI `docker` Nix → keep (development tool)

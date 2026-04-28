@@ -84,7 +84,6 @@
 
       # macOS-specific tools
       "mas"
-      "stow"
 
       # Shell enhancements
       "autojump"

@@ -144,30 +144,13 @@ print_step "Building initial nix-darwin configuration..."
 nix run --extra-experimental-features nix-command --extra-experimental-features flakes nix-darwin/master#darwin-rebuild -- switch
 print_success "Initial nix-darwin setup complete"
 
-# Apply custom nix-darwin configuration
+# Apply custom nix-darwin configuration.
+# This also activates home-manager, which manages all user dotfiles
+# (.zshrc, .zprofile, .gitconfig, .ideavimrc, .claude/*, etc.) — no
+# separate stow step needed.
 print_step "Applying custom nix-darwin configuration..."
 darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
 print_success "Custom nix-darwin configuration applied"
-
-# Set up dotfiles with Stow
-print_step "Setting up dotfiles with Stow..."
-cd ~/.dotfiles
-
-# Install stow if not available (should be installed by Homebrew via Nix)
-if ! command -v stow &> /dev/null; then
-    print_error "Stow not found! Please check nix-darwin configuration."
-    exit 1
-fi
-
-# Stow all categories
-print_step "Stowing dotfile categories..."
-stow shell
-stow git
-stow editors
-stow development
-stow system
-
-print_success "All dotfiles stowed successfully"
 
 # Set up Claude Code configuration
 print_step "Setting up Claude Code configuration..."

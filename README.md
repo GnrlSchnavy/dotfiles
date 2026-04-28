@@ -61,11 +61,8 @@ sh <(curl -L https://nixos.org/nix/install) --daemon
 git clone https://gitlab.com/YvanStemmerik/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
 
-# Apply nix-darwin configuration
+# Apply nix-darwin configuration (also activates home-manager)
 darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
-
-# Set up dotfiles
-stow shell editors development system
 ```
 
 ## Architecture
@@ -88,18 +85,19 @@ Strategic package management via nix-homebrew:
 - **Specialized tools**: Homebrew formulas for tools requiring taps (helm, kubectl)
 - **Mac App Store**: Apps only available through App Store (Xcode, WireGuard)
 
-### 3. Stow Dotfiles Management
-Category-based dotfile organization:
-- **`shell/`**: Shell configuration (.zprofile, .zshrc) and aliases
-- **`git/`**: Git configuration (.gitconfig, .gitignore_global)
-- **`editors/`**: Editor configurations (.ideavimrc)
-- **`development/`**: Development tool configs (.docker/)
-- **`system/`**: System-level settings (.claude/)
+### 3. home-manager (User Configuration)
+User-level dotfiles, all symlinked from the Nix store:
+- **`nix/home/zsh.nix`**: Shell config (.zshrc, .zprofile, .zshenv)
+- **`nix/home/git.nix`**: Git config (~/.config/git/config, ~/.config/git/ignore)
+- **`nix/home/files.nix`**: File-pointer dotfiles (.ideavimrc, .docker/, .claude/)
+
+The dotfile contents still live where they always did (`editors/`,
+`development/`, `system/`) — home-manager just creates the symlinks.
 
 ### Key Features
 - ✅ **Modular Nix configuration** with clear separation of concerns
 - ✅ **Strategic package management** with documented decision criteria
-- ✅ **Category-based dotfiles** managed via GNU Stow
+- ✅ **Declarative user dotfiles** via home-manager
 - ✅ **Automated setup script** for fresh macOS installations
 - ✅ **Version-controlled Claude Code settings** for consistent AI tooling
 - ✅ **Comprehensive documentation** with usage guidelines
@@ -109,14 +107,12 @@ Category-based dotfile organization:
 ### Managing Configurations
 
 ```bash
-# Rebuild system configuration
+# Rebuild — applies both system (nix-darwin) and user (home-manager) config
 darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
 
-# Update dotfiles
-cd ~/.dotfiles
-stow shell editors development system
-
-# Add new packages to nix/modules/packages.nix or homebrew.nix
+# Add new packages to nix/modules/packages.nix or nix/modules/homebrew.nix
+# Edit user dotfiles in nix/home/*.nix or the source files in editors/, system/, etc.
+# Then: darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
 ```
 
 ### Customization
@@ -124,7 +120,8 @@ stow shell editors development system
 - **Nix packages**: Edit `nix/modules/packages.nix`
 - **Homebrew apps**: Edit `nix/modules/homebrew.nix`
 - **System settings**: Edit `nix/modules/system.nix`
-- **Shell config**: Edit `shell/.zprofile`
+- **Shell config**: Edit `nix/home/zsh.nix`
+- **Git config**: Edit `nix/home/git.nix`
 
 ## Documentation
 

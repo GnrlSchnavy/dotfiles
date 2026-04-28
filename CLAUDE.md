@@ -4,7 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is a personal dotfiles repository for macOS using Nix Darwin, Homebrew, and GNU Stow for configuration management. The setup includes a comprehensive system configuration with development tools, applications, and custom settings.
+Personal dotfiles for macOS managed by **nix-darwin** (system) and
+**home-manager** (user). All dotfiles — `.zshrc`, `.zprofile`,
+`.gitconfig`, `.ideavimrc`, `.claude/*`, etc. — are symlinks into the
+Nix store, recreated on every `darwin-rebuild switch`. No Stow.
 
 ## Setup and Installation
 
@@ -17,74 +20,62 @@ Run the setup script to bootstrap the entire system:
 This script will:
 1. Install Rosetta and Xcode command line tools
 2. Clone dotfiles to `~/.dotfiles`
-3. Install Nix package manager
-4. Install and configure nix-darwin
-5. Apply the custom Nix configuration
-6. Use Stow to symlink dotfiles
+3. Install Homebrew (used as nix-homebrew's package source)
+4. Install Nix package manager
+5. Install and configure nix-darwin
+6. Apply the custom Nix configuration (which also activates home-manager)
 
 ### System Rebuild
-To apply changes to the Nix Darwin configuration:
+A single command applies both system-level and user-level config:
 ```bash
 darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
 ```
 
-### Dotfile Management
-This repository uses GNU Stow for symlinking dotfiles organized by category. After making changes to dotfiles:
-```bash
-cd ~/.dotfiles
-# Stow specific categories
-stow shell        # Shell configurations (.zprofile, .zshrc)
-stow git          # Git configurations (.gitignore_global)
-stow editors      # Editor configurations (.ideavimrc)
-stow development  # Development tools (.docker)
-stow system       # System configurations (.claude)
-
-# Or stow all categories at once
-stow shell git editors development system
-```
+This rebuilds nix-darwin (system packages, defaults, dock, homebrew
+bundle) AND activates home-manager (user dotfiles, shell, git, etc.).
 
 ## Architecture
 
 ### Nix Configuration Structure
-- **Main flake**: `nix/flake.nix` - Core system configuration for the "m4" host
-- **NixVim**: `nix/nixvim/` - Separate flake for Neovim configuration
-- **Host**: Configuration is specifically for "m4" (Apple Silicon Mac)
+- **Main flake**: `nix/flake.nix` - input plumbing + per-host wiring
+- **Host descriptors**: `nix/hosts/<name>/default.nix` - hostname, username, arch, stateVersion
+- **System modules**: `nix/modules/*.nix` - shared nix-darwin config
+- **User modules**: `nix/home/*.nix` - home-manager config (shell, git, dotfiles)
+- **NixVim**: `nix/nixvim/` - separate flake for Neovim configuration
+- **Currently configured host**: `m4` (Apple Silicon Mac)
 
 ### Key Components
 
 #### System Management
-- **nix-darwin**: Primary system configuration management
-- **Homebrew**: GUI applications and some CLI tools via nix-homebrew integration
-- **Stow**: Dotfile symlinking
+- **nix-darwin**: System-level config (packages, macOS defaults, dock, launchd, etc.)
+- **home-manager**: User-level config (shell, git, dotfiles symlinked from Nix store)
+- **Homebrew**: GUI applications via nix-homebrew integration (declared in `nix/modules/homebrew.nix`)
 
 #### Package Sources
-- **Nix packages**: Core development tools (Git, Maven, Docker, Rust, Java 23)
-- **Homebrew casks**: GUI applications (IntelliJ, VSCode, browsers, etc.)
-- **Homebrew formulas**: CLI tools (tmux, helm, kubectl tools)
-- **Mac App Store**: Apps via `masApps` configuration
+- **Nix packages** (`nix/modules/packages.nix`): CLI tools, build tools (git, maven, jq, etc.)
+- **Homebrew casks** (`nix/modules/homebrew.nix`): GUI applications (IntelliJ, VSCode, browsers, etc.)
+- **Homebrew formulas** (`nix/modules/homebrew.nix`): CLI tools needing taps or shell integration (helm, jenv, nvm, pyenv)
+- **Mac App Store** (`nix/modules/homebrew.nix` `masApps`): App-Store-only apps
 
 #### Configuration Files Organization
-**Shell Configuration** (`shell/`)
-- `.zprofile`: Imperative shell integrations only (Homebrew init, NVM/autojump lazy-loading)
-- `.zshrc`: Imperative shell integrations only (jenv lazy-loading, kubectl completion cache)
-- Shell aliases and PATH are declared in `nix/modules/environment.nix`
 
-**Git Configuration** (`git/`, all Stow-managed XDG-style)
-- `git/.config/git/config`: Full git config (user, pull.rebase, diff.algorithm, etc.)
-- `git/.gitignore_global`: Global gitignore patterns
-- `git/.config/git/ignore`: Git-specific ignore patterns for Claude settings
+**Shell** — managed by home-manager (`nix/home/zsh.nix`)
+- Login-shell init in `programs.zsh.profileExtra` (Homebrew init, autojump, NVM)
+- Interactive-shell init in `programs.zsh.initContent` (jenv/pyenv lazy-load, kubectl completion, bun, JAVA_HOME)
+- Aliases in `programs.zsh.shellAliases`
+- Static env vars in `home.sessionVariables`
 
-**Editor Configuration** (`editors/`)
-- `.ideavimrc`: IntelliJ IDEA Vim plugin configuration
-- `nix/nixvim/config/`: Neovim configuration with Catppuccin theme, LSP, Telescope
+**Git** — managed by home-manager (`nix/home/git.nix`)
+- All settings in `programs.git.settings` (writes ~/.config/git/config)
+- Global ignore patterns in `programs.git.ignores` (writes ~/.config/git/ignore)
 
-**Development Configuration** (`development/`)
-- `.docker/`: Docker configuration and settings
+**Editor / Docker / Claude** — file-pointer dotfiles (`nix/home/files.nix`)
+- `editors/.ideavimrc` → `~/.ideavimrc`
+- `development/.docker/config.json` → `~/.docker/config.json`
+- `system/.claude/{settings.local.json,settings.template.json,README.md}` → `~/.claude/...`
 
-**System Configuration** (`system/`)
-- `.claude/settings.local.json`: Claude Code permissions and tool access
-- `.claude/README.md`: Documentation for Claude configuration management
-- `.claude/settings.template.json`: Template for environment-specific settings
+**Neovim** — separate nixvim flake (`nix/nixvim/`)
+- Catppuccin theme, LSP for many languages, Telescope, Treesitter
 
 ### System Customizations
 - **macOS defaults**: Dock on right, dark mode, optimized animations
@@ -95,10 +86,9 @@ stow shell git editors development system
 ## Development Tools
 
 ### Available Tools
-- **Java**: Zulu JDK 23 with jenv for version management
-- **Rust**: rustc compiler
-- **Node.js**: via nvm
-- **Python**: via pyenv
+- **Java**: managed by jenv (set version with `jenv global <ver>`)
+- **Node.js**: managed by nvm (set version with `nvm install <ver>`)
+- **Python**: managed by pyenv (set version with `pyenv global <ver>`)
 - **Docker**: Docker Desktop via Homebrew cask
 - **Kubernetes**: kubectl, helm, kubeseal, flux, kdoctor
 
@@ -110,16 +100,10 @@ stow shell git editors development system
 ## Claude Code Integration
 
 ### Configuration Management
-Claude Code settings are version-controlled and managed through Stow:
-- **Location**: `system/.claude/settings.local.json`
-- **Symlinked to**: `~/.claude/settings.local.json`
+Claude Code settings are version-controlled and managed by home-manager:
+- **Source**: `system/.claude/settings.local.json` (in this repo)
+- **Symlinked to**: `~/.claude/settings.local.json` (via `nix/home/files.nix`)
 - **Purpose**: Consistent Claude Code experience across machines
-
-### Claude Settings
-The current configuration includes:
-- **Permissions**: Allowed bash commands for system operations
-- **Tool Access**: Controlled access to system commands
-- **Version Control**: Settings changes are tracked in git
 
 ### Working with Claude Settings
 ```bash
@@ -129,14 +113,11 @@ cat ~/.claude/settings.local.json
 # Edit Claude settings (changes will be tracked in git)
 $EDITOR ~/.dotfiles/system/.claude/settings.local.json
 
+# Apply: rebuild reads the new content and home-manager updates the symlink
+darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
+
 # Use template for new environments
 cp ~/.dotfiles/system/.claude/settings.template.json ~/.dotfiles/system/.claude/settings.local.json
-
-# Re-stow after making changes
-cd ~/.dotfiles && stow system
-
-# View Claude configuration documentation
-cat ~/.dotfiles/system/.claude/README.md
 ```
 
 ### Benefits
