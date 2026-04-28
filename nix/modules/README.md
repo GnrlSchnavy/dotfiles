@@ -45,12 +45,6 @@ This directory contains modular Nix Darwin configuration files organized by func
 - Shell aliases (kubectl shortcuts)
 - Additional PATH entries
 
-### `programs.nix`
-**Declarative program configurations**
-
-- Git: user, pull/push/merge settings, diff algorithm, rerere
-- Future: additional program configs can be added here
-
 ## Package Management Guidelines
 
 ### Adding New Packages

@@ -69,10 +69,10 @@ stow shell git editors development system
 - `.zshrc`: Imperative shell integrations only (jenv lazy-loading, kubectl completion cache)
 - Shell aliases and PATH are declared in `nix/modules/environment.nix`
 
-**Git Configuration**
-- Git settings (user, pull.rebase, diff.algorithm, etc.) are declared in `nix/modules/programs.nix`
-- `git/.gitignore_global`: Global gitignore patterns (Stow-managed)
-- `git/.config/git/ignore`: Git-specific ignore patterns for Claude settings (Stow-managed)
+**Git Configuration** (`git/`, all Stow-managed XDG-style)
+- `git/.config/git/config`: Full git config (user, pull.rebase, diff.algorithm, etc.)
+- `git/.gitignore_global`: Global gitignore patterns
+- `git/.config/git/ignore`: Git-specific ignore patterns for Claude settings
 
 **Editor Configuration** (`editors/`)
 - `.ideavimrc`: IntelliJ IDEA Vim plugin configuration

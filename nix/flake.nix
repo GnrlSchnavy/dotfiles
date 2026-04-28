@@ -56,7 +56,6 @@
           ./modules/system.nix
           ./modules/dock.nix
           ./modules/environment.nix
-          ./modules/programs.nix
           hostModule
 
           # nix-homebrew configuration
