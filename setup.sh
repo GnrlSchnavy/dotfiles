@@ -72,30 +72,45 @@ REPO_URL="https://github.com/GnrlSchnavy/dotfiles.git"
 TARGET_DIR="$HOME/.dotfiles"
 
 if [ -d "$TARGET_DIR" ]; then
-    print_error "$TARGET_DIR already exists."
-    print_warning "Please remove or backup the existing directory before running this script."
+    print_warning "$TARGET_DIR already exists; skipping clone."
+else
+    git clone "$REPO_URL" "$TARGET_DIR"
+    print_success "Dotfiles cloned to $TARGET_DIR"
+fi
+
+# Detect host and verify a host descriptor exists for it.
+# nix/hosts/<hostname>/default.nix must exist before running setup.
+# To onboard a new Mac, copy nix/hosts/template/ to nix/hosts/<your-hostname>/,
+# edit username/hostname, register it in nix/flake.nix's hosts attrset, and
+# commit before running this script.
+HOSTNAME=$(scutil --get LocalHostName)
+HOST_DESCRIPTOR="$TARGET_DIR/nix/hosts/$HOSTNAME/default.nix"
+print_step "Detected hostname: $HOSTNAME"
+
+if [ ! -f "$HOST_DESCRIPTOR" ]; then
+    print_error "No host descriptor at $HOST_DESCRIPTOR"
+    echo
+    echo "Before running setup, create a host descriptor for this machine:"
+    echo "  1. cp -r $TARGET_DIR/nix/hosts/template $TARGET_DIR/nix/hosts/$HOSTNAME"
+    echo "  2. Edit $TARGET_DIR/nix/hosts/$HOSTNAME/default.nix — set username, etc."
+    echo "  3. Register it in $TARGET_DIR/nix/flake.nix under the hosts attrset:"
+    echo "       hosts = {"
+    echo "         m4 = import ./hosts/m4;"
+    echo "         $HOSTNAME = import ./hosts/$HOSTNAME;"
+    echo "       };"
+    echo "  4. git add the new files (nix flakes only see git-tracked content)"
+    echo "  5. Re-run ./setup.sh"
     exit 1
 fi
+print_success "Host descriptor found at $HOST_DESCRIPTOR"
 
-git clone "$REPO_URL" "$TARGET_DIR"
-print_success "Dotfiles successfully installed to $TARGET_DIR"
-
-# Create nix symlink (required for nix-darwin)
-SOURCE_DIR="$HOME/.dotfiles/nix"
-SYMLINK_DIR="$HOME/nix"
-print_step "Creating Nix symlink: $SOURCE_DIR → $SYMLINK_DIR"
-if [ -L "$SYMLINK_DIR" ] || [ -d "$SYMLINK_DIR" ]; then
-    print_warning "Removing existing $SYMLINK_DIR"
-    rm -rf "$SYMLINK_DIR"
-fi
-ln -s "$SOURCE_DIR" "$SYMLINK_DIR"
-print_success "Nix symlink created"
-
-# Install Homebrew (required for nix-homebrew integration)
+# Install Homebrew (used as nix-homebrew's package source).
+# nix-homebrew patches Homebrew at activation, but it still needs an
+# initial install to take over.
 print_step "Installing Homebrew..."
 if ! command -v brew &> /dev/null; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    
+
     # Add Homebrew to PATH for current session
     if [[ "$ARCH" == "arm64" ]]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -111,9 +126,10 @@ fi
 print_step "Installing Nix package manager..."
 if ! command -v nix &> /dev/null; then
     sh <(curl -L https://nixos.org/nix/install) --daemon
-    
+
     # Source Nix for current session
     if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+        # shellcheck disable=SC1091
         . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
     fi
     print_success "Nix package manager installed"
@@ -121,79 +137,53 @@ else
     print_success "Nix package manager already installed"
 fi
 
-# Install nix-darwin
-print_step "Setting up nix-darwin..."
-sudo mkdir -p /etc/nix-darwin
-sudo chown $(id -nu):$(id -ng) /etc/nix-darwin
-
-# Get hostname for configuration
-HOSTNAME=$(scutil --get LocalHostName)
-print_step "Detected hostname: $HOSTNAME"
-
-# Check if we need to use 'm4' configuration or create host-specific one
-if [ "$HOSTNAME" != "m4" ]; then
-    print_warning "Hostname '$HOSTNAME' doesn't match 'm4' configuration"
-    print_warning "Using 'm4' configuration anyway - you may want to customize later"
-fi
-
-cd /etc/nix-darwin
-nix flake init -t nix-darwin/master --extra-experimental-features nix-command --extra-experimental-features flakes
-sed -i '' "s/simple/$HOSTNAME/" flake.nix
-
-print_step "Building initial nix-darwin configuration..."
-nix run --extra-experimental-features nix-command --extra-experimental-features flakes nix-darwin/master#darwin-rebuild -- switch
-print_success "Initial nix-darwin setup complete"
-
-# Apply custom nix-darwin configuration.
-# This also activates home-manager, which manages all user dotfiles
-# (.zshrc, .zprofile, .gitconfig, .ideavimrc, .claude/*, etc.) — no
-# separate stow step needed.
-print_step "Applying custom nix-darwin configuration..."
-darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
-print_success "Custom nix-darwin configuration applied"
-
-# Set up Claude Code configuration
-print_step "Setting up Claude Code configuration..."
-if [ -f ~/.claude/settings.local.json ]; then
-    print_success "Claude Code configuration ready"
-else
-    print_warning "Claude Code configuration not found - you may need to install Claude Code first"
-fi
+# Install nix-darwin and apply our flake in one step.
+# Pin to the same nix-darwin release that flake.nix uses to avoid
+# bootstrapping with a different version.
+print_step "Bootstrapping nix-darwin and applying configuration for $HOSTNAME..."
+nix run \
+    --extra-experimental-features "nix-command flakes" \
+    "github:LnL7/nix-darwin/nix-darwin-25.11#darwin-rebuild" -- \
+    switch --flake "$TARGET_DIR/nix#$HOSTNAME"
+print_success "nix-darwin configuration applied"
 
 # Final verification
 print_step "Performing final verification..."
 
-# Check if shell profile loads correctly
-if [ -f ~/.zprofile ]; then
-    print_success "Shell profile (.zprofile) configured"
+if command -v darwin-rebuild &> /dev/null; then
+    print_success "darwin-rebuild available — future rebuilds: darwin-rebuild switch --flake ~/.dotfiles/nix#$HOSTNAME"
 else
-    print_error "Shell profile not found"
+    print_warning "darwin-rebuild not in PATH — restart your shell"
 fi
 
-# Check if Homebrew integration works
+if [ -L ~/.zshrc ]; then
+    print_success "Shell config (~/.zshrc) managed by home-manager"
+else
+    print_warning "~/.zshrc is not a symlink — home-manager activation may have failed"
+fi
+
 if command -v brew &> /dev/null; then
     print_success "Homebrew integration working"
 else
-    print_warning "Homebrew not in PATH - may need to restart shell"
-fi
-
-# Check if Nix commands work
-if command -v nix &> /dev/null; then
-    print_success "Nix commands available"
-else
-    print_warning "Nix not in PATH - may need to restart shell"
+    print_warning "Homebrew not in PATH — restart your shell"
 fi
 
 echo
 print_success "🎉 Dotfiles setup complete!"
 echo
 echo "Next steps:"
-echo "1. Restart your terminal or run: source ~/.zprofile"
-echo "2. Install Claude Code if you haven't already"
-echo "3. Verify all applications are working correctly"
-echo "4. Customize any settings as needed"
+echo "1. Restart your terminal so PATH and home-manager-managed files take effect"
+echo "2. Bootstrap language toolchains (jenv/nvm/pyenv install only the binaries,"
+echo "   not actual language versions):"
+echo "     jenv add /Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home"
+echo "     jenv global temurin-25  # adjust to whichever JDK you installed"
+echo "     nvm install --lts"
+echo "     pyenv install 3.13"
+echo "     pyenv global 3.13"
+echo "3. (Optional) Install bun for the claude-mem alias:"
+echo "     curl -fsSL https://bun.sh/install | bash"
 echo
-echo "Configuration files are located in ~/.dotfiles/"
-echo "Documentation available in ~/.dotfiles/CLAUDE.md"
+echo "Configuration: ~/.dotfiles/"
+echo "Documentation: ~/.dotfiles/CLAUDE.md"
 echo
 print_success "Happy coding! 🚀"

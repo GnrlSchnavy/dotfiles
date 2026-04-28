@@ -1,68 +1,76 @@
 # macOS Dotfiles
 
-A comprehensive macOS development environment setup using Nix Darwin, Homebrew, and Stow for configuration management.
+A macOS development environment managed by **nix-darwin** (system) and
+**home-manager** (user). One `darwin-rebuild switch` applies the entire
+config; no Stow.
 
-## Quick Setup
+## Quick Setup (existing host)
 
-### Automated Installation (Recommended)
-
-For a fresh macOS installation, run the automated setup script:
+If you're setting up a machine whose hostname already has a descriptor
+in [nix/hosts/](nix/hosts/) (e.g. `m4`), one command:
 
 ```bash
-curl -fsSL https://gitlab.com/YvanStemmerik/dotfiles/-/raw/master/setup.sh | bash
+git clone https://github.com/GnrlSchnavy/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles && ./setup.sh
 ```
 
-Or clone first and run locally:
+The script verifies a host descriptor exists for the current hostname,
+installs Homebrew + Nix, and applies the flake.
+
+## Setting up a new host
+
+`scutil --get LocalHostName` must match a descriptor at
+`nix/hosts/<hostname>/default.nix`. To onboard a new Mac:
+
+1. **Copy the template:**
+   ```bash
+   cp -r nix/hosts/template "nix/hosts/$(scutil --get LocalHostName)"
+   ```
+2. **Edit the new descriptor** — replace the `REPLACE_ME_*` placeholders
+   with your username and hostname.
+3. **Register it in [nix/flake.nix](nix/flake.nix)** under the `hosts`
+   attrset:
+   ```nix
+   hosts = {
+     m4 = import ./hosts/m4;
+     <your-hostname> = import ./hosts/<your-hostname>;
+   };
+   ```
+4. **Stage the new files** so the flake can see them:
+   ```bash
+   git add nix/hosts/<your-hostname>/ nix/flake.nix
+   ```
+5. **Commit and push** (so future machines can clone the descriptor too).
+6. Run `./setup.sh` on the new machine.
+
+## Post-install steps
+
+The setup script installs version managers (`jenv`, `nvm`, `pyenv`) but
+doesn't install language toolchains through them. Bootstrap them per
+machine:
 
 ```bash
-git clone https://gitlab.com/YvanStemmerik/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
-chmod +x setup.sh
-./setup.sh
+# Java (after installing a JDK, e.g. via brew install temurin@25)
+jenv add /Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home
+jenv global temurin-25
+
+# Node
+nvm install --lts
+
+# Python
+pyenv install 3.13
+pyenv global 3.13
+
+# (Optional) Bun, used by the claude-mem alias
+curl -fsSL https://bun.sh/install | bash
 ```
 
-### What the setup script does:
+## Manual rebuild
 
-1. **System Prerequisites**
-   - Install Rosetta 2 (Apple Silicon only)
-   - Install Xcode Command Line Tools
-   - Clone dotfiles repository to `~/.dotfiles`
+After setup, future config changes are applied with:
 
-2. **Package Managers**
-   - Install Homebrew
-   - Install Nix package manager
-   - Set up nix-darwin for macOS system management
-
-3. **Configuration Management**
-   - Apply custom nix-darwin configuration (modular system)
-   - Set up dotfiles with Stow (category-based organization)
-   - Configure shell environment with aliases and tools
-
-4. **Verification**
-   - Test all installations and configurations
-   - Provide next steps and troubleshooting guidance
-
-## Manual Setup
-
-If you prefer manual control or need to troubleshoot:
-
-### Prerequisites
 ```bash
-# Install Homebrew
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# Install Nix
-sh <(curl -L https://nixos.org/nix/install) --daemon
-```
-
-### Apply Configuration
-```bash
-# Clone repository
-git clone https://gitlab.com/YvanStemmerik/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
-
-# Apply nix-darwin configuration (also activates home-manager)
-darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
+sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
 ```
 
 ## Architecture
@@ -136,7 +144,9 @@ darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
 1. **Xcode Command Line Tools**: If setup fails, install manually and re-run
 2. **Homebrew PATH**: Restart terminal after installation
 3. **Nix permissions**: Ensure you have admin privileges for initial setup
-4. **Hostname mismatch**: Script works with any hostname but optimized for 'm4'
+4. **No host descriptor for hostname**: Setup will tell you exactly what to do
+   — copy `nix/hosts/template/` to `nix/hosts/<hostname>/`, edit the
+   `REPLACE_ME_*` placeholders, register in `nix/flake.nix`
 
 ### Getting Help
 
@@ -153,9 +163,9 @@ darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
 
 ## Features
 
-- ✅ **Zero-configuration setup** from blank macOS
-- ✅ **Modular and maintainable** Nix configuration
-- ✅ **Category-based dotfile organization** with Stow
-- ✅ **Comprehensive development environment**
+- ✅ **One-command setup** from blank macOS
+- ✅ **Multi-host support** — copy a template, register, run setup
+- ✅ **Modular Nix configuration** with clear separation of concerns
+- ✅ **Declarative user dotfiles** via home-manager (no Stow)
 - ✅ **Version-controlled configurations**
 - ✅ **Cross-machine consistency**
