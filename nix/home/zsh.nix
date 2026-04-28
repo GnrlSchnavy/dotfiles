@@ -13,10 +13,6 @@
   programs.zsh = {
     enable = true;
 
-    shellAliases = {
-      claude-mem = ''$HOME/.bun/bin/bun "$HOME/.claude/plugins/cache/thedotmack/claude-mem/12.3.8/scripts/worker-service.cjs"'';
-    };
-
     # Login shell init (was shell/.zprofile under Stow).
     profileExtra = ''
       # Homebrew environment setup
