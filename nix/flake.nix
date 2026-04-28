@@ -11,6 +11,10 @@
     nix-darwin.url = "github:LnL7/nix-darwin/nix-darwin-25.11";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+    home-manager = {
+      url = "github:nix-community/home-manager/release-25.11";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -18,6 +22,7 @@
       self,
       nix-darwin,
       nix-homebrew,
+      home-manager,
       ...
     }:
     let
@@ -49,6 +54,16 @@
                 enableRosetta = true;
                 user = host.username;
                 autoMigrate = true;
+              };
+            }
+
+            home-manager.darwinModules.home-manager
+            {
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                extraSpecialArgs = { inherit inputs; };
+                users.${host.username} = import ./home;
               };
             }
           ];
