@@ -137,6 +137,18 @@ else
     print_success "Nix package manager already installed"
 fi
 
+# nix-darwin refuses to overwrite /etc files it doesn't manage. After
+# a fresh Nix install, /etc/nix/nix.conf, /etc/bashrc, /etc/zshrc
+# already exist; rename them with the conventional `.before-nix-darwin`
+# suffix so activation can take them over.
+print_step "Moving pre-existing /etc files aside for nix-darwin..."
+for f in /etc/nix/nix.conf /etc/bashrc /etc/zshrc; do
+    if [ -f "$f" ] && [ ! -f "$f.before-nix-darwin" ]; then
+        sudo mv "$f" "$f.before-nix-darwin"
+        print_success "Renamed $f -> $f.before-nix-darwin"
+    fi
+done
+
 # Install nix-darwin and apply our flake in one step.
 # Pin to the same nix-darwin release that flake.nix uses to avoid
 # bootstrapping with a different version. sudo because nix-darwin's

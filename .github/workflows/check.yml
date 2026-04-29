@@ -40,6 +40,18 @@ jobs:
           name: nix-community
           skipPush: true
 
+      - name: Move pre-existing /etc files out of the way
+        # nix-darwin refuses to overwrite files it doesn't manage. The
+        # runner has /etc/nix/nix.conf, /etc/bashrc, /etc/zshrc from
+        # the Nix install; rename them so activation can take over.
+        # On a real fresh Mac, setup.sh does this same step.
+        run: |
+          for f in /etc/nix/nix.conf /etc/bashrc /etc/zshrc; do
+            if [ -f "$f" ] && [ ! -f "$f.before-nix-darwin" ]; then
+              sudo mv "$f" "$f.before-nix-darwin"
+            fi
+          done
+
       - name: Apply darwin configuration end-to-end
         # Bootstrap nix-darwin and apply our `ci` host config in one
         # shot — same path setup.sh takes, just with the runner's
