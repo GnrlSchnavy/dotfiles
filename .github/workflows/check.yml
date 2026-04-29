@@ -85,6 +85,12 @@ jobs:
         run: |
           set -euo pipefail
 
+          # nix-darwin's profile and home-manager's profile aren't on
+          # PATH yet — that happens in new shells via the activation
+          # script's PATH manipulation. Explicitly prepend so this
+          # bash step can see the binaries it just installed.
+          export PATH="/run/current-system/sw/bin:/etc/profiles/per-user/runner/bin:$PATH"
+
           fail() { echo "::error::$1"; exit 1; }
 
           # home-manager managed shell files
@@ -101,10 +107,10 @@ jobs:
           [ -L ~/.docker/config.json ]            || fail "~/.docker/config.json is not a symlink"
           [ -L ~/.claude/settings.local.json ]    || fail "~/.claude/settings.local.json is not a symlink"
 
-          # darwin-rebuild itself should now be on PATH
+          # darwin-rebuild ships in the system profile
           command -v darwin-rebuild >/dev/null || fail "darwin-rebuild not on PATH"
 
-          # Brew bundle should have left every declared cask installed
+          # Brew bundle should have left every declared formula installed
           command -v brew >/dev/null || fail "brew not on PATH"
           for formula in jenv pyenv kubectl helm; do
             brew list --formula "$formula" >/dev/null 2>&1 || fail "brew formula $formula missing after activation"
