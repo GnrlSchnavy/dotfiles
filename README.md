@@ -1,5 +1,7 @@
 # macOS Dotfiles
 
+[![fresh-install test](https://github.com/GnrlSchnavy/dotfiles/actions/workflows/check.yml/badge.svg)](https://github.com/GnrlSchnavy/dotfiles/actions/workflows/check.yml)
+
 A macOS development environment managed by **nix-darwin** (system) and
 **home-manager** (user). One `darwin-rebuild switch` applies the entire
 config; no Stow.

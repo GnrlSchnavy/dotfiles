@@ -1,15 +1,15 @@
 name: fresh-install test
 
 # End-to-end test that mirrors what `./setup.sh` does on a real Mac:
-# install Nix, then `darwin-rebuild switch` against a host descriptor
-# that matches the runner's environment. This catches eval errors,
+# install Nix, then `darwin-rebuild switch` against the `ci` host
+# descriptor (matches the runner's environment). Catches eval errors,
 # build failures, activation script errors, home-manager activation
-# issues, and Homebrew bundle issues — the full surface area we'd
-# otherwise only discover by running the setup on a fresh machine.
+# issues, and brew-bundle issues — the full surface area we'd
+# otherwise only discover by running setup on a fresh machine.
 #
-# Cost: ~30-60 minutes per run because brew bundle downloads every
-# cask. We accept this for the realism. If it becomes painful,
-# narrow the trigger (e.g. only on `pull_request` and weekly cron).
+# The `ci` host skips casks (some have DSL incompatibilities specific
+# to the macos-15 runner image) and disables homebrew zap/upgrade,
+# keeping runs to ~10-15 min while still exercising the full path.
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31
@@ -40,7 +40,7 @@ jobs:
       - name: Use the public Nix cache
         # Pull from nix-community for nixvim/home-manager artifacts that
         # aren't on cache.nixos.org. Cuts a few minutes off cold runs.
-        uses: cachix/cachix-action@v15
+        uses: cachix/cachix-action@v17
         with:
           name: nix-community
           skipPush: true
