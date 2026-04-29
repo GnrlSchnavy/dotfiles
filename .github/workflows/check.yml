@@ -28,9 +28,14 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v31
         with:
+          # GITHUB_TOKEN gives us a higher rate limit when nix fetches
+          # flake inputs from github.com (otherwise we share an
+          # anonymous IP pool and 403 quickly).
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
           extra_nix_config: |
             experimental-features = nix-command flakes
             trusted-users = root runner
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
 
       - name: Use the public Nix cache
         # Pull from nix-community for nixvim/home-manager artifacts that
@@ -56,9 +61,11 @@ jobs:
         # Bootstrap nix-darwin and apply our `ci` host config in one
         # shot — same path setup.sh takes, just with the runner's
         # pre-installed Homebrew and Nix already in place. sudo because
-        # nix-darwin's activation step now requires root.
+        # nix-darwin's activation step now requires root; --preserve-env
+        # so HOME/PATH carry into the root invocation (otherwise nix
+        # reads its config from /var/root and we get warnings).
         run: |
-          sudo nix run \
+          sudo --preserve-env=PATH,HOME nix run \
             --extra-experimental-features "nix-command flakes" \
             "github:LnL7/nix-darwin/nix-darwin-25.11#darwin-rebuild" -- \
             switch --flake ./nix#ci
