@@ -82,9 +82,6 @@
       "kubectl"
       "kubeseal"
 
-      # macOS-specific tools
-      "mas"
-
       # Shell enhancements
       "autojump"
       "tmux"
@@ -94,10 +91,6 @@
       "pgloader"
       "stripe-cli"
     ];
-
-    # Mac App Store apps - only available through App Store
-    masApps = {
-    };
 
     # Homebrew maintenance settings
     onActivation = {

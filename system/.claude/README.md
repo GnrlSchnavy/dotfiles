@@ -1,50 +1,48 @@
-# Claude Code Configuration Management
+# Claude Code Configuration
 
-This directory contains Claude Code settings that are managed through the dotfiles system using Stow.
-
-## Overview
-
-Claude Code settings are version-controlled and symlinked to ensure consistent AI assistant configuration across different machines.
+Version-controlled Claude Code settings, symlinked into `~/.claude/`
+by home-manager (see [`nix/home/files.nix`](../../nix/home/files.nix)).
 
 ## Files
 
-- **`settings.local.json`**: Active Claude Code permissions and tool access settings
-- **`settings.template.json`**: Template file for setting up Claude on new machines
-- **`README.md`**: This documentation file
+| File | Purpose |
+|---|---|
+| `settings.local.json` | Active permissions and tool access |
+| `settings.template.json` | Starter template for new machines |
+| `README.md` | This file |
 
-## Usage
+## How it's wired
 
-### Current Configuration
-The active settings include permissions for common development tasks:
-- File operations (ls, cat, chmod, rm)
-- Git operations (add, commit, push)
-- Package management (stow)
-- System tools (nvim, find, grep)
-- Nix operations (flake check)
+`nix/home/files.nix` declares:
 
-### Setting Up on New Machines
-1. Run the main setup script which handles Stow configuration
-2. Or manually symlink: `cd ~/.dotfiles && stow system`
-3. Settings will be symlinked to `~/.claude/settings.local.json`
-
-### Modifying Settings
-1. Edit `~/.dotfiles/system/.claude/settings.local.json`
-2. Changes are automatically tracked in git
-3. Re-run `stow system` if needed to ensure symlinks are correct
-
-## Benefits
-
-- **Consistency**: Same Claude permissions across all machines
-- **Version Control**: Track changes to Claude configuration over time
-- **Portability**: Easy to replicate Claude setup on new machines
-- **Documentation**: Settings are documented and reviewable
-
-## Integration with Dotfiles
-
-This configuration is part of the system category in the Stow setup:
-```bash
-cd ~/.dotfiles
-stow system  # This will symlink .claude/ to ~/.claude/
+```nix
+home.file.".claude/settings.local.json".source = ../../system/.claude/settings.local.json;
+home.file.".claude/settings.template.json".source = ../../system/.claude/settings.template.json;
+home.file.".claude/README.md".source = ../../system/.claude/README.md;
 ```
 
-The settings become active immediately after symlinking.
+Each file becomes a symlink at `~/.claude/<name>` pointing into the
+Nix store, which in turn copies from this directory at build time.
+
+Other contents of `~/.claude/` (transcripts, plugin caches, session
+state) are *not* managed — home-manager only owns the three files
+above, leaving the rest alone.
+
+## Editing settings
+
+```bash
+$EDITOR ~/.dotfiles/system/.claude/settings.local.json
+
+# Apply (rebuild reads the new content and updates the symlink target)
+sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
+```
+
+Changes are tracked in git automatically since `settings.local.json`
+lives inside the dotfiles repo.
+
+## New-machine setup
+
+There's no separate step. `setup.sh` runs `darwin-rebuild switch`,
+which activates home-manager, which creates the symlinks. As long as
+the Claude Code app is installed (it is, via the `claude` cask in
+`homebrew.nix`), the settings apply on first launch.

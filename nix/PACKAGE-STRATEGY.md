@@ -15,10 +15,14 @@ This document defines the strategy for choosing between Nix packages, Homebrew f
 - ✅ Tools used in development workflows
 
 **Examples:**
-- Development: `git`, `rustc`, `nodejs`, `python3`
-- Build tools: `maven`, `gradle`, `cmake`
-- System utilities: `tree`, `jq`, `curl`, `wget`
-- Container tools: `docker`, `docker-compose`
+- Development: `git`, `maven`
+- System utilities: `tree`, `jq`, `curl`, `wget`, `ripgrep`, `fd`, `bat`
+- Networking CLIs: `wireguard-tools`
+
+Note: Language runtimes (Java, Node, Python) are deliberately *not*
+managed by Nix. They live behind version managers (`jenv`, `nvm`,
+`pyenv`) so each project can pin its own version. See
+[`homebrew.nix`](modules/homebrew.nix) and [`home/zsh.nix`](home/zsh.nix).
 
 ### Homebrew Formulas (`homebrew.brews`)
 **Use for: CLI tools not available in Nix or requiring Homebrew-specific features**
@@ -30,9 +34,9 @@ This document defines the strategy for choosing between Nix packages, Homebrew f
 - ✅ Tools needing frequent updates outside Nix release cycle
 
 **Examples:**
-- Kubernetes: `helm`, `kubectl`, `kubeseal` (from taps)
-- macOS-specific: `mas`, `brew-cask-upgrade`
-- Version managers: `pyenv`, `nvm`, `jenv` (when shell integration needed)
+- Kubernetes: `helm`, `kubectl`, `kubeseal`, `kdoctor`, `fluxcd/tap/flux`
+- Version managers: `jenv`, `nvm`, `pyenv`, `pipx`
+- Shell tooling: `tmux`, `autojump`, `gh`
 
 ### Homebrew Casks (`homebrew.casks`)
 **Use for: GUI applications, proprietary software, macOS apps**
@@ -69,26 +73,23 @@ This document defines the strategy for choosing between Nix packages, Homebrew f
 
 #### Core Development Tools (Nix)
 - Version control: `git`
-- Language runtimes: `nodejs`, `python3`, `rustc`
-- Build tools: `maven`, `gradle`, `cmake`
-- Container tools: `docker`, `docker-compose`
+- Build tools: `maven`
 
 #### System Utilities (Nix)
 - File operations: `tree`, `fd`, `ripgrep`
-- JSON/Data: `jq`, `yq`
-- Network: `curl`, `wget`
+- JSON/Data: `jq`
+- Network: `curl`, `wget`, `wireguard-tools`
 - Archive: `unzip`, `p7zip`
 
 #### GUI Applications (Homebrew Casks)
 - Editors: `visual-studio-code`, `intellij-idea`
-- Browsers: `google-chrome`, `brave-browser`
+- Browsers: `google-chrome`, `brave-browser`, `firefox`
 - Communication: `slack`, `discord`
-- Productivity: `alfred`, `rectangle`
+- Productivity: `alfred`, `rectangle`, `obsidian`
 
 #### Specialized CLI Tools (Homebrew Brews)
-- Kubernetes: `helm`, `kubectl` (if not in Nix)
-- Language managers: `pyenv`, `nvm` (for shell integration)
-- Platform-specific: Tools requiring Homebrew taps
+- Kubernetes: `helm`, `kubectl`, `kubeseal`, `kdoctor`
+- Language managers: `jenv`, `nvm`, `pyenv` (for shell-integrated version switching)
 
 ## Conflict Resolution
 

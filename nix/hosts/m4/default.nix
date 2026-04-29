@@ -9,7 +9,6 @@
 
   # nix-darwin module applied only to this host.
   module = { ... }: {
-    nixpkgs.config.allowUnfree = true;
     nixpkgs.hostPlatform = "aarch64-darwin";
     system.stateVersion = 5;
     system.primaryUser = "yvan";

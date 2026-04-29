@@ -10,8 +10,6 @@
   module =
     { lib, ... }:
     {
-      nixpkgs.config.allowUnfree = true;
-
       # GitHub-hosted macos-15 runners are Apple Silicon.
       nixpkgs.hostPlatform = "aarch64-darwin";
 

@@ -38,15 +38,18 @@ echo
 print_step "Creating backup directory: $BACKUP_DIR"
 mkdir -p "$BACKUP_DIR"
 
-# List of files to backup (those managed by stow)
+# Files to back up. Most live as symlinks into /nix/store now (managed
+# by home-manager); we copy with -L to capture the actual content so
+# the backup is portable even if the store path is gc'd later.
 declare -a DOTFILES=(
     "$HOME/.zprofile"
     "$HOME/.zshrc"
-    "$HOME/.gitconfig"
-    "$HOME/.gitignore_global"
+    "$HOME/.zshenv"
+    "$HOME/.config/git/config"
+    "$HOME/.config/git/ignore"
     "$HOME/.ideavimrc"
-    "$HOME/.docker"
-    "$HOME/.claude"
+    "$HOME/.docker/config.json"
+    "$HOME/.claude/settings.local.json"
 )
 
 # Backup individual dotfiles
@@ -109,15 +112,15 @@ fi
 echo "📁 Backup contents:"
 ls -la
 echo
-echo "📝 To manually restore files:"
-echo "   - Copy files from this backup to your home directory"
-echo "   - Be careful not to overwrite newer configurations"
-echo "   - Consider using 'stow --adopt' for managed dotfiles"
+echo "📝 To manually restore individual files:"
+echo "   - Copy them from this backup to ~/ (mind the .config/ paths)"
+echo "   - On a managed system, prefer editing the source in"
+echo "     ~/.dotfiles/ and rebuilding instead of overwriting symlinks"
 echo
 echo "🚀 To restore the full dotfiles setup:"
-echo "   1. Clone the dotfiles repository to ~/.dotfiles"
-echo "   2. Run the setup script: ~/.dotfiles/setup.sh"
-echo "   3. Manually copy any custom configurations from this backup"
+echo "   1. Clone the dotfiles repo to ~/.dotfiles"
+echo "   2. Run ~/.dotfiles/setup.sh"
+echo "   3. Bring across any local-only files from this backup"
 EOF
 
 chmod +x "$BACKUP_DIR/restore.sh"

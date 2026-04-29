@@ -1,148 +1,65 @@
-# Nix Modules Documentation
+# Nix Modules
 
-This directory contains modular Nix Darwin configuration files organized by functionality.
+System-level (`nix-darwin`) modules. Each one is imported by
+[`flake.nix`](../flake.nix) into every host's `darwinConfiguration`.
 
-## Module Overview
+User-level config lives next door in [`../home/`](../home/) under
+home-manager.
+
+## Modules
 
 ### `packages.nix`
-**Nix packages for CLI tools and development utilities**
+Nix-managed CLI tools. Currently:
+- `git`, `maven` — core development
+- `tree`, `jq`, `curl`, `wget`, `ripgrep`, `fd`, `bat` — system utilities
+- `unzip`, `p7zip` — archives
+- `mkalias`, `htop`, `fastfetch` — misc
+- `wireguard-tools` — networking
 
-- **Core development tools**: git, rustc, nodejs, maven
-- **Container ecosystem**: minikube (Docker via Docker Desktop cask)
-- **System utilities**: tree, jq, curl, ripgrep, fd
-- **Language runtimes**: Java 23, Python 3
-
-**Strategy**: Prefer Nix for CLI tools that benefit from reproducible builds and version consistency.
+Language runtimes (Java, Node, Python) are deliberately *not* here —
+they're managed by `jenv`/`nvm`/`pyenv` for per-project version
+switching. See [`PACKAGE-STRATEGY.md`](../PACKAGE-STRATEGY.md).
 
 ### `homebrew.nix`
-**Homebrew packages for GUI apps and specialized tools**
-
-- **GUI Applications (casks)**: IntelliJ IDEA, VSCode, browsers, Slack
-- **CLI Tools (brews)**: kubectl, helm (with taps), version managers  
-- **Mac App Store (masApps)**: WireGuard, Windows Remote Desktop
-
-**Strategy**: Use Homebrew for GUI applications, tools requiring taps, and macOS-specific software.
+Brews, casks, and Mac App Store apps via nix-homebrew.
+- **Brews**: kubernetes ecosystem (`helm`, `kubectl`, `kubeseal`,
+  `kdoctor`, `flux`), version managers (`jenv`, `nvm`, `pyenv`, `pipx`),
+  shell tooling (`tmux`, `autojump`, `gh`)
+- **Casks**: ~36 GUI apps (browsers, IDEs, comms, productivity, etc.)
+- **masApps**: currently empty
 
 ### `system.nix`
-**macOS system configuration and defaults**
-
-- Keyboard settings and key remapping
-- Finder, dock, and interface preferences
-- Security and screensaver settings
-- Global system behaviors
+macOS defaults: keyboard remap, screensaver, login window, finder
+preferences, global UI/keyboard/sound settings.
 
 ### `dock.nix`
-**Dock-specific configuration**
-
-- Dock positioning and behavior
-- Persistent applications
-- Animation and timing settings
+Dock layout: position, autohide, persistent apps. Apps are built
+from a name list via a small `app` helper to avoid duplicating
+the `/Applications/${name}.app` path.
 
 ### `environment.nix`
-**Environment variables, shell aliases, and system PATH**
+System-wide env vars (`EDITOR`, `VISUAL`) and shell aliases
+(kubectl shortcuts).
 
-- System-wide environment variables (EDITOR, VISUAL)
-- Shell aliases (kubectl shortcuts)
-- Additional PATH entries
+### `nix.nix`
+Nix-the-package-manager configuration:
+- `nixpkgs.config.allowUnfree = true`
+- `nix.settings`: experimental features, trusted users (`@admin`),
+  `warn-dirty = false`
+- `nix.gc.automatic`: weekly garbage collection of >30d generations
+- `nix.optimise.automatic`: launchd-scheduled store dedup
 
-## Package Management Guidelines
+## Adding a package
 
-### Adding New Packages
-
-#### Nix Packages
 ```bash
-# Edit packages.nix and add to appropriate category
-vim ~/.dotfiles/nix/modules/packages.nix
+# CLI tool from nixpkgs
+$EDITOR nix/modules/packages.nix
 
-# Apply changes
-darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
+# GUI app or homebrew formula
+$EDITOR nix/modules/homebrew.nix
+
+# Apply
+sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
 ```
 
-#### Homebrew Packages
-```bash
-# Edit homebrew.nix
-vim ~/.dotfiles/nix/modules/homebrew.nix
-
-# Apply changes
-darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v
-```
-
-### Decision Matrix
-
-| Package Type | Use Nix | Use Homebrew | Use App Store |
-|--------------|---------|--------------|---------------|
-| CLI tools | ✅ Preferred | If not in Nix | Never |
-| GUI apps | Never | ✅ Preferred | If exclusive |
-| Development libraries | ✅ Always | Never | Never |
-| System utilities | ✅ Preferred | If macOS-specific | Rarely |
-| Version managers | Avoid | ✅ For shell integration | Never |
-| Proprietary software | Never | ✅ Preferred | If required |
-
-### Common Patterns
-
-#### Language Ecosystems
-- **Runtime**: Nix (nodejs, python3, rustc)
-- **Version Manager**: Homebrew (nvm, pyenv, jenv)
-- **Build Tools**: Nix (maven, gradle, cargo)
-
-#### Container Tools
-- **CLI**: Nix (minikube) + Homebrew (kubectl for frequent updates)
-- **GUI**: Homebrew (docker-desktop, lens)
-- **Specialized**: Homebrew with taps (kubeseal, flux, kdoctor)
-
-#### Development Environment
-- **Editors (CLI)**: Nix (vim, emacs, nano)
-- **IDEs (GUI)**: Homebrew (intellij-idea, vscode)
-- **Utilities**: Mixed based on availability and features
-
-## Troubleshooting
-
-### Package Not Found
-1. Check if package exists in nixpkgs: https://search.nixos.org/packages
-2. Consider Homebrew alternative if not available
-3. Check for different package name or version
-
-### Version Conflicts
-1. Nix packages are isolated and shouldn't conflict
-2. Homebrew conflicts should use `brew upgrade` or `brew unlink`
-3. Document exceptions in package comments
-
-### Build Failures
-1. Check Nix Darwin logs: `darwin-rebuild --show-trace`
-2. Verify package exists for aarch64-darwin (Apple Silicon)
-3. Consider fallback to Homebrew for problematic packages
-
-## Rationale for Specific Choices
-
-### Why Both Password Managers?
-- **1Password**: Primary password manager with family/team sharing features
-- **Bitwarden**: Open-source alternative and backup option for cross-platform use
-
-### Why Multiple API Testing Tools?
-- **Postman**: Industry standard with team collaboration and cloud sync
-- **Bruno**: Open-source, offline-first alternative with Git-friendly storage
-
-### Why Docker CLI via Nix + Docker Desktop via Homebrew?
-- **Docker CLI (commented out)**: Would provide reproducible CLI for scripts
-- **Docker Desktop (Homebrew)**: GUI management with seamless macOS integration
-- Currently using Docker Desktop's bundled CLI for simplicity
-
-### Version Managers via Homebrew?
-Despite Nix providing language runtimes, version managers use Homebrew for:
-- Automatic shell integration and PATH management
-- Project-specific `.nvmrc`, `.python-version` file support
-- Compatibility with existing development workflows
-
-### Kubernetes Tools Split?
-- **kubectl (Homebrew)**: Frequent updates, better macOS integration
-- **minikube (Nix)**: Stable local Kubernetes, less frequent updates needed
-- **Specialized tools (Homebrew)**: Many require custom taps not available in Nix
-
-## Best Practices
-
-1. **Document rationale**: Add comments explaining non-obvious package choices
-2. **Group by purpose**: Organize packages by functionality, not alphabetically
-3. **Minimize duplication**: Same tool should only appear in one package manager
-4. **Test thoroughly**: Always rebuild and verify after package changes
-5. **Version consistency**: Use Nix for tools requiring specific versions
-6. **Regular maintenance**: Periodically review and optimize package sources
+For when to use which package source, see [`PACKAGE-STRATEGY.md`](../PACKAGE-STRATEGY.md).

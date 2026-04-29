@@ -19,8 +19,6 @@
 
   # nix-darwin module applied only to this host.
   module = { ... }: {
-    nixpkgs.config.allowUnfree = true;
-
     # "aarch64-darwin" for Apple Silicon, "x86_64-darwin" for Intel.
     nixpkgs.hostPlatform = "aarch64-darwin";
 

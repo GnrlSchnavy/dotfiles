@@ -7,199 +7,126 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Function to print colored output
-print_section() {
-    echo -e "${BLUE}🔍 $1${NC}"
-}
-
-print_success() {
-    echo -e "  ${GREEN}✅ $1${NC}"
-}
-
-print_warning() {
-    echo -e "  ${YELLOW}⚠️  $1${NC}"
-}
-
-print_error() {
-    echo -e "  ${RED}❌ $1${NC}"
-}
-
-print_info() {
-    echo -e "  ℹ️  $1"
-}
+print_section() { echo -e "${BLUE}🔍 $1${NC}"; }
+print_success() { echo -e "  ${GREEN}✅ $1${NC}"; }
+print_warning() { echo -e "  ${YELLOW}⚠️  $1${NC}"; }
+print_error()   { echo -e "  ${RED}❌ $1${NC}"; }
+print_info()    { echo -e "  ℹ️  $1"; }
 
 echo "🔍 Dotfiles Health Check"
-echo "Verifying system configuration and setup..."
 echo
 
-# Check if we're in the right directory
-print_section "Repository Status"
+# --- Repository ---
+print_section "Repository"
 if [ -d "$HOME/.dotfiles" ]; then
     cd "$HOME/.dotfiles" || exit 1
-    print_success "Dotfiles directory found"
+    print_success "~/.dotfiles found"
 
     if git rev-parse --git-dir > /dev/null 2>&1; then
-        print_success "Git repository is valid"
-
-        # Check for uncommitted changes
+        print_success "git repo valid"
         if git diff --quiet && git diff --cached --quiet; then
-            print_success "Working directory is clean"
+            print_success "working tree clean"
         else
-            print_warning "Uncommitted changes detected"
-            print_info "Run 'git status' to see changes"
+            print_warning "uncommitted changes (run 'git status')"
         fi
-
-        # Check current branch
-        BRANCH=$(git branch --show-current)
-        print_info "Current branch: $BRANCH"
+        print_info "branch: $(git branch --show-current)"
     else
-        print_error "Not a valid Git repository"
+        print_error "not a git repo"
     fi
 else
-    print_error "Dotfiles directory not found at ~/.dotfiles"
+    print_error "~/.dotfiles not found"
     exit 1
 fi
 
-# Check Nix configuration
-print_section "Nix Configuration"
+# --- Nix / nix-darwin ---
+print_section "Nix"
 if command -v nix > /dev/null 2>&1; then
-    print_success "Nix package manager installed"
-
+    print_success "nix installed ($(nix --version | awk '{print $NF}'))"
     if command -v darwin-rebuild > /dev/null 2>&1; then
-        print_success "Nix Darwin available"
-
-        # Check flake configuration
-        if nix flake check nix/ > /dev/null 2>&1; then
-            print_success "Flake configuration is valid"
+        print_success "darwin-rebuild on PATH"
+        if (cd nix && nix flake check --no-build > /dev/null 2>&1); then
+            print_success "flake evaluates cleanly"
         else
-            print_error "Flake configuration has issues"
-            print_info "Run 'nix flake check nix/' for details"
+            print_error "flake has eval errors (run 'cd nix && nix flake check')"
         fi
     else
-        print_error "Nix Darwin not found"
+        print_error "darwin-rebuild not on PATH"
     fi
 else
-    print_error "Nix package manager not installed"
+    print_error "nix not installed"
 fi
 
-# Check Homebrew
-print_section "Homebrew Configuration"
+# --- Host descriptor ---
+print_section "Host descriptor"
+HOSTNAME=$(scutil --get LocalHostName)
+if [ -f "nix/hosts/$HOSTNAME/default.nix" ]; then
+    print_success "nix/hosts/$HOSTNAME/default.nix exists"
+else
+    print_error "no host descriptor for $HOSTNAME"
+    print_info "create one from nix/hosts/template/, register in nix/flake.nix"
+fi
+
+# --- Homebrew ---
+print_section "Homebrew"
 if command -v brew > /dev/null 2>&1; then
-    print_success "Homebrew installed"
-
-    # Check homebrew doctor
+    print_success "brew on PATH"
     if brew doctor > /dev/null 2>&1; then
-        print_success "Homebrew health check passed"
+        print_success "brew doctor clean"
     else
-        print_warning "Homebrew has issues"
-        print_info "Run 'brew doctor' for details"
+        print_warning "brew doctor has warnings (run 'brew doctor')"
     fi
 else
-    print_error "Homebrew not installed"
+    print_error "brew not installed"
 fi
 
-# Check Stow setup
-print_section "Stow Configuration"
-if command -v stow > /dev/null 2>&1; then
-    print_success "GNU Stow available"
-
-    # Check for stow conflicts
-    categories=("shell" "git" "editors" "development" "system")
-    conflicts_found=false
-
-    for category in "${categories[@]}"; do
-        if [ -d "$category" ]; then
-            if stow --no-folding --dry-run "$category" > /dev/null 2>&1; then
-                print_success "$category category ready"
-            else
-                print_warning "$category has stow conflicts"
-                conflicts_found=true
-            fi
-        else
-            print_warning "$category directory not found"
-        fi
-    done
-
-    if [ "$conflicts_found" = true ]; then
-        print_info "Run 'stow --adopt <category>' to resolve conflicts"
-    fi
-else
-    print_error "GNU Stow not found"
-fi
-
-# Check symlinks
-print_section "Symlink Status"
-dotfiles=(
-    "$HOME/.zprofile"
+# --- Home-manager symlinks ---
+print_section "Home-manager symlinks"
+managed_files=(
     "$HOME/.zshrc"
-    "$HOME/.gitconfig"
-    "$HOME/.gitignore_global"
+    "$HOME/.zprofile"
+    "$HOME/.zshenv"
+    "$HOME/.config/git/config"
+    "$HOME/.config/git/ignore"
     "$HOME/.ideavimrc"
-    "$HOME/.claude"
+    "$HOME/.docker/config.json"
+    "$HOME/.claude/settings.local.json"
 )
-
-for file in "${dotfiles[@]}"; do
-    if [ -L "$file" ]; then
-        if [ -e "$file" ]; then
-            print_success "$(basename "$file") symlinked correctly"
-        else
-            print_error "$(basename "$file") is broken symlink"
-        fi
-    elif [ -e "$file" ]; then
-        print_warning "$(basename "$file") exists but is not symlinked"
-        print_info "Consider running 'stow --adopt <category>'"
+for f in "${managed_files[@]}"; do
+    if [ -L "$f" ] && [ -e "$f" ]; then
+        print_success "${f/#$HOME/~}"
+    elif [ -L "$f" ]; then
+        print_error "${f/#$HOME/~} (broken symlink)"
+    elif [ -e "$f" ]; then
+        print_warning "${f/#$HOME/~} exists but isn't a symlink"
     else
-        print_warning "$(basename "$file") not found"
+        print_warning "${f/#$HOME/~} missing"
     fi
 done
 
-# Check essential tools
-print_section "Essential Tools"
-essential_tools=(
-    "git:Git version control"
-    "kubectl:Kubernetes CLI"
-    "docker:Container runtime"
-    "nvim:Neovim editor"
-    "code:Visual Studio Code"
-)
-
-for tool_desc in "${essential_tools[@]}"; do
-    IFS=':' read -ra ADDR <<< "$tool_desc"
-    tool="${ADDR[0]}"
-    desc="${ADDR[1]}"
-
+# --- Tooling ---
+print_section "Tooling"
+for tool in git brew kubectl docker nvim code; do
     if command -v "$tool" > /dev/null 2>&1; then
-        print_success "$desc available"
+        print_success "$tool"
     else
-        print_warning "$desc not found"
+        print_warning "$tool not on PATH"
     fi
 done
 
-# Check environment
-print_section "Environment"
-if [ -n "$NVM_DIR" ]; then
-    print_success "NVM configured"
-else
-    print_warning "NVM not configured"
-fi
+# --- Version managers ---
+print_section "Version managers"
+[ -d "$HOME/.jenv" ]   && print_success "jenv installed"   || print_warning "jenv (~/.jenv missing)"
+[ -d "$HOME/.nvm" ]    && print_success "nvm installed"    || print_warning "nvm (~/.nvm missing)"
+[ -d "$HOME/.pyenv" ]  && print_success "pyenv installed"  || print_warning "pyenv (~/.pyenv missing)"
 
-if command -v jenv > /dev/null 2>&1; then
-    print_success "jenv available for Java version management"
-else
-    print_warning "jenv not available"
-fi
-
-# System information
-print_section "System Information"
-print_info "macOS version: $(sw_vers -productVersion)"
-print_info "Architecture: $(uname -m)"
-print_info "Shell: $SHELL"
-print_info "User: $USER"
+# --- System info ---
+print_section "System"
+print_info "macOS:        $(sw_vers -productVersion)"
+print_info "architecture: $(uname -m)"
+print_info "hostname:     $HOSTNAME"
+print_info "user:         $USER"
+print_info "shell:        $SHELL"
 
 echo
-echo "🎯 Health check complete!"
-echo
-echo "💡 If you found issues:"
-echo "  - Run './scripts/update.sh' to update everything"
-echo "  - Run specific commands mentioned in warnings"
-echo "  - Check the documentation in CLAUDE.md"
+echo "💡 Found issues? Try './scripts/update.sh' or rebuild manually:"
+echo "    sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$HOSTNAME -v"

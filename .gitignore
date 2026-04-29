@@ -26,7 +26,7 @@ result-*
 *~
 
 # Claude Code worktree state (machine-local; do not confuse with
-# system/.claude/ which is the Stow-managed Claude Code config)
+# system/.claude/ which is symlinked to ~/.claude/ via home-manager)
 /.claude/
 
 # Temporary files

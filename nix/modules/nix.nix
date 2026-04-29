@@ -1,9 +1,15 @@
 { ... }:
 
 {
+  # Allow unfree packages (Slack, IntelliJ, VSCode, etc.) when they
+  # appear in nixpkgs. Set here once instead of repeating per host.
+  nixpkgs.config.allowUnfree = true;
+
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
-    trusted-users = [ "@admin" "yvan" ];
+    # @admin covers any user in the admin group, which is the default
+    # for the primaryUser on macOS — no need to hardcode a username.
+    trusted-users = [ "@admin" ];
     warn-dirty = false;
   };
 
