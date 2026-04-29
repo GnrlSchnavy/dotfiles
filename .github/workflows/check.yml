@@ -1,20 +1,27 @@
-name: nix flake check
+name: fresh-install test
 
-# Run on every push to master and on pull requests so eval errors
-# get caught before they hit a laptop. Uses macOS runner because
-# darwinConfigurations only evaluate on darwin.
+# End-to-end test that mirrors what `./setup.sh` does on a real Mac:
+# install Nix, then `darwin-rebuild switch` against a host descriptor
+# that matches the runner's environment. This catches eval errors,
+# build failures, activation script errors, home-manager activation
+# issues, and Homebrew bundle issues — the full surface area we'd
+# otherwise only discover by running the setup on a fresh machine.
+#
+# Cost: ~30-60 minutes per run because brew bundle downloads every
+# cask. We accept this for the realism. If it becomes painful,
+# narrow the trigger (e.g. only on `pull_request` and weekly cron).
 
 on:
   push:
     branches: [master]
   pull_request:
     branches: [master]
-  # Allow manual triggering from the Actions tab.
   workflow_dispatch:
 
 jobs:
-  flake-check:
+  fresh-install:
     runs-on: macos-15
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -23,32 +30,53 @@ jobs:
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
-            # Trust the GitHub Actions runner user so substituters work.
             trusted-users = root runner
 
       - name: Use the public Nix cache
+        # Pull from nix-community for nixvim/home-manager artifacts that
+        # aren't on cache.nixos.org. Cuts a few minutes off cold runs.
         uses: cachix/cachix-action@v15
         with:
           name: nix-community
-          # No auth token needed for read-only access to a public cache.
           skipPush: true
 
-      - name: Evaluate every host configuration
-        # `nix flake check` would also evaluate the nixvim checks output,
-        # which requires aarch64-darwin specifically. Iterate hosts and
-        # evaluate each toplevel derivation path instead — that catches
-        # config typos and module errors without forcing a full build.
-        working-directory: nix
+      - name: Apply darwin configuration end-to-end
+        # Bootstrap nix-darwin and apply our `ci` host config in one
+        # shot — same path setup.sh takes, just with the runner's
+        # pre-installed Homebrew and Nix already in place.
+        run: |
+          nix run \
+            --extra-experimental-features "nix-command flakes" \
+            "github:LnL7/nix-darwin/nix-darwin-25.11#darwin-rebuild" -- \
+            switch --flake ./nix#ci
+
+      - name: Verify activation produced the expected symlinks
         run: |
           set -euo pipefail
-          for host in $(nix eval --raw --apply 'attrs: builtins.concatStringsSep " " (builtins.attrNames attrs)' .#darwinConfigurations); do
-            echo "::group::Evaluating darwinConfigurations.$host"
-            nix eval --raw ".#darwinConfigurations.$host.config.system.build.toplevel.drvPath"
-            echo "::endgroup::"
+
+          fail() { echo "::error::$1"; exit 1; }
+
+          # home-manager managed shell files
+          [ -L ~/.zshrc ]    || fail "~/.zshrc is not a symlink"
+          [ -L ~/.zprofile ] || fail "~/.zprofile is not a symlink"
+          [ -L ~/.zshenv ]   || fail "~/.zshenv is not a symlink"
+
+          # home-manager managed git config (XDG)
+          [ -L ~/.config/git/config ] || fail "~/.config/git/config is not a symlink"
+          [ -L ~/.config/git/ignore ] || fail "~/.config/git/ignore is not a symlink"
+
+          # home-manager file-pointer dotfiles
+          [ -L ~/.ideavimrc ]                     || fail "~/.ideavimrc is not a symlink"
+          [ -L ~/.docker/config.json ]            || fail "~/.docker/config.json is not a symlink"
+          [ -L ~/.claude/settings.local.json ]    || fail "~/.claude/settings.local.json is not a symlink"
+
+          # darwin-rebuild itself should now be on PATH
+          command -v darwin-rebuild >/dev/null || fail "darwin-rebuild not on PATH"
+
+          # Brew bundle should have left every declared cask installed
+          command -v brew >/dev/null || fail "brew not on PATH"
+          for formula in jenv pyenv kubectl helm; do
+            brew list --formula "$formula" >/dev/null 2>&1 || fail "brew formula $formula missing after activation"
           done
 
-      - name: Run flake-level checks
-        working-directory: nix
-        # --no-build skips building check derivations; we only want
-        # to verify the flake evaluates and produces well-typed checks.
-        run: nix flake check --no-build
+          echo "All smoke checks passed."
