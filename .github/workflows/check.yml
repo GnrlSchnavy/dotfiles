@@ -43,9 +43,10 @@ jobs:
       - name: Apply darwin configuration end-to-end
         # Bootstrap nix-darwin and apply our `ci` host config in one
         # shot — same path setup.sh takes, just with the runner's
-        # pre-installed Homebrew and Nix already in place.
+        # pre-installed Homebrew and Nix already in place. sudo because
+        # nix-darwin's activation step now requires root.
         run: |
-          nix run \
+          sudo nix run \
             --extra-experimental-features "nix-command flakes" \
             "github:LnL7/nix-darwin/nix-darwin-25.11#darwin-rebuild" -- \
             switch --flake ./nix#ci
