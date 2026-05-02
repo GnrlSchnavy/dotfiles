@@ -69,12 +69,17 @@ bundle) AND activates home-manager (user dotfiles, shell, git, etc.).
 - All settings in `programs.git.settings` (writes ~/.config/git/config)
 - Global ignore patterns in `programs.git.ignores` (writes ~/.config/git/ignore)
 
-**Editor / Docker / Claude** — file-pointer dotfiles (`nix/home/files.nix`)
+**Editor / Claude** — file-pointer dotfiles (`nix/home/files.nix`)
 - `editors/.ideavimrc` → `~/.ideavimrc`
-- `development/.docker/config.json` → `~/.docker/config.json`
 - `system/.claude/{settings.local.json,settings.template.json,README.md}` → `~/.claude/...`
 
-**Neovim** — separate nixvim flake (`nix/nixvim/`)
+Note: `~/.docker/config.json` is *not* home-manager-managed. Docker
+Desktop rewrites that file at runtime (current context, credential
+store), which fails when it's a Nix-store symlink (cross-filesystem
+rename). `development/.docker/config.json` stays in the repo as a
+reference of the defaults we used to pin.
+
+**Neovim** — built per-host in `flake.nix` from `nix/nixvim/config/`
 - Catppuccin theme, LSP for many languages, Telescope, Treesitter
 
 ### System Customizations

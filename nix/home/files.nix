@@ -13,8 +13,13 @@
     # IntelliJ IDEA Vim plugin config
     ".ideavimrc".source = ../../editors/.ideavimrc;
 
-    # Docker CLI config (Desktop manages credentials, plugins, hooks)
-    ".docker/config.json".source = ../../development/.docker/config.json;
+    # NOTE: ~/.docker/config.json is intentionally NOT managed by
+    # home-manager. Docker Desktop rewrites that file at runtime
+    # (current context, credential store, login state); a Nix-store
+    # symlink is read-only, so its atomic rename(2) fails with
+    # "cross-device link". Let Docker Desktop own the file.
+    # development/.docker/config.json stays in the repo as a reference
+    # of the values we'd otherwise pin.
 
     # Claude Code config. Only manage the three files we explicitly
     # version-control; leave everything else under ~/.claude/

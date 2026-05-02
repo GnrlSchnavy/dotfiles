@@ -138,12 +138,14 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 │   │   ├── default.nix        ← entrypoint, imports submodules
 │   │   ├── git.nix            ← programs.git config + global ignores
 │   │   ├── zsh.nix            ← .zshrc / .zprofile / .zshenv content
-│   │   └── files.nix          ← file-pointer dotfiles (.ideavimrc, .docker, .claude)
+│   │   └── files.nix          ← file-pointer dotfiles (.ideavimrc, .claude)
 │   └── nixvim/                ← neovim configuration as a nix module
 │       └── config/            ← imported by flake.nix's per-host nvim build
 │
 ├── editors/.ideavimrc         ← IntelliJ Vim config (referenced by home/files.nix)
-├── development/.docker/       ← Docker CLI config (referenced by home/files.nix)
+├── development/.docker/       ← Docker config reference (NOT symlinked — Docker
+│                                 Desktop rewrites the file at runtime, breaks on
+│                                 a Nix-store symlink)
 ├── system/.claude/            ← Claude Code settings (referenced by home/files.nix)
 │
 ├── .github/workflows/check.yml ← fresh-install CI
