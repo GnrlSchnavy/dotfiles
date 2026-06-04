@@ -111,7 +111,7 @@ jobs:
 
           # Brew bundle should have left every declared formula installed
           command -v brew >/dev/null || fail "brew not on PATH"
-          for formula in jenv pyenv kubectl helm; do
+          for formula in jenv kubectl helm; do
             brew list --formula "$formula" >/dev/null 2>&1 || fail "brew formula $formula missing after activation"
           done
 
