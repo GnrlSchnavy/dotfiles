@@ -79,8 +79,9 @@ Note: `~/.claude/settings.json` and `~/.claude-mem/settings.json` are
 *not* symlinked — the apps rewrite them at runtime, which fails against a
 read-only Nix-store symlink (same reason as `~/.docker/config.json`).
 `system/.claude/settings.json` and `system/.claude-mem/settings.json` are
-kept as reference snapshots; re-seed a fresh machine by copying them into
-place after the first rebuild:
+kept as reference snapshots. `setup.sh` seeds these into place
+automatically after the first rebuild (only when absent, so it never
+clobbers a file the app has since rewritten). To re-seed manually:
 
 ```bash
 cp ~/.dotfiles/system/.claude/settings.json ~/.claude/settings.json

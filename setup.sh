@@ -160,6 +160,30 @@ sudo nix run \
     switch --flake "$TARGET_DIR/nix#$HOSTNAME"
 print_success "nix-darwin configuration applied"
 
+# Seed the Claude settings that can't be symlinked.
+# ~/.claude/settings.json and ~/.claude-mem/settings.json are rewritten
+# by their apps at runtime, so home-manager keeps them as reference
+# copies (see nix/home/files.nix) rather than read-only symlinks. Seed
+# them here only when absent, so re-running setup never clobbers a file
+# the app has since updated.
+print_step "Seeding Claude reference settings (skipped if already present)..."
+seed_reference_file() {
+    local src="$1" dest="$2"
+    if [ ! -f "$src" ]; then
+        print_warning "Reference file missing in repo: $src — skipping"
+        return
+    fi
+    if [ -e "$dest" ]; then
+        print_warning "$dest already exists — leaving it untouched"
+        return
+    fi
+    mkdir -p "$(dirname "$dest")"
+    cp "$src" "$dest"
+    print_success "Seeded $dest from repo reference"
+}
+seed_reference_file "$TARGET_DIR/system/.claude/settings.json" "$HOME/.claude/settings.json"
+seed_reference_file "$TARGET_DIR/system/.claude-mem/settings.json" "$HOME/.claude-mem/settings.json"
+
 # Final verification
 print_step "Performing final verification..."
 
