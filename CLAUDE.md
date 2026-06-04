@@ -73,6 +73,19 @@ bundle) AND activates home-manager (user dotfiles, shell, git, etc.).
 **Editor / Claude** — file-pointer dotfiles (`nix/home/files.nix`)
 - `editors/.ideavimrc` → `~/.ideavimrc`
 - `system/.claude/{settings.local.json,settings.template.json,README.md}` → `~/.claude/...`
+- `system/.claude/{agents,commands,skills}/` → `~/.claude/...` (static custom content, symlinked as read-only dirs)
+
+Note: `~/.claude/settings.json` and `~/.claude-mem/settings.json` are
+*not* symlinked — the apps rewrite them at runtime, which fails against a
+read-only Nix-store symlink (same reason as `~/.docker/config.json`).
+`system/.claude/settings.json` and `system/.claude-mem/settings.json` are
+kept as reference snapshots; re-seed a fresh machine by copying them into
+place after the first rebuild:
+
+```bash
+cp ~/.dotfiles/system/.claude/settings.json ~/.claude/settings.json
+cp ~/.dotfiles/system/.claude-mem/settings.json ~/.claude-mem/settings.json
+```
 
 Note: `~/.docker/config.json` is *not* home-manager-managed. Docker
 Desktop rewrites that file at runtime (current context, credential
