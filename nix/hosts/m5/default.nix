@@ -5,7 +5,7 @@
 # do NOT affect m4. Everything in nix/modules/ and nix/home/ is shared.
 {
   hostname = "m5";
-  username = "yvan";
+  username = "yvan-sytac";
 
   # nix-darwin modules unique to this host (live in this directory).
   systemModules = [ ./homebrew.nix ./packages.nix ./dock.nix ];
@@ -17,9 +17,9 @@
   module = { ... }: {
     nixpkgs.hostPlatform = "aarch64-darwin";
     system.stateVersion = 5;
-    system.primaryUser = "yvan";
+    system.primaryUser = "yvan-sytac";
 
-    # Declare the user so home-manager can read users.users.yvan.home.
-    users.users.yvan.home = "/Users/yvan";
+    # Declare the user so home-manager can read users.users.yvan-sytac.home.
+    users.users.yvan-sytac.home = "/Users/yvan-sytac";
   };
 }

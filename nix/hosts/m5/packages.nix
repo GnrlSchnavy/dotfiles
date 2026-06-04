@@ -29,7 +29,5 @@
     pkgs.htop
     pkgs.fastfetch
 
-    # Networking
-    pkgs.wireguard-tools  # wg / wg-quick CLI for WireGuard tunnels
   ];
 }

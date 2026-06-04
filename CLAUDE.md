@@ -38,24 +38,25 @@ bundle) AND activates home-manager (user dotfiles, shell, git, etc.).
 
 ### Nix Configuration Structure
 - **Main flake**: `nix/flake.nix` - input plumbing + per-host wiring
-- **Host descriptors**: `nix/hosts/<name>/default.nix` - hostname, username, arch, stateVersion
-- **System modules**: `nix/modules/*.nix` - shared nix-darwin config
-- **User modules**: `nix/home/*.nix` - home-manager config (shell, git, dotfiles)
+- **Host descriptors**: `nix/hosts/<name>/default.nix` - hostname, username, arch, stateVersion, and this host's `systemModules` (nix-darwin) + `homeModules` (home-manager) lists
+- **Per-host modules**: `nix/hosts/<name>/{homebrew,packages,dock,git}.nix` - what each machine owns and can diverge on
+- **Shared system modules**: `nix/modules/*.nix` - nix-darwin config applied to every host (`nix.nix`, `system.nix`, `environment.nix`)
+- **Shared user modules**: `nix/home/*.nix` - home-manager config shared by every host (`zsh.nix`, `files.nix`)
 - **NixVim**: `nix/nixvim/` - separate flake for Neovim configuration
-- **Currently configured host**: `m4` (Apple Silicon Mac)
+- **Configured hosts**: `m4` and `m5` (Apple Silicon Macs); `ci` mirrors `m4` for the fresh-install test
 
 ### Key Components
 
 #### System Management
 - **nix-darwin**: System-level config (packages, macOS defaults, dock, launchd, etc.)
 - **home-manager**: User-level config (shell, git, dotfiles symlinked from Nix store)
-- **Homebrew**: GUI applications via nix-homebrew integration (declared in `nix/modules/homebrew.nix`)
+- **Homebrew**: GUI applications via nix-homebrew integration (declared in `nix/hosts/<name>/homebrew.nix`)
 
 #### Package Sources
-- **Nix packages** (`nix/modules/packages.nix`): CLI tools, build tools (git, maven, jq, etc.)
-- **Homebrew casks** (`nix/modules/homebrew.nix`): GUI applications (IntelliJ, VSCode, browsers, etc.)
-- **Homebrew formulas** (`nix/modules/homebrew.nix`): CLI tools needing taps or shell integration (helm, jenv, nvm, pyenv)
-- **Mac App Store** (`nix/modules/homebrew.nix` `masApps`): App-Store-only apps
+- **Nix packages** (`nix/hosts/<name>/packages.nix`): CLI tools, build tools (git, maven, jq, etc.)
+- **Homebrew casks** (`nix/hosts/<name>/homebrew.nix`): GUI applications (IntelliJ, VSCode, browsers, etc.)
+- **Homebrew formulas** (`nix/hosts/<name>/homebrew.nix`): CLI tools needing taps or shell integration (helm, jenv, nvm, pyenv)
+- **Mac App Store** (`nix/hosts/<name>/homebrew.nix` `masApps`): App-Store-only apps
 
 #### Configuration Files Organization
 
@@ -65,7 +66,7 @@ bundle) AND activates home-manager (user dotfiles, shell, git, etc.).
 - Aliases in `programs.zsh.shellAliases`
 - Static env vars in `home.sessionVariables`
 
-**Git** — managed by home-manager (`nix/home/git.nix`)
+**Git** — managed by home-manager, **per-host** (`nix/hosts/<name>/git.nix`) so each machine can use its own identity
 - All settings in `programs.git.settings` (writes ~/.config/git/config)
 - Global ignore patterns in `programs.git.ignores` (writes ~/.config/git/ignore)
 
@@ -161,10 +162,10 @@ j <partial-name>  # autojump navigation
 This repository uses a strategic approach to package management across Nix and Homebrew:
 
 #### Package Sources Strategy
-- **Nix packages** (`nix/modules/packages.nix`): CLI tools, development libraries, system utilities
-- **Homebrew casks** (`nix/modules/homebrew.nix`): GUI applications, proprietary software  
-- **Homebrew brews** (`nix/modules/homebrew.nix`): Tools requiring taps, version managers
-- **Mac App Store** (`nix/modules/homebrew.nix`): Apps exclusive to App Store
+- **Nix packages** (`nix/hosts/<name>/packages.nix`): CLI tools, development libraries, system utilities
+- **Homebrew casks** (`nix/hosts/<name>/homebrew.nix`): GUI applications, proprietary software  
+- **Homebrew brews** (`nix/hosts/<name>/homebrew.nix`): Tools requiring taps, version managers
+- **Mac App Store** (`nix/hosts/<name>/homebrew.nix`): Apps exclusive to App Store
 
 #### Decision Matrix
 | Tool Type | Nix | Homebrew | App Store |
@@ -177,10 +178,10 @@ This repository uses a strategic approach to package management across Nix and H
 #### Adding Packages
 ```bash
 # Nix packages (CLI tools, development)
-vim ~/.dotfiles/nix/modules/packages.nix
+vim ~/.dotfiles/nix/hosts/<name>/packages.nix
 
 # Homebrew (GUI apps, specialized tools)  
-vim ~/.dotfiles/nix/modules/homebrew.nix
+vim ~/.dotfiles/nix/hosts/<name>/homebrew.nix
 
 # Apply changes
 darwin-rebuild switch --flake ~/.dotfiles/nix#m4 -v

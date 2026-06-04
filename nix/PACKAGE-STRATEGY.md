@@ -2,9 +2,13 @@
 
 This document defines the strategy for choosing between Nix packages, Homebrew formulas, Homebrew casks, and Mac App Store apps.
 
+> **Where these live:** the package modules (`packages.nix`, `homebrew.nix`) are
+> **per-host** under `nix/hosts/<name>/`, so each machine keeps its own lists.
+> The source-selection strategy below applies identically on every host.
+
 ## Decision Matrix
 
-### Nix Packages (`nix/modules/packages.nix`)
+### Nix Packages (`nix/hosts/<name>/packages.nix`)
 **Use for: CLI tools, development libraries, system utilities that benefit from reproducibility**
 
 **Criteria:**
@@ -22,7 +26,7 @@ This document defines the strategy for choosing between Nix packages, Homebrew f
 Note: Language runtimes (Java, Node, Python) are deliberately *not*
 managed by Nix. They live behind version managers (`jenv`, `nvm`,
 `pyenv`) so each project can pin its own version. See
-[`homebrew.nix`](modules/homebrew.nix) and [`home/zsh.nix`](home/zsh.nix).
+[`hosts/m4/homebrew.nix`](hosts/m4/homebrew.nix) and [`home/zsh.nix`](home/zsh.nix).
 
 ### Homebrew Formulas (`homebrew.brews`)
 **Use for: CLI tools not available in Nix or requiring Homebrew-specific features**

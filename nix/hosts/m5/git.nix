@@ -12,8 +12,8 @@
 
     settings = {
       user = {
-        name = "yvan";
-        email = "yvanstemmerik@gmail.com";
+        name = "yvanstemmerik-ah";
+        email = "yvan.stemmerik@ah.nl";
       };
 
       init.defaultBranch = "main";

@@ -10,9 +10,9 @@ Built on three layers:
 
 | Layer | Manages | Mechanism |
 |---|---|---|
-| **nix-darwin** | macOS system: defaults, dock, launchd, fonts, packages | `nix/modules/*.nix` |
-| **home-manager** | User-level dotfiles: `.zshrc`, `.gitconfig`, `.ideavimrc`, `.claude/*` | `nix/home/*.nix` |
-| **nix-homebrew** | GUI applications and a few CLI tools that aren't in nixpkgs | `nix/modules/homebrew.nix` |
+| **nix-darwin** | macOS system: defaults, dock, launchd, fonts, packages | `nix/modules/*.nix` (shared) + `nix/hosts/<name>/*.nix` (per-host) |
+| **home-manager** | User-level dotfiles: `.zshrc`, `.gitconfig`, `.ideavimrc`, `.claude/*` | `nix/home/*.nix` (shared) + `nix/hosts/<name>/git.nix` |
+| **nix-homebrew** | GUI applications and a few CLI tools that aren't in nixpkgs | `nix/hosts/<name>/homebrew.nix` |
 
 No Stow. No manual symlink dance. CI verifies a fresh-install scenario
 end-to-end on every push.
@@ -24,7 +24,7 @@ end-to-end on every push.
 If your machine's hostname already has a descriptor in
 [`nix/hosts/`](nix/hosts/) (e.g. `m4`):
 
-```bash
+```bashe
 git clone https://github.com/GnrlSchnavy/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles && ./setup.sh
 ```
@@ -103,11 +103,12 @@ sudo darwin-rebuild --rollback
 
 | What | Where |
 |---|---|
-| New CLI tool from nixpkgs | [`nix/modules/packages.nix`](nix/modules/packages.nix) |
-| New GUI app (cask) or brew formula | [`nix/modules/homebrew.nix`](nix/modules/homebrew.nix) |
-| macOS system default (dock, finder, etc.) | [`nix/modules/system.nix`](nix/modules/system.nix) or [`nix/modules/dock.nix`](nix/modules/dock.nix) |
+| New CLI tool from nixpkgs | [`nix/hosts/<name>/packages.nix`](nix/hosts/m4/packages.nix) |
+| New GUI app (cask) or brew formula | [`nix/hosts/<name>/homebrew.nix`](nix/hosts/m4/homebrew.nix) |
+| macOS system default (finder, keyboard, etc.) | [`nix/modules/system.nix`](nix/modules/system.nix) |
+| Dock layout / apps (per-host) | [`nix/hosts/<name>/dock.nix`](nix/hosts/m4/dock.nix) |
 | Shell config (zsh init, lazy-loads, env vars) | [`nix/home/zsh.nix`](nix/home/zsh.nix) |
-| Git config | [`nix/home/git.nix`](nix/home/git.nix) |
+| Git config (per-host identity) | [`nix/hosts/<name>/git.nix`](nix/hosts/m4/git.nix) |
 | New dotfile to symlink (e.g. `.foorc`) | [`nix/home/files.nix`](nix/home/files.nix) |
 | Neovim plugins / LSP / keymaps | [`nix/nixvim/config/`](nix/nixvim/config/) |
 | Garbage collection, nix daemon settings | [`nix/modules/nix.nix`](nix/modules/nix.nix) |
@@ -124,19 +125,16 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 │   ├── flake.nix              ← input plumbing + per-host wiring
 │   ├── flake.lock             ← pinned versions of all inputs
 │   ├── hosts/
-│   │   ├── m4/                ← descriptor for the "m4" Mac (hostname, user)
-│   │   ├── ci/                ← CI runner descriptor (used by the workflow)
+│   │   ├── m4/                ← "m4" Mac: descriptor + own homebrew/packages/dock/git
+│   │   ├── m5/                ← "m5" Mac: descriptor + own homebrew/packages/dock/git
+│   │   ├── ci/                ← CI runner descriptor (mirrors m4's per-host modules)
 │   │   └── template/          ← copy this when adding a new host
-│   ├── modules/               ← nix-darwin (system-level) modules
-│   │   ├── packages.nix       ← Nix-managed CLI tools
-│   │   ├── homebrew.nix       ← brew bundle (casks, formulas, MAS)
+│   ├── modules/               ← shared nix-darwin (system-level) modules
 │   │   ├── system.nix         ← macOS defaults (keyboard, finder, login window)
-│   │   ├── dock.nix           ← dock layout and behavior
 │   │   ├── environment.nix    ← system-wide env vars and aliases
 │   │   └── nix.nix            ← nix daemon config (gc, optimise, settings)
-│   ├── home/                  ← home-manager (user-level) modules
+│   ├── home/                  ← shared home-manager (user-level) modules
 │   │   ├── default.nix        ← entrypoint, imports submodules
-│   │   ├── git.nix            ← programs.git config + global ignores
 │   │   ├── zsh.nix            ← .zshrc / .zprofile / .zshenv content
 │   │   └── files.nix          ← file-pointer dotfiles (.ideavimrc, .claude)
 │   └── nixvim/                ← neovim configuration as a nix module
@@ -204,8 +202,8 @@ exactly what to do (it's [the new-host workflow](#setting-up-a-new-host)).
 **Brew bundle fails on a specific cask** — usually an upstream
 Homebrew issue (we've seen them on macOS 26). Check
 `brew install --cask <name>` manually for the real error. If it's
-truly broken upstream, comment the cask out of `homebrew.nix`
-temporarily.
+truly broken upstream, comment the cask out of your host's
+`homebrew.nix` (`nix/hosts/<name>/homebrew.nix`) temporarily.
 
 **Pre-existing `~/.zshrc` etc. blocking home-manager** — the flake
 sets `home-manager.backupFileExtension = "hm-backup"`, so your
