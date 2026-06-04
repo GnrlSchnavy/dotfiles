@@ -12,6 +12,7 @@
       "google-chrome"
 
       # Communication
+      "microsoft-outlook"
       "microsoft-teams"
       "signal"
       "slack"
@@ -58,6 +59,7 @@
 
       # Development utilities
       "gh"
+      "kubectl"
     ];
 
     # Homebrew maintenance settings
