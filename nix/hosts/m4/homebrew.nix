@@ -20,21 +20,16 @@
       "whatsapp"
 
       # Productivity
-      "1password"
-      "1password-cli"
       "alfred"
       "obsidian"
       "rectangle"
 
       # Development
-      "bruno"
       "chromedriver"
       "claude"
-      "cyberduck"
       "docker-desktop"
       "intellij-idea"
       "lens"
-      "postman"
       "visual-studio-code"
 
       # Media
@@ -52,8 +47,6 @@
 
       # Virtualization & Remote
       "crossover"
-      "nvidia-geforce-now"
-      "teamviewer"
 
       # Programming languages
       "temurin@25"
@@ -63,17 +56,13 @@
     brews = [
       # Programming languages
       "kotlin"
-      "python-tk"
 
       # Security
       "gnupg"
-      "tor"
 
       # Version managers (need shell integration for lazy-loading)
       "jenv"
       "nvm"
-      "pipx"
-      "pyenv"
 
       # Kubernetes ecosystem
       "fluxcd/tap/flux"
@@ -88,7 +77,6 @@
 
       # Development utilities
       "gh"
-      "pgloader"
       "stripe-cli"
       "ansible"
     ];
