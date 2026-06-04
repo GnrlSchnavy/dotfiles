@@ -9,9 +9,10 @@
 { ... }:
 
 {
+  # git.nix is intentionally NOT here — it's per-host (different identity
+  # per machine), pulled in via the descriptor's homeModules list.
   imports = [
     ./files.nix
-    ./git.nix
     ./zsh.nix
   ];
 

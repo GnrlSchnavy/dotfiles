@@ -90,6 +90,7 @@
       "gh"
       "pgloader"
       "stripe-cli"
+      "ansible"
     ];
 
     # Homebrew maintenance settings

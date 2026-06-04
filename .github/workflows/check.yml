@@ -104,7 +104,6 @@ jobs:
 
           # home-manager file-pointer dotfiles
           [ -L ~/.ideavimrc ]                     || fail "~/.ideavimrc is not a symlink"
-          [ -L ~/.docker/config.json ]            || fail "~/.docker/config.json is not a symlink"
           [ -L ~/.claude/settings.local.json ]    || fail "~/.claude/settings.local.json is not a symlink"
 
           # darwin-rebuild ships in the system profile

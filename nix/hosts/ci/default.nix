@@ -7,6 +7,11 @@
   hostname = "ci";
   username = "runner";
 
+  # CI mirrors m4's per-host modules so we exercise the real config
+  # end-to-end. Casks are force-dropped in `module` below; brews still run.
+  systemModules = [ ../m4/homebrew.nix ../m4/packages.nix ../m4/dock.nix ];
+  homeModules = [ ../m4/git.nix ];
+
   module =
     { lib, ... }:
     {

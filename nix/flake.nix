@@ -33,14 +33,12 @@
       ...
     }:
     let
-      # Modules shared across every host. Anything machine-specific
-      # (hostname, primary user, arch) lives in hosts/<name>/default.nix.
+      # Modules shared across every host. Per-host divergence (homebrew,
+      # packages, dock, git) lives in hosts/<name>/ and is pulled in via
+      # the host descriptor's systemModules / homeModules lists.
       sharedModules = [
-        ./modules/packages.nix
-        ./modules/homebrew.nix
         ./modules/nix.nix
         ./modules/system.nix
-        ./modules/dock.nix
         ./modules/environment.nix
       ];
 
@@ -60,11 +58,14 @@
 
       # Build a darwin configuration from a host descriptor.
       # See hosts/m4/default.nix for the expected shape.
+      #
+      # systemModules / homeModules are the per-host module lists; they
+      # default to [ ] so a descriptor can omit either.
       mkDarwin =
         host:
         nix-darwin.lib.darwinSystem {
           specialArgs = { inherit inputs; };
-          modules = sharedModules ++ [
+          modules = sharedModules ++ (host.systemModules or [ ]) ++ [
             host.module
             { system.configurationRevision = self.rev or self.dirtyRev or null; }
 
@@ -94,7 +95,10 @@
                 # original with the .hm-backup suffix.
                 backupFileExtension = "hm-backup";
                 extraSpecialArgs = { inherit inputs; };
-                users.${host.username} = import ./home;
+                # Shared home config (./home) plus this host's homeModules.
+                users.${host.username} = {
+                  imports = [ ./home ] ++ (host.homeModules or [ ]);
+                };
               };
             }
           ];
@@ -106,8 +110,7 @@
         # macos-15 runner environment (user "runner", /Users/runner).
         # Not intended for use on a real machine.
         ci = import ./hosts/ci;
-        # Add additional hosts here, e.g.:
-        # m5 = import ./hosts/m5;
+        m5 = import ./hosts/m5;
       };
     in
     {
