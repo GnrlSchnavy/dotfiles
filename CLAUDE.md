@@ -88,6 +88,29 @@ cp ~/.dotfiles/system/.claude/settings.json ~/.claude/settings.json
 cp ~/.dotfiles/system/.claude-mem/settings.json ~/.claude-mem/settings.json
 ```
 
+##### Installing claude-mem (manual, per machine)
+
+claude-mem can't be fully declared in Nix: it's an imperative installer
+that writes Claude Code lifecycle hooks, runs a background worker daemon,
+and builds a SQLite + Chroma store under `~/.claude-mem/`. We declare what
+we can and run the installer by hand once per machine:
+
+- **Declared:** its runtime deps `bun` + `uv` are pinned in
+  `nix/hosts/<host>/homebrew.nix`; its tuned config snapshot lives at
+  `system/.claude-mem/settings.json`.
+- **Manual:** after the first `darwin-rebuild switch` (so `bun`/`uv` are
+  present), run the installer, then restore the tuned settings:
+
+```bash
+npx claude-mem install                # writes hooks, starts the worker
+cp ~/.dotfiles/system/.claude-mem/settings.json ~/.claude-mem/settings.json
+npx claude-mem restart                # reload worker with tuned settings
+```
+
+Note: `setup.sh`'s seed step only copies `~/.claude-mem/settings.json`
+when absent. `npx claude-mem install` creates that file itself, so run the
+installer first, then the `cp` above to overwrite it with our snapshot.
+
 Note: `~/.docker/config.json` is *not* home-manager-managed. Docker
 Desktop rewrites that file at runtime (current context, credential
 store), which fails when it's a Nix-store symlink (cross-filesystem
