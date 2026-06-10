@@ -87,3 +87,11 @@ happen: `backupFileExtension = "hm-backup"` renames blockers to
 
 **Rebuild succeeded but shell changes aren't visible** — restart the
 terminal; `.zprofile`/`.zshenv` changes need a new login shell.
+
+**Dock gone and Cmd-Tab dead after a rebuild** — activation kills the
+Dock to apply `dock.nix`, and occasionally launchd fails to relaunch
+it. Cmd-Tab is served by the Dock process, so both disappear together.
+Restart it:
+```bash
+launchctl kickstart -k "gui/$(id -u)/com.apple.Dock.agent"
+```
