@@ -178,8 +178,11 @@ seed_reference_file() {
         return
     fi
     mkdir -p "$(dirname "$dest")"
-    cp "$src" "$dest"
-    print_success "Seeded $dest from repo reference"
+    # The reference snapshots were taken on a specific machine, so any
+    # absolute home paths inside them (e.g. /Users/yvan) must be
+    # rewritten to this machine's home directory.
+    sed "s|/Users/[a-zA-Z0-9_-]*|$HOME|g" "$src" > "$dest"
+    print_success "Seeded $dest from repo reference (home paths rewritten to $HOME)"
 }
 seed_reference_file "$TARGET_DIR/system/.claude/settings.json" "$HOME/.claude/settings.json"
 seed_reference_file "$TARGET_DIR/system/.claude-mem/settings.json" "$HOME/.claude-mem/settings.json"
@@ -210,13 +213,11 @@ print_success "🎉 Dotfiles setup complete!"
 echo
 echo "Next steps:"
 echo "1. Restart your terminal so PATH and home-manager-managed files take effect"
-echo "2. Bootstrap language toolchains (jenv/nvm/pyenv install only the binaries,"
+echo "2. Bootstrap language toolchains (jenv/nvm install only the binaries,"
 echo "   not actual language versions):"
 echo "     jenv add /Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home"
 echo "     jenv global temurin-25  # adjust to whichever JDK you installed"
 echo "     nvm install --lts"
-echo "     pyenv install 3.13"
-echo "     pyenv global 3.13"
 echo
 echo "Configuration: ~/.dotfiles/"
 echo "Documentation: ~/.dotfiles/CLAUDE.md"

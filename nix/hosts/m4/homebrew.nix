@@ -31,6 +31,7 @@
       "intellij-idea"
       "lens"
       "visual-studio-code"
+      "warp" # Warp terminal (NOT cloudflare-warp, the VPN)
 
       # Media
       "jellyfin-media-player"
@@ -43,7 +44,6 @@
       "proton-mail-bridge"
       "proton-pass"
       "protonvpn"
-      "warp"
 
       # Virtualization & Remote
       "crossover"

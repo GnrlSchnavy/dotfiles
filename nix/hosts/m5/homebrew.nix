@@ -29,6 +29,7 @@
       "docker-desktop"
       "intellij-idea"
       "visual-studio-code"
+      "warp" # Warp terminal (NOT cloudflare-warp, the VPN)
 
       # Media
       "spotify"
@@ -39,7 +40,6 @@
       "proton-mail-bridge"
       "proton-pass"
       "protonvpn"
-      "warp"
 
       # Programming languages
       "temurin@25"

@@ -88,9 +88,11 @@ managed_files=(
     "$HOME/.config/git/config"
     "$HOME/.config/git/ignore"
     "$HOME/.ideavimrc"
-    "$HOME/.docker/config.json"
     "$HOME/.claude/settings.local.json"
 )
+# Note: ~/.docker/config.json and ~/.claude/settings.json are
+# intentionally NOT home-manager-managed (apps rewrite them at runtime),
+# so they're not checked here. See docs/shell-and-dotfiles.md.
 for f in "${managed_files[@]}"; do
     if [ -L "$f" ] && [ -e "$f" ]; then
         print_success "${f/#$HOME/~}"
@@ -117,7 +119,6 @@ done
 print_section "Version managers"
 [ -d "$HOME/.jenv" ]   && print_success "jenv installed"   || print_warning "jenv (~/.jenv missing)"
 [ -d "$HOME/.nvm" ]    && print_success "nvm installed"    || print_warning "nvm (~/.nvm missing)"
-[ -d "$HOME/.pyenv" ]  && print_success "pyenv installed"  || print_warning "pyenv (~/.pyenv missing)"
 
 # --- System info ---
 print_section "System"

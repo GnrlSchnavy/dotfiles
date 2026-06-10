@@ -24,7 +24,7 @@ end-to-end on every push.
 If your machine's hostname already has a descriptor in
 [`nix/hosts/`](nix/hosts/) (e.g. `m4`):
 
-```bashe
+```bash
 git clone https://github.com/GnrlSchnavy/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles && ./setup.sh
 ```
@@ -67,8 +67,8 @@ git commit -m "host: add <your-hostname>"
 
 ## Post-install steps
 
-The setup installs version managers (`jenv`, `nvm`, `pyenv`) but not
-the language toolchains they manage. Bootstrap whichever you need:
+The setup installs version managers (`jenv`, `nvm`) but not the
+language toolchains they manage. Bootstrap whichever you need:
 
 ```bash
 # Java: install a JDK (e.g. via `brew install temurin@25`), then point jenv at it
@@ -77,10 +77,6 @@ jenv global temurin-25
 
 # Node
 nvm install --lts
-
-# Python
-pyenv install 3.13
-pyenv global 3.13
 ```
 
 ---
@@ -226,7 +222,14 @@ new config.
 
 ## Documentation
 
-- [`CLAUDE.md`](CLAUDE.md) — guidance for Claude Code when working in this repo
-- [`nix/PACKAGE-STRATEGY.md`](nix/PACKAGE-STRATEGY.md) — when to pick Nix vs Homebrew vs MAS
-- [`nix/modules/README.md`](nix/modules/README.md) — per-module overview
-- [`scripts/README.md`](scripts/README.md) — maintenance script catalog
+Canonical docs live in [`docs/`](docs/):
+
+- [`docs/architecture.md`](docs/architecture.md) — flake wiring, module layering, host descriptors
+- [`docs/hosts.md`](docs/hosts.md) — host inventory and new-host onboarding
+- [`docs/packages.md`](docs/packages.md) — Nix vs Homebrew vs MAS strategy, adding/removing packages
+- [`docs/shell-and-dotfiles.md`](docs/shell-and-dotfiles.md) — zsh setup, dotfile symlinking, files apps rewrite at runtime
+- [`docs/claude-code.md`](docs/claude-code.md) — Claude Code settings/agents/skills management
+- [`docs/operations.md`](docs/operations.md) — rebuilds, updates, maintenance scripts, troubleshooting
+- [`docs/ci.md`](docs/ci.md) — the fresh-install CI workflow
+
+Plus [`CLAUDE.md`](CLAUDE.md) — entry point for AI agents working in this repo.

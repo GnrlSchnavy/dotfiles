@@ -42,18 +42,6 @@
       # Eagerly set JAVA_HOME so ./mvnw forks the correct JDK before jenv lazy-loads
       export JAVA_HOME="$HOME/.jenv/versions/$(cat .java-version 2>/dev/null || cat $HOME/.jenv/version 2>/dev/null || echo 24)"
 
-      # Python version management with pyenv - lazy-loaded for faster shell startup
-      export PATH="$PYENV_ROOT/bin:$PATH"
-      lazy_load_pyenv() {
-        unset -f pyenv python python3 pip pip3
-        eval "$(pyenv init - --no-rehash zsh)"
-      }
-      pyenv()   { lazy_load_pyenv && pyenv   "$@"; }
-      python()  { lazy_load_pyenv && python  "$@"; }
-      python3() { lazy_load_pyenv && python3 "$@"; }
-      pip()     { lazy_load_pyenv && pip     "$@"; }
-      pip3()    { lazy_load_pyenv && pip3    "$@"; }
-
       # Kubectl shell completion - cached for faster shell startup
       if [[ ! -f ~/.zsh_kubectl_completion ]] || [[ $(date -r ~/.zsh_kubectl_completion +%s) -lt $(( $(date +%s) - 86400 )) ]]; then
         kubectl completion zsh > ~/.zsh_kubectl_completion 2>/dev/null
@@ -78,6 +66,5 @@
   home.sessionVariables = {
     BUN_INSTALL = "$HOME/.bun";
     NVM_DIR = "$HOME/.nvm";
-    PYENV_ROOT = "$HOME/.pyenv";
   };
 }

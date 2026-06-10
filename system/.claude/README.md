@@ -3,30 +3,38 @@
 Version-controlled Claude Code settings, symlinked into `~/.claude/`
 by home-manager (see [`nix/home/files.nix`](../../nix/home/files.nix)).
 
-## Files
+## Contents
 
-| File | Purpose |
-|---|---|
-| `settings.local.json` | Active permissions and tool access |
-| `settings.template.json` | Starter template for new machines |
-| `README.md` | This file |
+| Path | Managed how | Purpose |
+|---|---|---|
+| `settings.local.json` | symlink → `~/.claude/settings.local.json` | Active permissions and tool access |
+| `settings.template.json` | symlink → `~/.claude/settings.template.json` | Starter template for new machines |
+| `README.md` | symlink → `~/.claude/README.md` | This file |
+| `agents/` | symlink → `~/.claude/agents` (read-only dir) | Custom subagent definitions |
+| `commands/` | symlink → `~/.claude/commands` (read-only dir) | Custom slash commands |
+| `skills/` | symlink → `~/.claude/skills` (read-only dir) | Custom skills (vault-* etc.) |
+| `settings.json` | **NOT symlinked** — reference snapshot | Seeded to `~/.claude/settings.json` by `setup.sh` only when absent |
 
-## How it's wired
+`../.claude-mem/settings.json` is the same kind of reference snapshot
+for claude-mem, seeded to `~/.claude-mem/settings.json` by `setup.sh`
+(with absolute home paths rewritten for the current user).
 
-`nix/home/files.nix` declares:
+## Why settings.json is not symlinked
 
-```nix
-home.file.".claude/settings.local.json".source = ../../system/.claude/settings.local.json;
-home.file.".claude/settings.template.json".source = ../../system/.claude/settings.template.json;
-home.file.".claude/README.md".source = ../../system/.claude/README.md;
+Claude Code rewrites `~/.claude/settings.json` at runtime (plugin
+toggles, effort level, survey state). A read-only Nix-store symlink
+breaks the app's atomic rename — the same failure mode as
+`~/.docker/config.json`. So home-manager owns only the static files
+above; the rewritten ones are seeded once and then owned by the app.
+
+To re-seed manually:
+
+```bash
+cp ~/.dotfiles/system/.claude/settings.json ~/.claude/settings.json
 ```
 
-Each file becomes a symlink at `~/.claude/<name>` pointing into the
-Nix store, which in turn copies from this directory at build time.
-
-Other contents of `~/.claude/` (transcripts, plugin caches, session
-state) are *not* managed — home-manager only owns the three files
-above, leaving the rest alone.
+Everything else under `~/.claude/` (transcripts, plugin caches,
+session state) is untouched by home-manager.
 
 ## Editing settings
 
@@ -37,12 +45,13 @@ $EDITOR ~/.dotfiles/system/.claude/settings.local.json
 sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
 ```
 
-Changes are tracked in git automatically since `settings.local.json`
-lives inside the dotfiles repo.
+Changes are tracked in git automatically since the files live inside
+the dotfiles repo. The `agents/`, `commands/` and `skills/` directories
+are symlinked whole — add or edit a file here, rebuild, and it appears
+under `~/.claude/`.
 
 ## New-machine setup
 
-There's no separate step. `setup.sh` runs `darwin-rebuild switch`,
-which activates home-manager, which creates the symlinks. As long as
-the Claude Code app is installed (it is, via the `claude` cask in
-`homebrew.nix`), the settings apply on first launch.
+No separate step. `setup.sh` runs `darwin-rebuild switch` (creates the
+symlinks via home-manager) and then seeds the two non-symlinkable
+settings files if they don't exist yet.

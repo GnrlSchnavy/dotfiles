@@ -2,7 +2,9 @@
 
 Helpers for the day-to-day care of this dotfiles setup. None of them
 are required — `darwin-rebuild` does the heavy lifting — but they
-package up common workflows.
+package up common workflows. See
+[`docs/operations.md`](../docs/operations.md) for the full operations
+guide.
 
 ## `update.sh`
 
@@ -32,7 +34,7 @@ Health check. Verifies:
 - A host descriptor exists for this machine
 - Every home-manager-managed symlink resolves
 - Common tooling (`git`, `kubectl`, `nvim`, etc.) is reachable
-- Version-manager directories (`~/.jenv`, `~/.nvm`, `~/.pyenv`) exist
+- Version-manager directories (`~/.jenv`, `~/.nvm`) exist
 
 Run it after a rebuild or whenever something feels off.
 
