@@ -94,6 +94,38 @@ inside a marked, removable block. So:
 2. `oc-tooling clone <client> <url>` for each active client.
 3. `oc-tooling apply <client>/<repo>` in each checkout.
 
+## Switching clients
+
+### Offboard a client
+
+1. In each of that client's checkouts: `oc-tooling unapply` — removes the
+   symlinks and the managed `.git/info/exclude` block, leaving the checkout
+   clean.
+2. Drop the local clone/link: `rm ~/.opencode-clients/<client>` (a `link` is
+   just a symlink; a `clone` is safe to `rm -rf` since it's pushed).
+3. *(If the client had a memory lane)* remove its `oc-<client>` function +
+   observer config from [`nix/home/codemem.nix`](../nix/home/codemem.nix) and
+   `darwin-rebuild switch`. Then handle the lane's memory DB at
+   `~/.codemem/<client>/`:
+   - **Delete it** (`rm -rf ~/.codemem/<client>`) if offboarding requires
+     removing client-derived data — usually the right call.
+   - Keep it only if you have a specific reason.
+4. The private tooling repo stays on the client's infra (archive it there if
+   you like). Nothing about the client remains in these public dotfiles.
+
+### Onboard the new client
+
+Follow [Onboard a new client](#runbook--onboard-a-new-client). The only
+client-specific judgement is the **memory lane**:
+
+- **No isolation needed** (extraction may go through your normal path) → skip
+  the lane; use the tooling and run the client's repos under `oc-personal`.
+- **Sanctioned-channel isolation needed** (like Ahold's TechNL) → add an
+  `oc-<client>` lane in [`nix/home/codemem.nix`](../nix/home/codemem.nix)
+  mirroring `oc-work`: its own DB folder, observer config, and viewer port,
+  with its own extraction channel (proxy URL + key resolved from `pass-cli`,
+  **fail-closed**). Never reuse another client's lane, channel, or DB.
+
 ## Gotchas
 
 - **Subagents aren't in the Tab switcher.** `mode: subagent` agents are
