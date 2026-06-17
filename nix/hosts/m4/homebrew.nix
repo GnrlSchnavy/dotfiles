@@ -59,6 +59,10 @@
 
       # Security
       "gnupg"
+      # Proton Pass CLI — official tap, not in core Homebrew. brew owns
+      # updates (its own `pass-cli update` is disabled under Homebrew);
+      # onActivation.upgrade picks up new versions on rebuild.
+      "protonpass/tap/pass-cli"
 
       # Version managers (need shell integration for lazy-loading)
       "jenv"
