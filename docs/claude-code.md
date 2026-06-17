@@ -87,6 +87,96 @@ automatically.)
 Note: `bun`/`uv` are currently pinned on m4 only. Add them to another
 host's `homebrew.nix` before running the claude-mem installer there.
 
+## OpenCode & two-lane codemem memory
+
+Separate from Claude Code, [OpenCode](https://opencode.ai) is wired up
+in [`nix/home/codemem.nix`](../nix/home/codemem.nix) (a shared
+home-manager module, applied on every host) together with
+[codemem](https://www.npmjs.com/package/codemem), which gives OpenCode
+persistent memory.
+
+It runs in **two isolated lanes** so client (Ahold) content is never
+extracted via Anthropic directly — only through the sanctioned TechNL
+proxy:
+
+| Launcher | Provider | codemem DB | Observer extraction | Viewer port |
+|---|---|---|---|---|
+| `oc-personal` | Max via the `opencode-with-claude` proxy (`127.0.0.1:3456`) | `~/.codemem/personal/` | local Claude (Max) | 4747 |
+| `oc-work` | TechNL proxy (`api-ai.digitaldev.nl`), project `ahold` | `~/.codemem/work-ahold/` | TechNL proxy | 4848 |
+
+Both lanes use `claude-sonnet-4-6` for coding and `claude-haiku-4-5`
+as the codemem observer model.
+
+How isolation holds: the two lanes have **separate DB folders** (the
+viewer lock is keyed on the DB directory), **separate observer
+configs**, and **separate viewer ports** — all set per-lane by the
+`oc-*` shell functions. The OpenCode plugin forwards
+`CODEMEM_DB` / `CODEMEM_CONFIG` / `CODEMEM_VIEWER_PORT` into the viewer
+it auto-starts, and the extraction sweeper runs inside that per-lane
+viewer, so work extraction provably stays in the TechNL channel.
+
+Config layout:
+
+- `~/.config/opencode/opencode.json` — personal config (managed via
+  `xdg.configFile`)
+- `~/projects/ahold/opencode.json` — work config (lives outside
+  `~/.config`, so `home.file`)
+- `~/.config/codemem/{personal,work-ahold}.json` — per-lane observer
+  configs
+
+**No secrets live in the repo.** The TechNL key is resolved at runtime
+by `oc-work` via `pass-cli` (Proton Pass), and paths use
+`config.home.homeDirectory` so the same module works on both `m4`
+(`/Users/yvan`) and `m5` (`/Users/yvan-sytac`).
+
+Prereqs on a host: `pass-cli` (Proton Pass CLI) and `uv` must be
+declared in that host's `homebrew.nix` for `oc-work` to resolve its key
+and for codemem's vector search.
+
+## OpenCode & codemem (two-lane memory)
+
+[`nix/home/codemem.nix`](../nix/home/codemem.nix) is a shared
+home-manager module (imported by `nix/home/default.nix`, applied to
+every host) that configures [OpenCode](https://opencode.ai) plus
+`codemem` persistent memory in **two isolated lanes**. The split exists
+so client (Ahold) content is never extracted through Anthropic
+directly — only through the sanctioned TechNL proxy.
+
+| Launcher | Provider | codemem DB | Observer (extraction) | Viewer port |
+|---|---|---|---|---|
+| `oc-personal` | Max via the `opencode-with-claude` proxy (`127.0.0.1:3456`) | `~/.codemem/personal/` | local Claude (`claude-haiku-4-5` sidecar) | 4747 |
+| `oc-work` | TechNL proxy (`api-ai.digitaldev.nl`) | `~/.codemem/work-ahold/` | TechNL proxy (`api_http`, key via pass-cli) | 4848 |
+
+Both are zsh functions appended to the shared `zsh.nix` initContent;
+run `oc-personal` / `oc-work` instead of `opencode` directly so the
+per-lane env (DB, config, viewer port, provider key) is set. The coding
+model is `claude-sonnet-4-6` in both lanes.
+
+**Where config lives:**
+
+- `~/.config/opencode/opencode.json` — personal OpenCode config (Max)
+- `~/projects/ahold/opencode.json` — work OpenCode config (TechNL);
+  lives outside `~/.config` because it's project-scoped
+- `~/.config/codemem/personal.json` — personal observer config
+- `~/.config/codemem/work-ahold.json` — work observer config
+- `~/.codemem/{personal,work-ahold}/` — per-lane SQLite stores +
+  plugin logs, created by a home-manager activation step
+
+**Isolation mechanism:** separate DB *folders* (the viewer lock is
+keyed on the DB directory), separate observer configs, and separate
+viewer ports — all set per-lane by the `oc-*` functions. The OpenCode
+plugin forwards `CODEMEM_DB` / `CODEMEM_CONFIG` / `CODEMEM_VIEWER_PORT`
+into the viewer it auto-starts, and the extraction sweeper runs inside
+that per-lane viewer, so work extraction provably stays in the TechNL
+channel.
+
+**No secrets in the repo:** the TechNL key is resolved at runtime via
+`pass-cli` (Proton Pass) — `oc-work` fails fast if it can't fetch the
+key. Paths use `config.home.homeDirectory`, so the same module works
+for `/Users/yvan` (m4) and `/Users/yvan-sytac` (m5). Requires the
+`pass-cli` brew (declared per-host in `homebrew.nix`) and a logged-in
+Proton Pass session.
+
 ## Repo-level Claude config
 
 - `CLAUDE.md` at the repo root is the agent entry point; it defers to

@@ -104,6 +104,7 @@ sudo darwin-rebuild --rollback
 | macOS system default (finder, keyboard, etc.) | [`nix/modules/system.nix`](nix/modules/system.nix) |
 | Dock layout / apps (per-host) | [`nix/hosts/<name>/dock.nix`](nix/hosts/m4/dock.nix) |
 | Shell config (zsh init, lazy-loads, env vars) | [`nix/home/zsh.nix`](nix/home/zsh.nix) |
+| OpenCode config / codemem memory lanes | [`nix/home/codemem.nix`](nix/home/codemem.nix) |
 | Git config (per-host identity) | [`nix/hosts/<name>/git.nix`](nix/hosts/m4/git.nix) |
 | New dotfile to symlink (e.g. `.foorc`) | [`nix/home/files.nix`](nix/home/files.nix) |
 | Neovim plugins / LSP / keymaps | [`nix/nixvim/config/`](nix/nixvim/config/) |
@@ -132,7 +133,8 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 │   ├── home/                  ← shared home-manager (user-level) modules
 │   │   ├── default.nix        ← entrypoint, imports submodules
 │   │   ├── zsh.nix            ← .zshrc / .zprofile / .zshenv content
-│   │   └── files.nix          ← file-pointer dotfiles (.ideavimrc, .claude)
+│   │   ├── files.nix          ← file-pointer dotfiles (.ideavimrc, .claude)
+│   │   └── codemem.nix        ← OpenCode config + two-lane codemem memory
 │   └── nixvim/                ← neovim configuration as a nix module
 │       └── config/            ← imported by flake.nix's per-host nvim build
 │

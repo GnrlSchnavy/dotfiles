@@ -94,9 +94,10 @@ nix/
 │   ├── system.nix       # macOS defaults, caps-lock→escape, dark mode, finder
 │   └── environment.nix  # EDITOR/VISUAL=nvim, kubectl aliases (k, kgp, kaf, …)
 ├── home/                # shared home-manager modules (every host)
-│   ├── default.nix      # imports files.nix + zsh.nix; home.stateVersion
+│   ├── default.nix      # imports files.nix + zsh.nix + codemem.nix; home.stateVersion
 │   ├── zsh.nix          # .zprofile/.zshrc content, aliases, session vars
-│   └── files.nix        # file-pointer dotfiles (.ideavimrc, .claude/*)
+│   ├── files.nix        # file-pointer dotfiles (.ideavimrc, .claude/*)
+│   └── codemem.nix      # OpenCode config + two-lane codemem memory (oc-personal/oc-work)
 └── nixvim/config/       # Neovim module (NOT a flake) — LSP, Telescope, Treesitter
 ```
 

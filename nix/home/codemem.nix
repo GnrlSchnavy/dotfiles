@@ -44,7 +44,7 @@ in
       baseURL = "http://127.0.0.1:3456";
       apiKey = "dummy";
     };
-    model = "anthropic/claude-sonnet-4-5";
+    model = "anthropic/claude-sonnet-4-6";
   };
 
   # ── Work OpenCode config (direct TechNL provider, codemem only) ──
@@ -62,15 +62,15 @@ in
         apiKey = "dummy";
         headers."api-key" = "{env:TECHNL_GENAI_KEY}";
       };
-      models."claude-sonnet-4-5" = {
-        name = "Claude Sonnet 4.5 (TechNL)";
+      models."claude-sonnet-4-6" = {
+        name = "Claude Sonnet 4.6 (TechNL)";
         limit = {
           context = 200000;
           output = 64000;
         };
       };
     };
-    model = "technl/claude-sonnet-4-5";
+    model = "technl/claude-sonnet-4-6";
   };
 
   # ── codemem observer configs (no secrets) ──
