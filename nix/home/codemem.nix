@@ -14,8 +14,9 @@
 # auto-starts, and the extraction sweeper runs inside that per-lane viewer, so
 # work extraction provably stays in the TechNL channel.
 #
-# No secrets live in this file: the TechNL key is resolved at runtime via
-# pass-cli (Proton Pass). Paths use config.home.homeDirectory so the same
+# No secrets live in this file: the TechNL key AND the proxy URL are resolved at
+# runtime via pass-cli (Proton Pass) — the proxy hostname is intentionally kept
+# out of these public dotfiles. Paths use config.home.homeDirectory so the same
 # module works for both /Users/yvan (m4) and /Users/yvan-sytac (m5).
 { config, lib, ... }:
 
@@ -23,7 +24,6 @@ let
   home = config.home.homeDirectory;
   codememVersion = "0.36.0";
   pluginSpec = "@codemem/opencode-plugin@${codememVersion}";
-  technlBase = "https://api-ai.digitaldev.nl/anthropic/v1";
 
   # codemem MCP server entry — identical in both lanes. It inherits
   # CODEMEM_DB / CODEMEM_CONFIG from the launching oc-* function, so recall is
@@ -65,7 +65,9 @@ in
       npm = "@ai-sdk/anthropic";
       name = "TechNL GenAI (work)";
       options = {
-        baseURL = technlBase;
+        # Proxy URL resolved at runtime from $TECHNL_PROXY_URL (set by oc-work
+        # from pass-cli), so the hostname stays out of these public dotfiles.
+        baseURL = "{env:TECHNL_PROXY_URL}";
         apiKey = "dummy";
         headers."api-key" = "{env:TECHNL_GENAI_KEY}";
       };
@@ -116,18 +118,25 @@ in
       opencode "$@"
     }
     oc-work() {
-      # Resolve the TechNL key once (used for both coding + observer auth).
-      local technl_key
+      # Resolve the TechNL key + proxy URL once (used for both coding + observer
+      # auth). Both come from pass-cli so neither is baked into the dotfiles.
+      # Fail closed: if either can't be resolved, do NOT launch — never fall back
+      # to a path that could route client content to Anthropic directly.
+      local technl_key technl_proxy
       technl_key="$(pass-cli item view 'pass://Ahold/TechNLGenAI/api_key')" || {
         print -u2 "oc-work: failed to resolve TechNL key from pass-cli"; return 1
+      }
+      technl_proxy="$(pass-cli item view 'pass://Ahold/TechNLGenAI/proxy_url')" || {
+        print -u2 "oc-work: failed to resolve TechNL proxy URL from pass-cli"; return 1
       }
       CODEMEM_DB="${home}/.codemem/work-ahold/mem.sqlite" \
       CODEMEM_CONFIG="${home}/.config/codemem/work-ahold.json" \
       CODEMEM_VIEWER_PORT=4848 \
       CODEMEM_PROJECT=ahold \
       CODEMEM_PLUGIN_LOG="${home}/.codemem/work-ahold/plugin.log" \
-      CODEMEM_ANTHROPIC_ENDPOINT="${technlBase}/messages" \
+      CODEMEM_ANTHROPIC_ENDPOINT="$technl_proxy/messages" \
       TECHNL_GENAI_KEY="$technl_key" \
+      TECHNL_PROXY_URL="$technl_proxy" \
       ANTHROPIC_API_KEY="$technl_key" \
       OPENCODE_CONFIG="${home}/projects/ahold/opencode.json" \
       opencode "$@"

@@ -102,7 +102,7 @@ proxy:
 | Launcher | Provider | codemem DB | Observer extraction | Viewer port |
 |---|---|---|---|---|
 | `oc-personal` | Max via the `opencode-with-claude` proxy (`127.0.0.1:3456`) | `~/.codemem/personal/` | local Claude (Max) | 4747 |
-| `oc-work` | TechNL proxy (`api-ai.digitaldev.nl`), project `ahold` | `~/.codemem/work-ahold/` | TechNL proxy | 4848 |
+| `oc-work` | TechNL proxy (URL via pass-cli), project `ahold` | `~/.codemem/work-ahold/` | TechNL proxy | 4848 |
 
 Both lanes use `claude-sonnet-4-6` for coding and `claude-haiku-4-5`
 as the codemem observer model.
@@ -145,7 +145,7 @@ directly — only through the sanctioned TechNL proxy.
 | Launcher | Provider | codemem DB | Observer (extraction) | Viewer port |
 |---|---|---|---|---|
 | `oc-personal` | Max via the `opencode-with-claude` proxy (`127.0.0.1:3456`) | `~/.codemem/personal/` | local Claude (`claude-haiku-4-5` sidecar) | 4747 |
-| `oc-work` | TechNL proxy (`api-ai.digitaldev.nl`) | `~/.codemem/work-ahold/` | TechNL proxy (`api_http`, key via pass-cli) | 4848 |
+| `oc-work` | TechNL proxy (URL via pass-cli) | `~/.codemem/work-ahold/` | TechNL proxy (`api_http`, key via pass-cli) | 4848 |
 
 Both are zsh functions appended to the shared `zsh.nix` initContent;
 run `oc-personal` / `oc-work` instead of `opencode` directly so the
