@@ -124,8 +124,13 @@ Config layout:
 - `~/.config/codemem/{personal,work-ahold}.json` — per-lane observer
   configs
 
-**No secrets live in the repo.** The TechNL key is resolved at runtime
-by `oc-work` via `pass-cli` (Proton Pass), and paths use
+Run `oc-personal` / `oc-work` (zsh functions) instead of `opencode`
+directly, so each lane's env (DB, config, viewer port, provider key) is
+set.
+
+**No secrets live in the repo.** The TechNL key *and* the proxy URL are
+resolved at runtime by `oc-work` via `pass-cli` (Proton Pass) — `oc-work`
+**fails closed** if it can't fetch either — and paths use
 `config.home.homeDirectory` so the same module works on both `m4`
 (`/Users/yvan`) and `m5` (`/Users/yvan-sytac`).
 
@@ -133,49 +138,9 @@ Prereqs on a host: `pass-cli` (Proton Pass CLI) and `uv` must be
 declared in that host's `homebrew.nix` for `oc-work` to resolve its key
 and for codemem's vector search.
 
-## OpenCode & codemem (two-lane memory)
-
-[`nix/home/codemem.nix`](../nix/home/codemem.nix) is a shared
-home-manager module (imported by `nix/home/default.nix`, applied to
-every host) that configures [OpenCode](https://opencode.ai) plus
-`codemem` persistent memory in **two isolated lanes**. The split exists
-so client (Ahold) content is never extracted through Anthropic
-directly — only through the sanctioned TechNL proxy.
-
-| Launcher | Provider | codemem DB | Observer (extraction) | Viewer port |
-|---|---|---|---|---|
-| `oc-personal` | Max via the `opencode-with-claude` proxy (`127.0.0.1:3456`) | `~/.codemem/personal/` | local Claude (`claude-haiku-4-5` sidecar) | 4747 |
-| `oc-work` | TechNL proxy (URL via pass-cli) | `~/.codemem/work-ahold/` | TechNL proxy (`api_http`, key via pass-cli) | 4848 |
-
-Both are zsh functions appended to the shared `zsh.nix` initContent;
-run `oc-personal` / `oc-work` instead of `opencode` directly so the
-per-lane env (DB, config, viewer port, provider key) is set. The coding
-model is `claude-sonnet-4-6` in both lanes.
-
-**Where config lives:**
-
-- `~/.config/opencode/opencode.json` — personal OpenCode config (Max)
-- `~/projects/ahold/opencode.json` — work OpenCode config (TechNL);
-  lives outside `~/.config` because it's project-scoped
-- `~/.config/codemem/personal.json` — personal observer config
-- `~/.config/codemem/work-ahold.json` — work observer config
-- `~/.codemem/{personal,work-ahold}/` — per-lane SQLite stores +
-  plugin logs, created by a home-manager activation step
-
-**Isolation mechanism:** separate DB *folders* (the viewer lock is
-keyed on the DB directory), separate observer configs, and separate
-viewer ports — all set per-lane by the `oc-*` functions. The OpenCode
-plugin forwards `CODEMEM_DB` / `CODEMEM_CONFIG` / `CODEMEM_VIEWER_PORT`
-into the viewer it auto-starts, and the extraction sweeper runs inside
-that per-lane viewer, so work extraction provably stays in the TechNL
-channel.
-
-**No secrets in the repo:** the TechNL key is resolved at runtime via
-`pass-cli` (Proton Pass) — `oc-work` fails fast if it can't fetch the
-key. Paths use `config.home.homeDirectory`, so the same module works
-for `/Users/yvan` (m4) and `/Users/yvan-sytac` (m5). Requires the
-`pass-cli` brew (declared per-host in `homebrew.nix`) and a logged-in
-Proton Pass session.
+For **per-client custom agents and repo-specific rules** (kept out of
+these public dotfiles, in a private per-client repo), see
+[OpenCode client tooling](opencode-client-tooling.md).
 
 ## OpenCode instructions & agents
 
@@ -209,6 +174,11 @@ Agents intentionally **omit a `model:` field** so they inherit the active
 lane's default model. Hard-coding `anthropic/…` would route an agent to the
 personal Max proxy even under `oc-work` — a client-data leak. Leaving it
 unset preserves lane isolation.
+
+These are the **global** agents (both lanes). For **project-scoped,
+per-client** agents and repo rules — materialized into a client checkout
+from a private repo without committing them — see
+[OpenCode client tooling](opencode-client-tooling.md).
 
 ## Repo-level Claude config
 
