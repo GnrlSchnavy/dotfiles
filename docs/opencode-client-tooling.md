@@ -79,14 +79,114 @@ inside a marked, removable block. So:
 
 ## Runbook — onboard a new client
 
-1. Create a **private** tooling repo on the client's infra.
-2. *(Optional, for separated memory)* add an `oc-<client>` lane in
-   [`nix/home/codemem.nix`](../nix/home/codemem.nix) mirroring `oc-work`, then
-   `darwin-rebuild switch`.
-3. `oc-tooling clone <client> <url>` (or `link <client> <path>` if already
-   checked out).
-4. Populate `repos/<repo>/tree/` with the agents + `AGENTS.md`; commit + push.
-5. In each client checkout: `oc-tooling apply <client>/<repo>`.
+Two parts: **(A)** an isolated memory lane in these dotfiles, and **(B)** the
+private tooling repo. Skip part A if the client needs no extraction isolation
+(then just do B and run its repos under `oc-personal`).
+
+Throughout, replace `<client>` (lowercase slug, e.g. `acme`), `<CLIENT>` (env
+prefix, e.g. `ACME`), and the channel/pass values. Pick a **unique viewer
+port** (personal `4747`, Ahold `4848`, so the next is `4849`).
+
+### A. Add an isolated memory lane
+
+All edits are in [`nix/home/codemem.nix`](../nix/home/codemem.nix), mirroring
+the `oc-work` (Ahold) lane.
+
+1. **Add the client's secrets to Proton Pass** (resolved at runtime, never in
+   the repo):
+   - `pass://<Client>/<Channel>/api_key`
+   - `pass://<Client>/<Channel>/proxy_url` — the **base** URL (e.g.
+     `https://…/v1`), without `/messages`.
+
+2. **Client OpenCode config** (project-scoped, so `home.file`, outside
+   `~/.config`). The proxy URL + key come from env (set by the launcher), so
+   neither is in the repo:
+   ```nix
+   home.file."projects/<client>/opencode.json".text = builtins.toJSON {
+     "$schema" = "https://opencode.ai/config.json";
+     plugin = [ pluginSpec ];
+     mcp = codememMcp;
+     # optional overlay (see note below):
+     # instructions = [ "${home}/.config/opencode/<client>/*.md" ];
+     provider.<client> = {
+       npm = "@ai-sdk/anthropic";
+       name = "<Client> proxy";
+       options = {
+         baseURL = "{env:<CLIENT>_PROXY_URL}";
+         apiKey = "dummy";
+         headers."api-key" = "{env:<CLIENT>_API_KEY}";
+       };
+       models."claude-sonnet-4-6" = {
+         name = "Claude Sonnet 4.6";
+         limit = { context = 200000; output = 64000; };
+       };
+     };
+     model = "<client>/claude-sonnet-4-6";
+   };
+   ```
+
+3. **codemem observer config** — extraction routed through the same channel:
+   ```nix
+   xdg.configFile."codemem/<client>.json".text = builtins.toJSON {
+     observer_runtime = "api_http";
+     observer_provider = "anthropic";
+     observer_model = "claude-haiku-4-5";
+     observer_auth_source = "command";
+     observer_auth_command = [ "pass-cli" "item" "view" "pass://<Client>/<Channel>/api_key" ];
+     observer_auth_cache_ttl_s = 300;
+     observer_headers."api-key" = "\${auth.token}";  # literal ${auth.token}
+   };
+   ```
+
+4. **Launcher** — append to `programs.zsh.initContent`. Resolves both secrets,
+   **fails closed**, and sets the per-lane env:
+   ```nix
+   oc-<client>() {
+     local key proxy
+     key="$(pass-cli item view 'pass://<Client>/<Channel>/api_key')"    || { print -u2 "oc-<client>: no api_key";   return 1; }
+     proxy="$(pass-cli item view 'pass://<Client>/<Channel>/proxy_url')" || { print -u2 "oc-<client>: no proxy_url"; return 1; }
+     CODEMEM_DB="${home}/.codemem/<client>/mem.sqlite" \
+     CODEMEM_CONFIG="${home}/.config/codemem/<client>.json" \
+     CODEMEM_VIEWER_PORT=<unique-port> \
+     CODEMEM_PROJECT=<client> \
+     CODEMEM_PLUGIN_LOG="${home}/.codemem/<client>/plugin.log" \
+     CODEMEM_ANTHROPIC_ENDPOINT="$proxy/messages" \
+     <CLIENT>_API_KEY="$key" \
+     <CLIENT>_PROXY_URL="$proxy" \
+     ANTHROPIC_API_KEY="$key" \
+     OPENCODE_CONFIG="${home}/projects/<client>/opencode.json" \
+     opencode "$@"
+   }
+   ```
+   Why `ANTHROPIC_API_KEY` + `CODEMEM_ANTHROPIC_ENDPOINT`: codemem's observer
+   targets an Anthropic-shaped endpoint; the endpoint var redirects it to the
+   sanctioned proxy (never `api.anthropic.com`) and the key var feeds it the
+   client key. See the existing `oc-work` for the worked example.
+
+5. **Per-lane runtime dir** — extend the `home.activation.codememDirs` list:
+   ```nix
+   run mkdir -p ${home}/.codemem/personal ${home}/.codemem/work-ahold ${home}/.codemem/<client>
+   ```
+
+6. `git add` the changed files, then `darwin-rebuild switch`.
+
+7. **Verify isolation before real work**: run `oc-<client>` in a throwaway
+   repo, do a little, wait ~2 min for the sweep, then confirm memories were
+   created — which proves extraction went through the only configured channel
+   (and the launcher fails closed if a secret is missing).
+
+> **Overlay note:** the `instructions` line is optional. A client overlay can
+> live as a public folder `system/opencode/<client>/*.md` (client *name* only,
+> like Ahold's — no internal architecture), or be dropped entirely and the
+> rules kept in the private tooling repo (part B).
+
+### B. Set up the tooling (private repo)
+
+1. Create a **private** tooling repo on the client's infra; `oc-tooling clone
+   <client> <url>` (or `link <client> <path>` if already checked out).
+2. Populate `repos/<repo>/tree/` with the agents + nested `AGENTS.md`;
+   commit + push (mind the [push-auth gotcha](#gotchas) for work accounts).
+3. In each client checkout: `oc-tooling apply <client>/<repo>`.
 
 ## Runbook — restore after re-clone / OS reinstall
 
