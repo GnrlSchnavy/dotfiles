@@ -29,9 +29,19 @@
 # The source files live in system/opencode/ (git-tracked; flakes only see
 # tracked files). They are static, so symlinking read-only into the Nix store is
 # safe — OpenCode only reads them.
-{ ... }:
+#
+# This module also ships `oc-tooling`: a client-agnostic helper that materializes
+# per-client OpenCode tooling (project agents + nested AGENTS.md) from a PRIVATE
+# per-client repo into a checkout, without committing it. The helper carries no
+# client content; the content lives in the private repo (see the script header).
+{ pkgs, ... }:
 
 {
+  home.packages = [
+    (pkgs.writeShellScriptBin "oc-tooling"
+      (builtins.readFile ../../system/opencode/bin/oc-tooling.sh))
+  ];
+
   xdg.configFile = {
     "opencode/AGENTS.md".source = ../../system/opencode/AGENTS.md;
     # Client overlay folder — every *.md inside is glob'd in by the work lane
