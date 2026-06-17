@@ -65,9 +65,13 @@
       "autojump"
 
       # Development utilities
+      "uv"
       "gh"
       "kubectl"
       "pnpm"
+      "opencode"
+
+
     ];
 
     # Homebrew maintenance settings
