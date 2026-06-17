@@ -26,6 +26,7 @@
       # Development
       "chromedriver"
       "claude"
+      "claude-code"
       "docker-desktop"
       "intellij-idea"
       "visual-studio-code"
@@ -66,6 +67,7 @@
       # Development utilities
       "gh"
       "kubectl"
+      "pnpm"
     ];
 
     # Homebrew maintenance settings
