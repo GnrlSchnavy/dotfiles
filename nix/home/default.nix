@@ -14,6 +14,7 @@
   imports = [
     ./files.nix
     ./zsh.nix
+    ./codemem.nix
   ];
 
   # First state version we ship under home-manager. Don't change without
