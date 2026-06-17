@@ -177,10 +177,44 @@ for `/Users/yvan` (m4) and `/Users/yvan-sytac` (m5). Requires the
 `pass-cli` brew (declared per-host in `homebrew.nix`) and a logged-in
 Proton Pass session.
 
+## OpenCode instructions & agents
+
+Source lives in `system/opencode/`; deployed by
+[`nix/home/opencode.nix`](../nix/home/opencode.nix) as read-only symlinks
+into `~/.config/opencode/`. These are the *global* OpenCode layer — read
+by every session, both lanes.
+
+| Deployed path | Source | Scope |
+|---|---|---|
+| `~/.config/opencode/AGENTS.md` | `system/opencode/AGENTS.md` | baseline rules, every session |
+| `~/.config/opencode/agent/*.md` | `system/opencode/agent/` | global agents, every session |
+| `~/.config/opencode/ahold.md` | `system/opencode/ahold.md` | Ahold overlay, **work lane only** |
+
+How the layers stack (verified against opencode 1.17.5):
+
+- OpenCode always loads `~/.config/opencode/AGENTS.md`, then walks **up**
+  from the cwd to the project root collecting any project `AGENTS.md`, and
+  combines them all. A project-level `CLAUDE.md` is **not** auto-loaded in
+  this version — project instruction files must be named `AGENTS.md`.
+- Agents are discovered via the glob `{agent,agents}/**/*.md` under the
+  config dir and any project `.opencode/`, so the curated agents are
+  available everywhere.
+- The Ahold overlay is **not** global. It's pulled in only by the work
+  lane, via `instructions: ["…/ahold.md"]` in
+  `~/projects/ahold/opencode.json` (declared in
+  [`nix/home/codemem.nix`](../nix/home/codemem.nix)). A new client gets its
+  own overlay file plus a new lane.
+
+Agents intentionally **omit a `model:` field** so they inherit the active
+lane's default model. Hard-coding `anthropic/…` would route an agent to the
+personal Max proxy even under `oc-work` — a client-data leak. Leaving it
+unset preserves lane isolation.
+
 ## Repo-level Claude config
 
 - `CLAUDE.md` at the repo root is the agent entry point; it defers to
-  `docs/` for detail.
+  `docs/` for detail. `AGENTS.md` is a symlink to it so OpenCode (which
+  auto-loads `AGENTS.md`, not project `CLAUDE.md`) reads the same guidance.
 - `.gitignore` excludes `/.claude/` at the repo root (machine-local
   Claude Code worktree state) — distinct from `system/.claude/`, which
   is versioned.
