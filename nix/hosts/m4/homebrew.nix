@@ -14,7 +14,6 @@
 
       # Communication
       "discord"
-      "microsoft-teams"
       "signal"
       "slack"
       "whatsapp"
@@ -45,11 +44,12 @@
       "proton-pass"
       "protonvpn"
 
-      # Virtualization & Remote
-      "crossover"
-
       # Programming languages
       "temurin@25"
+
+      #Gaming
+      "crossover"
+      "steam"
     ];
 
     # CLI Tools (brews) - use when not available in Nix or need Homebrew features
@@ -83,6 +83,13 @@
       "gh"
       "stripe-cli"
       "ansible"
+
+      # AI tooling runtimes — pinned here (not via nvm/pyenv) because
+      # claude-mem needs them present at machine scope: bun runs its
+      # worker daemon, uv backs its Python vector search. claude-mem
+      # would otherwise auto-fetch unpinned copies on first install.
+      "oven-sh/bun/bun"
+      "uv"
     ];
 
     # Homebrew maintenance settings

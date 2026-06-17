@@ -55,6 +55,38 @@ runtime file back into the repo and commit.
 Everything else under `~/.claude/` (transcripts, session state, plugin
 caches) is deliberately unmanaged.
 
+## claude-mem: manual per-machine install
+
+claude-mem can't be fully declared in Nix — it's an imperative
+installer that writes Claude Code lifecycle hooks, runs a background
+worker daemon, and builds a SQLite + Chroma store under
+`~/.claude-mem/`. We declare what we can and run the installer by hand
+once per machine:
+
+- **Declared:** its runtime deps `bun` + `uv` are pinned as brews in
+  `nix/hosts/<host>/homebrew.nix` (machine-scope, not behind nvm/pyenv —
+  bun runs the worker daemon, uv backs the Python vector search;
+  otherwise claude-mem auto-fetches unpinned copies). Its tuned config
+  snapshot lives at `system/.claude-mem/settings.json`.
+- **Manual:** after the first `darwin-rebuild switch` (so `bun`/`uv`
+  exist), run the installer, then restore the tuned settings:
+
+```bash
+npx claude-mem install                # writes hooks, starts the worker
+cp ~/.dotfiles/system/.claude-mem/settings.json ~/.claude-mem/settings.json
+npx claude-mem restart                # reload worker with tuned settings
+```
+
+`setup.sh`'s seed step only copies `~/.claude-mem/settings.json` when
+absent, and `npx claude-mem install` creates that file itself — so run
+the installer first, then the `cp` above to overwrite it with our
+snapshot. (On a host whose username differs from the snapshot's, fix
+the `/Users/<name>` paths inside afterward, as setup.sh's seeder does
+automatically.)
+
+Note: `bun`/`uv` are currently pinned on m4 only. Add them to another
+host's `homebrew.nix` before running the claude-mem installer there.
+
 ## Repo-level Claude config
 
 - `CLAUDE.md` at the repo root is the agent entry point; it defers to

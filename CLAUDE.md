@@ -24,7 +24,8 @@ sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName)
 ```
 
 Fresh machine bootstrap: `./setup.sh`
-([docs/operations.md](docs/operations.md)).
+([docs/operations.md](docs/operations.md)). claude-mem needs a manual
+per-machine install step — see [docs/claude-code.md](docs/claude-code.md#claude-mem-manual-per-machine-install).
 
 ## Hard rules (violations break the build or the machine)
 
