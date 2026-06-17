@@ -55,10 +55,12 @@ in
     plugin = [ pluginSpec ];
     mcp = codememMcp;
     # Ahold client overlay — loaded ONLY in the work lane, on top of the global
-    # ~/.config/opencode/AGENTS.md. Absolute path (resolved directly by
-    # OpenCode), so it applies in every repo under oc-work. The file is deployed
-    # by nix/home/opencode.nix; new clients get their own overlay + lane.
-    instructions = [ "${home}/.config/opencode/ahold.md" ];
+    # ~/.config/opencode/AGENTS.md. Glob of an absolute path: OpenCode resolves
+    # it as glob(basename, {cwd: dirname}), so every *.md in the folder loads
+    # (flat, one level), in every repo under oc-work. The folder is deployed by
+    # nix/home/opencode.nix; add files to extend it, new clients get their own
+    # folder + lane.
+    instructions = [ "${home}/.config/opencode/ahold/*.md" ];
     provider.technl = {
       npm = "@ai-sdk/anthropic";
       name = "TechNL GenAI (work)";

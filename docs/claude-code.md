@@ -188,7 +188,7 @@ by every session, both lanes.
 |---|---|---|
 | `~/.config/opencode/AGENTS.md` | `system/opencode/AGENTS.md` | baseline rules, every session |
 | `~/.config/opencode/agent/*.md` | `system/opencode/agent/` | global agents, every session |
-| `~/.config/opencode/ahold.md` | `system/opencode/ahold.md` | Ahold overlay, **work lane only** |
+| `~/.config/opencode/ahold/*.md` | `system/opencode/ahold/` | Ahold overlay (any number of files), **work lane only** |
 
 How the layers stack (verified against opencode 1.17.5):
 
@@ -200,7 +200,7 @@ How the layers stack (verified against opencode 1.17.5):
   config dir and any project `.opencode/`, so the curated agents are
   available everywhere.
 - The Ahold overlay is **not** global. It's pulled in only by the work
-  lane, via `instructions: ["…/ahold.md"]` in
+  lane, via `instructions: ["…/ahold/*.md"]` in
   `~/projects/ahold/opencode.json` (declared in
   [`nix/home/codemem.nix`](../nix/home/codemem.nix)). A new client gets its
   own overlay file plus a new lane.
