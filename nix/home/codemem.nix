@@ -44,7 +44,24 @@ in
       baseURL = "http://127.0.0.1:3456";
       apiKey = "dummy";
     };
+    # Opus tier for the agent-workflow roles (Max serves Opus). Sonnet stays the
+    # default below; only the roles mapped in `agent` use Opus.
+    provider.anthropic.models."claude-opus-4-8" = {
+      name = "Claude Opus 4.8";
+      limit = {
+        context = 200000;
+        output = 64000;
+      };
+    };
     model = "anthropic/claude-sonnet-4-6";
+    # Per-role model tiers. The agent prompts live in system/opencode/agent/ and
+    # are model-LESS; the tier is chosen here, per-lane. lead + planner run on
+    # Opus; every other role inherits the Sonnet default. See
+    # docs/claude-code.md#opencode-agent-workflow.
+    agent = {
+      lead.model = "anthropic/claude-opus-4-8";
+      planner.model = "anthropic/claude-opus-4-8";
+    };
   };
 
   # ── Work OpenCode config (direct TechNL provider, codemem only) ──
@@ -78,8 +95,26 @@ in
           output = 64000;
         };
       };
+      # Opus tier for the agent-workflow roles. NOTE: confirm the TechNL proxy
+      # actually serves this model id and change it to whatever it exposes.
+      models."claude-opus-4-8" = {
+        name = "Claude Opus 4.8 (TechNL)";
+        limit = {
+          context = 200000;
+          output = 64000;
+        };
+      };
     };
     model = "technl/claude-sonnet-4-6";
+    # Per-role model tiers — MUST be set here too. Under oc-work the personal
+    # config loads as the base and this work config merges ON TOP; if lead +
+    # planner were left unset here they would inherit the personal `anthropic/*`
+    # Opus = a client-data leak. Pinning them to the `technl` provider keeps
+    # every role inside the sanctioned channel.
+    agent = {
+      lead.model = "technl/claude-opus-4-8";
+      planner.model = "technl/claude-opus-4-8";
+    };
   };
 
   # ── codemem observer configs (no secrets) ──

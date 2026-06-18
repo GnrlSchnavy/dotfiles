@@ -63,6 +63,7 @@ per-machine install step — see [docs/claude-code.md](docs/claude-code.md#claud
 | New dotfile symlink | `nix/home/files.nix` |
 | OpenCode config / codemem memory lanes | `nix/home/codemem.nix` ([docs/claude-code.md](docs/claude-code.md#opencode--two-lane-codemem-memory)) |
 | OpenCode global rules (AGENTS.md) + agents | `system/opencode/` → `nix/home/opencode.nix` ([docs/claude-code.md](docs/claude-code.md#opencode-instructions--agents)) |
+| OpenCode agent workflow (roles, commands, per-lane model tiers) | `system/opencode/agent/` + `command/`, tiers in `nix/home/codemem.nix` ([docs/opencode-agent-workflow.md](docs/opencode-agent-workflow.md)) |
 | OpenCode per-client agents/rules | private per-client repo + `oc-tooling` ([docs/opencode-client-tooling.md](docs/opencode-client-tooling.md)) |
 | Claude Code settings/agents/skills | `system/.claude/` ([docs/claude-code.md](docs/claude-code.md)) |
 | Neovim (NixVim) | `nix/nixvim/config/` — built per-host by `mkNvim` in `nix/flake.nix`; it is **not** a standalone flake |

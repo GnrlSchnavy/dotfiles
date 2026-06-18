@@ -51,5 +51,8 @@
     # Whole-directory symlink: every system/opencode/agent/*.md becomes a global
     # OpenCode agent.
     "opencode/agent".source = ../../system/opencode/agent;
+    # Custom slash commands (loaded from {command,commands}/**/*.md, both lanes).
+    # /plan, /review, /close drive the agent-workflow roles.
+    "opencode/command".source = ../../system/opencode/command;
   };
 }

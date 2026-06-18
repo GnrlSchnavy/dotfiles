@@ -180,6 +180,20 @@ per-client** agents and repo rules — materialized into a client checkout
 from a private repo without committing them — see
 [OpenCode client tooling](opencode-client-tooling.md).
 
+## OpenCode agent workflow
+
+A schema-driven, multi-agent way to take a feature from spec to merged: a
+**lead** orchestrator (Opus) plans, dispatches role subagents
+(`planner`/`architect`/`developer`/`reviewer`/`closer`) and the specialists
+above, and enforces an escalation ladder + review gates. Roles live in
+`system/opencode/agent/`, commands (`/plan`, `/review`, `/close`) in
+`system/opencode/command/`, and the per-lane Opus/Sonnet tiers in each
+`opencode.json`'s `agent.<role>.model` block (model-less agents + per-lane tiers
+= isolation-safe). **Subagent models don't show in the footer — verify via the
+log** (`grep 'agent=<role>' ~/.local/share/opencode/log/opencode.log`).
+
+Full reference: [OpenCode agent workflow](opencode-agent-workflow.md).
+
 ## Repo-level Claude config
 
 - `CLAUDE.md` at the repo root is the agent entry point; it defers to

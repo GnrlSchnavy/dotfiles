@@ -9,7 +9,9 @@ precise enough for both humans and AI agents making changes.
 | [hosts.md](hosts.md) | See what each host is, or onboard a new Mac |
 | [packages.md](packages.md) | Add/remove software; decide Nix vs Homebrew vs Mac App Store |
 | [shell-and-dotfiles.md](shell-and-dotfiles.md) | Change zsh config, symlink a new dotfile, or understand which files must NOT be symlinked |
-| [claude-code.md](claude-code.md) | Manage Claude Code settings, agents, commands, skills |
+| [claude-code.md](claude-code.md) | Manage Claude Code settings, agents, commands, skills; OpenCode two-lane codemem + global agents |
+| [opencode-agent-workflow.md](opencode-agent-workflow.md) | Use or extend the multi-agent workflow (lead/planner/…), per-lane model tiers |
+| [opencode-client-tooling.md](opencode-client-tooling.md) | Set up per-client OpenCode tooling (private repo + `oc-tooling`), onboard/switch clients |
 | [operations.md](operations.md) | Rebuild, update, health-check, back up, troubleshoot |
 | [ci.md](ci.md) | Understand or modify the fresh-install CI workflow |
 
