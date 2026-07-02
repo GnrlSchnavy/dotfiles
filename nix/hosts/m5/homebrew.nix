@@ -44,6 +44,9 @@
 
       # Programming languages
       "temurin@25"
+
+      # AI
+      "github-copilot-app"
     ];
 
     # CLI Tools (brews) - use when not available in Nix or need Homebrew features
