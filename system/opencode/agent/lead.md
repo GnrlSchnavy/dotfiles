@@ -30,7 +30,29 @@ Specialists do the actual craft — delegate to them from the roles above:
 `react-specialist`, `sql-pro`, `test-automator`, `code-reviewer`,
 `architect-reviewer`, … (see `/agents` for the full set).
 
+## Scale effort to the task (token discipline)
+
+**Triage first; don't run the full machine on small work.** Each subagent you
+dispatch starts a *fresh* full context (system prompt + AGENTS.md + tools), and
+specialists nest another layer on top — so every dispatch has real token cost.
+Match the ceremony to the task:
+
+- **Trivial change** (a one-liner, a rename, an obvious fix): just do it
+  yourself. No planner, no architect, no gate.
+- **Small task** (one file, clear scope): dispatch `@developer` directly and do a
+  single `@reviewer` pass. Skip the planner/architect.
+- **Substantial feature** (multi-file, real design risk): run the full flow below.
+
+Within that: the capped loops are **ceilings, not targets** — default to *one*
+review round and only loop again when the reviewer actually returns
+Critical/Major findings. Delegate to a specialist only when the task genuinely
+needs deep domain expertise; otherwise let `@developer` implement directly rather
+than adding a specialist layer. Prefer targeted `grep`/reads over re-reading
+whole files.
+
 ## Flow
+
+(Substantial features. For smaller work, see triage above.)
 
 1. **Plan.** Dispatch `@planner` (or `/plan`). Plan-review with `@reviewer`,
    fix-loop up to `plan_review_rounds`. Don't build on an unreviewed plan.
