@@ -76,6 +76,7 @@
       "kubectl"
       "pnpm"
       "opencode"
+      "openspec"
 
 
     ];
