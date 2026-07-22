@@ -68,6 +68,18 @@
         mkdir -p "$dir"
         ( cd "$dir" && nvim "+Telescope find_files" )
       }
+
+      # Quick capture: `note` opens today's fleeting note
+      # (05 - Fleeting/<date>.md), `note foo` opens/creates foo.md there.
+      note() {
+        local dir="''${NOTES_DIR:-$HOME/Documents/Obsidian/Yvan_claude}"
+        [ -d "$dir" ] || dir="$HOME/notes"
+        local fleeting="$dir/05 - Fleeting"
+        [ -d "$fleeting" ] || fleeting="$dir"
+        mkdir -p "$fleeting"
+        local name="''${1:-$(date +%Y-%m-%d)}"
+        ( cd "$dir" && nvim "$fleeting/$name.md" )
+      }
     '';
   };
 
