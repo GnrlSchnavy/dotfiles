@@ -36,7 +36,9 @@ Idempotent; safe to re-run. Steps, in order:
    exists — if not, prints the new-host onboarding steps and exits
    (see [hosts.md](hosts.md)).
 4. Installs Homebrew (nix-homebrew patches it later but needs the
-   initial install) and Nix (multi-user daemon).
+   initial install) and Nix (multi-user daemon), then pre-trusts every
+   third-party tap declared in the host's `homebrew.nix` (newer
+   Homebrew refuses untrusted taps — see Troubleshooting).
 5. Moves pre-existing `/etc/nix/nix.conf`, `/etc/bashrc`, `/etc/zshrc`
    to `*.before-nix-darwin` so nix-darwin can take them over.
 6. `sudo nix run github:LnL7/nix-darwin/nix-darwin-25.11#darwin-rebuild -- switch --flake ~/.dotfiles/nix#<host>`
@@ -76,6 +78,16 @@ descriptor is missing `users.users.<name>.home = "/Users/<name>";`.
 **A brew-installed tool keeps disappearing** — `cleanup = "zap"`
 removes anything not declared in the host's `homebrew.nix`. Declare it
 (see [packages.md](packages.md#-cleanup--zap)).
+
+**"Refusing to load formula ... from untrusted tap"** — Homebrew
+(mid-2026+) gates third-party taps behind explicit trust. setup.sh
+pre-trusts the taps in the host's `homebrew.nix`, and CI does the same
+in `.github/workflows/check.yml`. After *adding a new* third-party tap
+(`owner/tap/formula` brew), trust it once per machine before
+rebuilding, and add it to the CI trust step:
+```bash
+brew trust <owner>/<tap>
+```
 
 **Brew bundle fails on one cask** — usually upstream; try
 `brew install --cask <name>` for the real error, comment the cask out
