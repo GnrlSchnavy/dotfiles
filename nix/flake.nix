@@ -73,7 +73,13 @@
             ({ pkgs, ... }: {
               environment.systemPackages = [ (mkNvim pkgs host) ];
             })
-
+          ]
+          # nix-homebrew installs/manages the Homebrew prefix itself.
+          # Hosts can opt out (manageHomebrew = false) to use a
+          # pre-existing Homebrew install — the CI runner ships one in
+          # a layout nix-homebrew's autoMigrate can't adopt (not a git
+          # checkout). brew bundle still runs either way.
+          ++ inputs.nixpkgs.lib.optionals (host.manageHomebrew or true) [
             nix-homebrew.darwinModules.nix-homebrew
             {
               nix-homebrew = {
@@ -83,7 +89,8 @@
                 autoMigrate = true;
               };
             }
-
+          ]
+          ++ [
             home-manager.darwinModules.home-manager
             {
               home-manager = {

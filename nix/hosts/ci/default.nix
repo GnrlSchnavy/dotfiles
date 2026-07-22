@@ -7,6 +7,13 @@
   hostname = "ci";
   username = "runner";
 
+  # Use the runner's pre-installed Homebrew instead of letting
+  # nix-homebrew install/migrate its own. Since the July 2026 macos-15
+  # image, /opt/homebrew is no longer a git checkout, so autoMigrate
+  # fails with "does not look like a Homebrew checkout". brew bundle
+  # (homebrew.*) still runs against the existing install.
+  manageHomebrew = false;
+
   # CI mirrors m4's per-host modules so we exercise the real config
   # end-to-end. Casks are force-dropped in `module` below; brews still run.
   systemModules = [ ../m4/homebrew.nix ../m4/packages.nix ../m4/dock.nix ];
