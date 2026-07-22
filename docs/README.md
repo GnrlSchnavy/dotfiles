@@ -12,6 +12,7 @@ precise enough for both humans and AI agents making changes.
 | [claude-code.md](claude-code.md) | Manage Claude Code settings, agents, commands, skills; OpenCode two-lane codemem + global agents |
 | [opencode-agent-workflow.md](opencode-agent-workflow.md) | Use or extend the multi-agent workflow (lead/planner/…), per-lane model tiers |
 | [opencode-client-tooling.md](opencode-client-tooling.md) | Set up per-client OpenCode tooling (private repo + `oc-tooling`), onboard/switch clients |
+| [nvim-cheatsheet.md](nvim-cheatsheet.md) | Look up Neovim keybindings while learning the NixVim setup |
 | [operations.md](operations.md) | Rebuild, update, health-check, back up, troubleshoot |
 | [ci.md](ci.md) | Understand or modify the fresh-install CI workflow |
 

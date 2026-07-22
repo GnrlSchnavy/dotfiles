@@ -58,6 +58,16 @@
 
       # Obsidian CLI on PATH
       export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"
+
+      # Quick note editing: open nvim in the notes directory straight
+      # into the fuzzy file finder. Uses the Obsidian vault when present,
+      # ~/notes otherwise. Override with NOTES_DIR.
+      notes() {
+        local dir="''${NOTES_DIR:-$HOME/Documents/Obsidian/Yvan_claude}"
+        [ -d "$dir" ] || dir="$HOME/notes"
+        mkdir -p "$dir"
+        ( cd "$dir" && nvim "+Telescope find_files" )
+      }
     '';
   };
 
