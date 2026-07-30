@@ -9,8 +9,11 @@
 # all trust it through this module.
 #
 # Runs in preActivation (before the homebrew bundle step), as the
-# primary user (brew refuses to run as root). Idempotent; no-op when
-# brew is absent or predates trust gating (`brew trust` unknown).
+# primary user (brew refuses to run as root), mirroring nix-darwin's
+# own brew-bundle invocation: --set-home is required — without it brew
+# runs with root's HOME and cannot write the trust settings.
+# Idempotent; no-op when brew is absent or predates trust gating
+# (`brew trust` unknown).
 { config, lib, ... }:
 let
   # "owner/tap/name" → "owner/tap"; plain names contribute nothing.
@@ -29,14 +32,15 @@ let
 
   brew = "${config.homebrew.brewPrefix}/brew";
   user = config.system.primaryUser;
+  runBrew = "PATH=\"${config.homebrew.brewPrefix}:$PATH\" sudo --preserve-env=PATH --set-home --user=${user} ${brew}";
 in
 {
   system.activationScripts.preActivation.text =
     lib.mkIf (config.homebrew.enable && taps != [ ]) ''
-      if [ -x ${brew} ] && sudo -u ${user} ${brew} trust --help >/dev/null 2>&1; then
+      if [ -x ${brew} ] && ${runBrew} trust --help >/dev/null 2>&1; then
         echo "trusting third-party Homebrew taps..." >&2
         ${lib.concatMapStringsSep "\n  " (tap: ''
-          sudo -u ${user} ${brew} trust ${tap} >/dev/null 2>&1 \
+          ${runBrew} trust ${tap} >/dev/null 2>&1 \
               || echo "warning: could not trust Homebrew tap ${tap}" >&2'') taps}
       fi
     '';
