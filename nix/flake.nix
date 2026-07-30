@@ -7,7 +7,21 @@
     nix-darwin.url = "github:LnL7/nix-darwin/nix-darwin-25.11";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
 
-    nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+    # Homebrew itself, overriding the release nix-homebrew pins.
+    # Casks/formulae come from Homebrew's live API, so brew must keep up
+    # with their DSL: 6.0.12 (nix-homebrew's pin) predates the
+    # command_wrapper stanza current casks use, breaking brew bundle
+    # ("Cask 'firefox' definition is invalid"). Bump the ref when brew
+    # bundle hits another unknown-DSL error; drop the override once
+    # nix-homebrew's own pin catches up.
+    brew-src = {
+      url = "github:Homebrew/brew/6.0.13";
+      flake = false;
+    };
+    nix-homebrew = {
+      url = "github:zhaofengli/nix-homebrew";
+      inputs.brew-src.follows = "brew-src";
+    };
 
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";
