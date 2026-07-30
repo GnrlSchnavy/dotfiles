@@ -50,6 +50,9 @@
 
       #VPN
       "tailscale-app"
+
+      #Games
+      "steam"
     ];
 
     # CLI Tools (brews) - use when not available in Nix or need Homebrew features
