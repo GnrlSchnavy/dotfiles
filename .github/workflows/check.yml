@@ -57,19 +57,9 @@ jobs:
             fi
           done
 
-      - name: Trust third-party Homebrew taps
-        # Newer Homebrew refuses to load formulae from untrusted
-        # third-party taps ("Refusing to load formula ... from
-        # untrusted tap"). Pre-trust the taps our brew bundle uses so
-        # activation doesn't abort. On a real machine this is a
-        # one-time interactive `brew trust` per tap.
-        # Taps: keep in sync with nix/hosts/m4/homebrew.nix (the ci
-        # host mirrors m4's brews).
-        run: |
-          brew trust protonpass/tap
-          brew trust fluxcd/tap
-          brew trust oven-sh/bun
-
+      # Third-party tap trust is handled declaratively during
+      # activation by nix/modules/homebrew-trust.nix — this run also
+      # serves as its end-to-end test.
       - name: Apply darwin configuration end-to-end
         # Bootstrap nix-darwin and apply our `ci` host config in one
         # shot — same path setup.sh takes, just with the runner's

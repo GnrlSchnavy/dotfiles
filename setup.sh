@@ -122,30 +122,6 @@ else
     print_success "Homebrew already installed"
 fi
 
-# Newer Homebrew (mid-2026) refuses to load formulae from untrusted
-# third-party taps, which would abort brew bundle during nix-darwin
-# activation. Pre-trust every third-party tap declared in this host's
-# homebrew.nix ("owner/tap/formula" brews). CI does the same in
-# .github/workflows/check.yml.
-print_step "Trusting third-party Homebrew taps..."
-if brew trust --help &> /dev/null; then
-    HOST_BREWS="$TARGET_DIR/nix/hosts/$HOSTNAME/homebrew.nix"
-    if [ -f "$HOST_BREWS" ]; then
-        for tap in $(grep -hoE '"[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+"' "$HOST_BREWS" \
-                       | tr -d '"' | awk -F/ '{print $1 "/" $2}' | sort -u); do
-            if brew trust "$tap" &> /dev/null; then
-                print_success "Trusted tap $tap"
-            else
-                print_warning "Could not trust tap $tap — brew bundle may prompt or fail"
-            fi
-        done
-    else
-        print_warning "No homebrew.nix for $HOSTNAME — skipping tap trust"
-    fi
-else
-    print_success "This Homebrew version has no tap trust gating — nothing to do"
-fi
-
 # Install Nix package manager
 print_step "Installing Nix package manager..."
 if ! command -v nix &> /dev/null; then

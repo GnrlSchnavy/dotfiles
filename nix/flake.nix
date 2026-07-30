@@ -54,6 +54,7 @@
         ./modules/nix.nix
         ./modules/system.nix
         ./modules/environment.nix
+        ./modules/homebrew-trust.nix
       ];
 
       # Build a per-host nvim. flakePath and darwinHost are derived from
