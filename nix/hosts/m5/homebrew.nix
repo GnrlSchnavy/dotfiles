@@ -20,15 +20,9 @@
 
       # Productivity
       "alfred"
-      # Menubar app to start/stop brew services; autostarted at login by
-      # nix/modules/brew-services-menubar.nix. Unsigned upstream, so
-      # installed without quarantine to avoid the Gatekeeper block.
-      {
-        name = "brewservicesmenubar";
-        args = {
-          no_quarantine = true;
-        };
-      }
+      # Menubar app to start/stop brew services; autostart + Gatekeeper
+      # handling live in nix/modules/brew-services-menubar.nix.
+      "brewservicesmenubar"
       "obsidian"
       "rectangle"
 
