@@ -20,9 +20,6 @@
 
       # Productivity
       "alfred"
-      # Menubar app to start/stop brew services; autostart + Gatekeeper
-      # handling live in nix/modules/brew-services-menubar.nix.
-      "brewservicesmenubar"
       "obsidian"
       "rectangle"
 
