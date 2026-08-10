@@ -14,6 +14,7 @@
   imports = [
     ./files.nix
     ./zsh.nix
+    ./secrets.nix
     ./codemem.nix
     ./opencode.nix
   ];

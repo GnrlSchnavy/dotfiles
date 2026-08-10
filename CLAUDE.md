@@ -61,6 +61,7 @@ per-machine install step — see [docs/claude-code.md](docs/claude-code.md#claud
 | macOS defaults | `nix/modules/system.nix` |
 | Shell (zsh) init, env vars | `nix/home/zsh.nix` |
 | New dotfile symlink | `nix/home/files.nix` |
+| Secrets (Proton Pass refs, `pass-get`/`pass-render`) | `nix/home/secrets.nix` ([docs/secrets.md](docs/secrets.md)) |
 | OpenCode config / codemem memory lanes | `nix/home/codemem.nix` ([docs/claude-code.md](docs/claude-code.md#opencode--two-lane-codemem-memory)) |
 | OpenCode global rules (AGENTS.md) + agents | `system/opencode/` → `nix/home/opencode.nix` ([docs/claude-code.md](docs/claude-code.md#opencode-instructions--agents)) |
 | OpenCode agent workflow (roles, commands, per-lane model tiers) | `system/opencode/agent/` + `command/`, tiers in `nix/home/codemem.nix` ([docs/opencode-agent-workflow.md](docs/opencode-agent-workflow.md)) |
