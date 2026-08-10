@@ -78,6 +78,7 @@
       "uv"
       "gh"
       "kubectl"
+      "kubeseal"
       "pnpm"
       "opencode"
       "openspec"
