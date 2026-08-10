@@ -29,6 +29,7 @@
       "claude-code"
       "docker-desktop"
       "intellij-idea"
+      "lens"
       "visual-studio-code"
       "warp" # Warp terminal (NOT cloudflare-warp, the VPN)
 
