@@ -1,4 +1,4 @@
-# Two-lane codemem memory for OpenCode — shared across all hosts (m4, m5).
+# Two-lane codemem memory for OpenCode — shared across all hosts.
 #
 # codemem gives OpenCode persistent memory. We run it in two isolated lanes
 # so client (Ahold) content is NEVER extracted via Anthropic directly — only
@@ -17,7 +17,7 @@
 # No secrets live in this file: the TechNL key AND the proxy URL are resolved at
 # runtime via pass-cli (Proton Pass) — the proxy hostname is intentionally kept
 # out of these public dotfiles. Paths use config.home.homeDirectory so the same
-# module works for both /Users/yvan (m4) and /Users/yvan-sytac (m5).
+# module works regardless of the host's username.
 { config, lib, ... }:
 
 let

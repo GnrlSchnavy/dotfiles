@@ -3,11 +3,11 @@
 # Onboard a new Mac:
 #   1. cp -r nix/hosts/template nix/hosts/<your-hostname>
 #   2. Seed the per-host modules from an existing host, then prune:
-#        cp nix/hosts/m4/{homebrew,packages,dock,git}.nix nix/hosts/<your-hostname>/
+#        cp nix/hosts/m5/{homebrew,packages,dock,git}.nix nix/hosts/<your-hostname>/
 #   3. Edit the values below (hostname, username, arch if Intel).
 #   4. Register it in nix/flake.nix under the hosts attrset:
 #        hosts = {
-#          m4 = import ./hosts/m4;
+#          m5 = import ./hosts/m5;
 #          <your-hostname> = import ./hosts/<your-hostname>;
 #        };
 #   5. git add nix/hosts/<your-hostname>/  (flakes only read git-tracked files)

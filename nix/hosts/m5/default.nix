@@ -1,8 +1,8 @@
 # Host-specific configuration for the "m5" Apple Silicon Mac.
 #
 # Per-host modules (homebrew, packages, dock, git) live in THIS directory.
-# They were seeded as copies of m4 — prune/edit them freely; changes here
-# do NOT affect m4. Everything in nix/modules/ and nix/home/ is shared.
+# m5 is currently the only real host; nix/modules/ and nix/home/ hold
+# everything shared, and this directory holds what is machine-specific.
 {
   hostname = "m5";
   username = "yvan-sytac";

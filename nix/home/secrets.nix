@@ -1,4 +1,4 @@
-# Proton Pass secret resolution — shared across all hosts (m4, m5).
+# Proton Pass secret resolution — shared across all hosts.
 #
 # The rule this module exists to enforce: `pass://` REFERENCES may live in
 # these (public) dotfiles; resolved VALUES may never touch git or /nix/store.

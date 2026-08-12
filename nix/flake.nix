@@ -72,7 +72,7 @@
         };
 
       # Build a darwin configuration from a host descriptor.
-      # See hosts/m4/default.nix for the expected shape.
+      # See hosts/m5/default.nix for the expected shape.
       #
       # systemModules / homeModules are the per-host module lists; they
       # default to [ ] so a descriptor can omit either.
@@ -127,12 +127,11 @@
         };
 
       hosts = {
-        m4 = import ./hosts/m4;
+        m5 = import ./hosts/m5;
         # CI fresh-install test target. Matches the GitHub Actions
         # macos-15 runner environment (user "runner", /Users/runner).
         # Not intended for use on a real machine.
         ci = import ./hosts/ci;
-        m5 = import ./hosts/m5;
       };
     in
     {

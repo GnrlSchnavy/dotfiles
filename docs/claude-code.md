@@ -84,8 +84,10 @@ snapshot. (On a host whose username differs from the snapshot's, fix
 the `/Users/<name>` paths inside afterward, as setup.sh's seeder does
 automatically.)
 
-Note: `bun`/`uv` are currently pinned on m4 only. Add them to another
-host's `homebrew.nix` before running the claude-mem installer there.
+Note: `bun` and `uv` are pinned in `nix/hosts/m5/homebrew.nix`. Add
+them to any new host's `homebrew.nix` before running the claude-mem
+installer there, or claude-mem will auto-fetch unpinned copies for its
+worker daemon and vector search.
 
 ## OpenCode & two-lane codemem memory
 
@@ -131,8 +133,8 @@ set.
 **No secrets live in the repo.** The TechNL key *and* the proxy URL are
 resolved at runtime by `oc-work` via `pass-cli` (Proton Pass) — `oc-work`
 **fails closed** if it can't fetch either — and paths use
-`config.home.homeDirectory` so the same module works on both `m4`
-(`/Users/yvan`) and `m5` (`/Users/yvan-sytac`).
+`config.home.homeDirectory` rather than a hardcoded `/Users/<name>`,
+so the module survives a change of host or username.
 
 Prereqs on a host: `pass-cli` (Proton Pass CLI) and `uv` must be
 declared in that host's `homebrew.nix` for `oc-work` to resolve its key

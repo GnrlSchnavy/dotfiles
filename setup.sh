@@ -95,7 +95,7 @@ if [ ! -f "$HOST_DESCRIPTOR" ]; then
     echo "  2. Edit $TARGET_DIR/nix/hosts/$HOSTNAME/default.nix — set username, etc."
     echo "  3. Register it in $TARGET_DIR/nix/flake.nix under the hosts attrset:"
     echo "       hosts = {"
-    echo "         m4 = import ./hosts/m4;"
+    echo "         m5 = import ./hosts/m5;"
     echo "         $HOSTNAME = import ./hosts/$HOSTNAME;"
     echo "       };"
     echo "  4. git add the new files (nix flakes only see git-tracked content)"

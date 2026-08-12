@@ -27,8 +27,8 @@ GitHub-hosted `macos-15` runner (~10–15 min).
 
 ## The `ci` host (`nix/hosts/ci/default.nix`)
 
-Mirrors m4 by importing `../m4/{homebrew,packages,dock}.nix` and
-`../m4/git.nix`, then overrides for CI:
+Mirrors m5 by importing `../m5/{homebrew,packages,dock}.nix` and
+`../m5/git.nix`, then overrides for CI:
 
 - `homebrew.casks = lib.mkForce [ ]` — casks are multi-GB and a few
   have DSL incompatibilities with the runner's Homebrew; brews alone
@@ -49,13 +49,12 @@ Misses:
 - **Cask problems** (casks are dropped in CI).
 - **macOS version drift** — runner is macOS 15, real machines run
   macOS 26. Switch `runs-on:` when `macos-26` runners ship.
-- **m5-specific config** — CI only exercises m4's modules. An
-  m5-only typo would pass CI (it would still fail
-  `nix flake check --no-build`, which is worth running locally).
+- Less than it used to: CI now mirrors `m5`, the only real host, so
+  the old gap where an m5-only typo passed CI is gone.
 
 ## Maintenance couplings
 
-- The smoke check hardcodes formulas `jenv kubectl helm`. If m4's
+- The smoke check hardcodes formulas `jenv kubectl helm`. If m5's
   brews change, update the workflow list.
 - The smoke check's symlink list must track `nix/home/files.nix` —
   add a check when adding an important managed file.

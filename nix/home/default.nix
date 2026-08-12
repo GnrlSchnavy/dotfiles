@@ -5,7 +5,7 @@
 # homebrew, system defaults) stays in nix/modules/.
 #
 # `home.username` and `home.homeDirectory` are derived from
-# users.users.<name>.home in the host descriptor (see hosts/m4/default.nix).
+# users.users.<name>.home in the host descriptor (see hosts/m5/default.nix).
 { ... }:
 
 {

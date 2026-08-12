@@ -10,8 +10,10 @@
       "brave-browser"
       "firefox"
       "google-chrome"
+      "tor-browser"
 
       # Communication
+      "discord"
       "microsoft-outlook"
       "microsoft-teams"
       "signal"
@@ -34,7 +36,9 @@
       "warp" # Warp terminal (NOT cloudflare-warp, the VPN)
 
       # Media
+      "jellyfin-media-player"
       "spotify"
+      "vlc"
 
       # Networking & Security
       "proton-drive"
@@ -53,6 +57,7 @@
       "tailscale-app"
 
       #Games
+      "crossover"
       "steam"
     ];
 
@@ -62,6 +67,7 @@
       "kotlin"
 
       # Security
+      "gnupg"
       # Proton Pass CLI — official tap, not in core Homebrew. brew owns
       # updates (its own `pass-cli update` is disabled under Homebrew);
       # onActivation.upgrade picks up new versions on rebuild.
@@ -71,19 +77,31 @@
       "jenv"
       "nvm"
 
-      # Shell enhancements
-      "autojump"
-
-      # Development utilities
-      "uv"
-      "gh"
+      # Kubernetes ecosystem
+      "fluxcd/tap/flux"
+      "helm"
+      "kdoctor"
       "kubectl"
       "kubeseal"
-      "pnpm"
+
+      # Shell enhancements
+      "autojump"
+      "tmux"
+
+      # Development utilities
+      "ansible"
+      "gh"
       "opencode"
       "openspec"
+      "pnpm"
+      "stripe-cli"
 
-
+      # AI tooling runtimes — pinned here (not via nvm) because
+      # claude-mem needs them present at machine scope: bun runs its
+      # worker daemon, uv backs its Python vector search. claude-mem
+      # would otherwise auto-fetch unpinned copies on first install.
+      "oven-sh/bun/bun"
+      "uv"
     ];
 
     # Homebrew maintenance settings

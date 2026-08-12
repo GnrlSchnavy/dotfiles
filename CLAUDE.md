@@ -12,9 +12,10 @@ Personal dotfiles for macOS managed by **nix-darwin** (system) and
 `~/.config/git/*`, `.ideavimrc`, `~/.claude/*`, etc. — are symlinks
 into the Nix store, recreated on every rebuild. No Stow.
 
-Hosts: `m4` (personal, user `yvan`) and `m5` (work, user `yvan-sytac`)
-— independent per-host configs, expected to diverge; `ci` mirrors m4
-for the fresh-install CI test. See [docs/hosts.md](docs/hosts.md).
+Hosts: `m5` (user `yvan-sytac`) is the only real machine — it serves
+as both the personal and work Mac; `ci` mirrors m5 for the
+fresh-install CI test. `m4` was sold and removed in August 2026. See
+[docs/hosts.md](docs/hosts.md).
 
 ## The one command
 
@@ -45,7 +46,8 @@ per-machine install step — see [docs/claude-code.md](docs/claude-code.md#claud
 5. **Per-host vs shared**: packages, homebrew, dock, git identity →
    `nix/hosts/<name>/`; everything shared → `nix/modules/` (system) or
    `nix/home/` (user). Don't put host-specific config in shared
-   modules, and don't sync m4/m5 with each other unasked.
+   modules — the split is what keeps onboarding the next Mac a copy
+   rather than a refactor, even though m5 is currently the only host.
 6. **Python is not centrally managed.** pyenv was deliberately removed
    (June 2026) — don't reintroduce pyenv into brews, zsh.nix, scripts,
    or docs.
@@ -85,7 +87,7 @@ sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName)
 ```
 
 CI runs a fresh-install test on every push ([docs/ci.md](docs/ci.md)).
-If you change m4's brews, check the hardcoded formula list in
+If you change m5's brews, check the hardcoded formula list in
 `.github/workflows/check.yml`'s smoke check.
 
 ## Development tools on these machines
@@ -94,7 +96,7 @@ If you change m4's brews, check the hardcoded formula list in
   set eagerly in zsh for `./mvnw` (see
   [docs/shell-and-dotfiles.md](docs/shell-and-dotfiles.md))
 - **Node**: nvm (`nvm install <ver>`)
-- **Kubernetes**: kubectl (+ helm/flux/kubeseal on m4); aliases `k`,
+- **Kubernetes**: kubectl, helm, flux, kubeseal, kdoctor; aliases `k`,
   `kgp`, `kaf`, … from `nix/modules/environment.nix`
 - **Editors**: NixVim (Catppuccin, LSP, Telescope, Treesitter),
   IntelliJ + IdeaVim, VSCode

@@ -24,7 +24,7 @@ precise enough for both humans and AI agents making changes.
    `darwin-rebuild` and fails with "path does not exist".
 2. **Rebuilds require sudo**:
    `sudo darwin-rebuild switch --flake ~/.dotfiles/nix#<host> -v`
-   (host = `m4` or `m5`, or `$(scutil --get LocalHostName)`).
+   (host = `m5`, or `$(scutil --get LocalHostName)`).
 3. **Never symlink files that apps rewrite at runtime**
    (`~/.claude/settings.json`, `~/.claude-mem/settings.json`,
    `~/.docker/config.json`). See

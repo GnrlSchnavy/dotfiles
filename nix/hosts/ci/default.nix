@@ -14,10 +14,12 @@
   # (homebrew.*) still runs against the existing install.
   manageHomebrew = false;
 
-  # CI mirrors m4's per-host modules so we exercise the real config
+  # CI mirrors m5's per-host modules so we exercise the real config
   # end-to-end. Casks are force-dropped in `module` below; brews still run.
-  systemModules = [ ../m4/homebrew.nix ../m4/packages.nix ../m4/dock.nix ];
-  homeModules = [ ../m4/git.nix ];
+  # (Was m4 until that host was decommissioned in August 2026; m5 is now
+  # the only real host, so CI and the machine no longer drift.)
+  systemModules = [ ../m5/homebrew.nix ../m5/packages.nix ../m5/dock.nix ];
+  homeModules = [ ../m5/git.nix ];
 
   module =
     { lib, ... }:

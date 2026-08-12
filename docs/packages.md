@@ -94,5 +94,5 @@ Consequences:
   `nix/modules/nix.nix`; don't repeat it per host.
 - The CI smoke check (`.github/workflows/check.yml`) asserts the
   formulas `jenv`, `kubectl`, `helm` exist after activation. If you
-  remove one of those from **m4**'s brews, update the workflow too
-  (ci mirrors m4's modules).
+  remove one of those from **m5**'s brews, update the workflow too
+  (ci mirrors m5's modules).

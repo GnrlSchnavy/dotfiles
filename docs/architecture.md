@@ -47,7 +47,7 @@ The `outputs` section defines:
   the host's inline `module` + the nvim package + nix-homebrew setup +
   home-manager (which imports `nix/home/` plus the host's
   `homeModules`).
-- `hosts` attrset — registers `m4`, `m5`, and `ci`. Adding a host means
+- `hosts` attrset — registers `m5` and `ci`. Adding a host means
   adding an entry here (see [hosts.md](hosts.md)).
 
 Home-manager is configured with `useGlobalPkgs`, `useUserPackages`, and
@@ -85,9 +85,8 @@ nix/
 ├── flake.nix            # inputs + mkDarwin/mkNvim + hosts attrset
 ├── flake.lock           # pinned input versions
 ├── hosts/
-│   ├── m4/              # descriptor + homebrew/packages/dock/git modules
-│   ├── m5/              # same shape, independent content
-│   ├── ci/              # GitHub Actions runner; reuses ../m4/* modules with CI overrides
+│   ├── m5/              # descriptor + homebrew/packages/dock/git modules
+│   ├── ci/              # GitHub Actions runner; reuses ../m5/* modules with CI overrides
 │   └── template/        # copy to onboard a new Mac
 ├── modules/             # shared nix-darwin modules (every host)
 │   ├── nix.nix          # nix daemon, gc (weekly, >30d), store optimise, allowUnfree
@@ -114,8 +113,10 @@ reference `development/.docker/config.json`.
   (system-level) or `nix/home/` (user-level). Examples: macOS
   defaults, zsh setup, Claude config symlinks.
 
-m5 was seeded as a copy of m4 and then pruned independently; the two
-hosts are expected to diverge. Never "sync" them without being asked.
+`m5` is currently the only real host (m4 was sold in August 2026), so
+the per-host layer holds exactly one machine's worth of config. Keep
+the split anyway — it costs nothing and is what makes onboarding the
+next Mac a copy rather than a refactor.
 
 ## Neovim (NixVim)
 

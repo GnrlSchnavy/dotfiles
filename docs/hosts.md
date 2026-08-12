@@ -9,20 +9,33 @@ it is allowed to diverge on: `packages.nix`, `homebrew.nix`,
 
 | Host | Machine | User | Notes |
 |---|---|---|---|
-| `m4` | Apple Silicon Mac (personal) | `yvan` | Original host; git identity yvanstemmerik@gmail.com; extra tooling (k8s stack, gnupg, tmux, wireguard-tools, lens, crossover, tor-browser, jellyfin) |
-| `m5` | Apple Silicon Mac (work) | `yvan-sytac` | Seeded from m4 then pruned; git identity yvan.stemmerik@ah.nl; adds microsoft-outlook; smaller brew/cask set |
-| `ci` | GitHub Actions `macos-15` runner | `runner` | Fresh-install test target only. Reuses `../m4/*` modules with CI overrides (casks forced to `[]`, cleanup `none`, no upgrade). Never use on a real machine |
+| `m5` | Apple Silicon Mac (personal + work) | `yvan-sytac` | The only real host. Git identity yvan.stemmerik@ah.nl |
+| `ci` | GitHub Actions `macos-15` runner | `runner` | Fresh-install test target only. Reuses `../m5/*` modules with CI overrides (casks forced to `[]`, cleanup `none`, no upgrade). Never use on a real machine |
 | `template` | — | — | Copy source for onboarding; placeholders `REPLACE_ME_*` |
 
-m4 and m5 are **expected to diverge** — don't copy lists between them
-unless asked.
+### Decommissioned
+
+`m4` (Apple Silicon Mac, personal, user `yvan`) was the original host.
+The machine was sold in **August 2026** and its descriptor removed;
+m5 now serves as both the personal and work machine.
+
+m4's per-host modules are recoverable from git history if you ever
+want something back from them:
+
+```bash
+git show 8594049:nix/hosts/m4/homebrew.nix
+```
+
+Everything m4 declared was carried over into m5 with one exception:
+the nix package `wireguard-tools`, dropped because Tailscale replaced
+the raw WireGuard setup.
 
 ## Onboarding a new Mac
 
 1. Copy the template (on any machine, then commit):
    ```bash
    cp -r nix/hosts/template nix/hosts/<hostname>   # hostname = scutil --get LocalHostName
-   cp nix/hosts/m4/{homebrew,packages,dock,git}.nix nix/hosts/<hostname>/
+   cp nix/hosts/m5/{homebrew,packages,dock,git}.nix nix/hosts/<hostname>/
    ```
 2. Edit `nix/hosts/<hostname>/default.nix`: replace every
    `REPLACE_ME_*` (hostname, username, the `users.users.<name>.home`
@@ -32,7 +45,6 @@ unless asked.
 4. Register in `nix/flake.nix`:
    ```nix
    hosts = {
-     m4 = import ./hosts/m4;
      m5 = import ./hosts/m5;
      ci = import ./hosts/ci;
      <hostname> = import ./hosts/<hostname>;

@@ -22,7 +22,7 @@ end-to-end on every push.
 ## Quick start (existing host)
 
 If your machine's hostname already has a descriptor in
-[`nix/hosts/`](nix/hosts/) (e.g. `m4`):
+[`nix/hosts/`](nix/hosts/) (e.g. `m5`):
 
 ```bash
 git clone https://github.com/GnrlSchnavy/dotfiles.git ~/.dotfiles
@@ -53,7 +53,7 @@ $EDITOR "nix/hosts/$(scutil --get LocalHostName)/default.nix"
 
 # 3. Register it in nix/flake.nix's `hosts` attrset:
 #    hosts = {
-#      m4 = import ./hosts/m4;
+#      m5 = import ./hosts/m5;
 #      <your-hostname> = import ./hosts/<your-hostname>;
 #    };
 
@@ -99,13 +99,13 @@ sudo darwin-rebuild --rollback
 
 | What | Where |
 |---|---|
-| New CLI tool from nixpkgs | [`nix/hosts/<name>/packages.nix`](nix/hosts/m4/packages.nix) |
-| New GUI app (cask) or brew formula | [`nix/hosts/<name>/homebrew.nix`](nix/hosts/m4/homebrew.nix) |
+| New CLI tool from nixpkgs | [`nix/hosts/<name>/packages.nix`](nix/hosts/m5/packages.nix) |
+| New GUI app (cask) or brew formula | [`nix/hosts/<name>/homebrew.nix`](nix/hosts/m5/homebrew.nix) |
 | macOS system default (finder, keyboard, etc.) | [`nix/modules/system.nix`](nix/modules/system.nix) |
-| Dock layout / apps (per-host) | [`nix/hosts/<name>/dock.nix`](nix/hosts/m4/dock.nix) |
+| Dock layout / apps (per-host) | [`nix/hosts/<name>/dock.nix`](nix/hosts/m5/dock.nix) |
 | Shell config (zsh init, lazy-loads, env vars) | [`nix/home/zsh.nix`](nix/home/zsh.nix) |
 | OpenCode config / codemem memory lanes | [`nix/home/codemem.nix`](nix/home/codemem.nix) |
-| Git config (per-host identity) | [`nix/hosts/<name>/git.nix`](nix/hosts/m4/git.nix) |
+| Git config (per-host identity) | [`nix/hosts/<name>/git.nix`](nix/hosts/m5/git.nix) |
 | New dotfile to symlink (e.g. `.foorc`) | [`nix/home/files.nix`](nix/home/files.nix) |
 | Neovim plugins / LSP / keymaps | [`nix/nixvim/config/`](nix/nixvim/config/) |
 | Garbage collection, nix daemon settings | [`nix/modules/nix.nix`](nix/modules/nix.nix) |
@@ -122,9 +122,8 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 │   ├── flake.nix              ← input plumbing + per-host wiring
 │   ├── flake.lock             ← pinned versions of all inputs
 │   ├── hosts/
-│   │   ├── m4/                ← "m4" Mac: descriptor + own homebrew/packages/dock/git
 │   │   ├── m5/                ← "m5" Mac: descriptor + own homebrew/packages/dock/git
-│   │   ├── ci/                ← CI runner descriptor (mirrors m4's per-host modules)
+│   │   ├── ci/                ← CI runner descriptor (mirrors m5's per-host modules)
 │   │   └── template/          ← copy this when adding a new host
 │   ├── modules/               ← shared nix-darwin (system-level) modules
 │   │   ├── system.nix         ← macOS defaults (keyboard, finder, login window)
@@ -214,7 +213,7 @@ new config.
 ## Requirements
 
 - macOS 15+ (developed on macOS 26 / Tahoe)
-- Apple Silicon (Intel works for most of it; the `m4` host descriptor
+- Apple Silicon (Intel works for most of it; the `m5` host descriptor
   declares `aarch64-darwin` — change to `x86_64-darwin` for Intel)
 - Admin privileges (nix-darwin activation requires sudo)
 - An internet connection (initial run pulls a few GB through the cache)
