@@ -49,6 +49,7 @@
 
       # Programming languages
       "temurin@25"
+      "temurin@21"
 
       # AI
       "github-copilot-app"
