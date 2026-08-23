@@ -97,6 +97,8 @@
       "pnpm"
       "stripe-cli"
 
+      # Utilities
+      "nmap"
       # AI tooling runtimes — pinned here (not via nvm) because
       # claude-mem needs them present at machine scope: bun runs its
       # worker daemon, uv backs its Python vector search. claude-mem
