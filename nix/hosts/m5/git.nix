@@ -15,6 +15,12 @@ let
     name = "yvan";
     email = "yvanstemmerik@gmail.com";
   };
+
+  # GitHub account per checkout. The macOS keychain helper keeps one
+  # github.com login per account and returns the one matching this
+  # username, so personal and work pushes don't overwrite each other's
+  # saved login.
+  personalGitHub.credential."https://github.com".username = "GnrlSchnavy";
 in
 {
   programs.git = {
@@ -32,11 +38,11 @@ in
     includes = [
       {
         condition = "gitdir:~/projects/personal/";
-        contents.user = personal;
+        contents = { user = personal; } // personalGitHub;
       }
       {
         condition = "gitdir:~/.dotfiles/";
-        contents.user = personal;
+        contents = { user = personal; } // personalGitHub;
       }
     ];
 
@@ -46,6 +52,7 @@ in
         name = "yvanstemmerik-ah";
         email = "yvan.stemmerik@ah.nl";
       };
+      credential."https://github.com".username = "yvanstemmerik-ah";
 
       init.defaultBranch = "main";
       pull.rebase = true;
