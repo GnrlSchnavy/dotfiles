@@ -30,9 +30,9 @@ let
   declared = map nameOf (config.homebrew.brews ++ config.homebrew.casks);
   taps = lib.unique ((map nameOf config.homebrew.taps) ++ lib.concatMap tapOf declared);
 
-  brew = "${config.homebrew.brewPrefix}/brew";
+  brew = "${config.homebrew.prefix}/bin/brew";
   user = config.system.primaryUser;
-  runBrew = "PATH=\"${config.homebrew.brewPrefix}:$PATH\" sudo --preserve-env=PATH --set-home --user=${user} ${brew}";
+  runBrew = "PATH=\"${config.homebrew.prefix}/bin:$PATH\" sudo --preserve-env=PATH --set-home --user=${user} ${brew}";
 in
 {
   system.activationScripts.preActivation.text =
