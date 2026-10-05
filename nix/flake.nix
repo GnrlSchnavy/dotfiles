@@ -136,5 +136,15 @@
     in
     {
       darwinConfigurations = builtins.mapAttrs (_: host: mkDarwin host) hosts;
+
+      # `nix flake check` skips darwinConfigurations entirely; exposing each
+      # host's system here is what makes `nix flake check --no-build` evaluate
+      # it (add --all-systems on a machine of another platform, e.g. Linux CI).
+      checks = inputs.nixpkgs.lib.foldlAttrs (
+        acc: name: cfg:
+        inputs.nixpkgs.lib.recursiveUpdate acc {
+          ${cfg.pkgs.stdenv.hostPlatform.system}.${name} = cfg.system;
+        }
+      ) { } self.darwinConfigurations;
     };
 }

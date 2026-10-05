@@ -149,18 +149,20 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 ├── system/.claude-work/       ← work lane: hooks + Ahold CLAUDE.md overlay
 ├── system/bin/                ← cc-tooling (per-client tooling helper)
 │
-├── .github/workflows/check.yml ← fresh-install CI
+├── .github/workflows/check.yml ← Linux eval + tests, then fresh-install CI
 ├── setup.sh                    ← bootstrap entry point
-└── scripts/                    ← maintenance helpers (check, update, backup)
+├── scripts/                    ← maintenance helpers (check, update, backup)
+└── tests/                      ← lane-hook and cc-tooling tests (tests/run.sh)
 ```
 
 ---
 
 ## CI: fresh-install verification
 
-[`.github/workflows/check.yml`](.github/workflows/check.yml) runs the
-full bootstrap on a clean macOS-15 GitHub-hosted runner against the
-`ci` host descriptor. It catches:
+[`.github/workflows/check.yml`](.github/workflows/check.yml) first
+evaluates every host and runs `tests/run.sh` on Linux (~2 min), then
+runs the full bootstrap on a clean macOS-15 GitHub-hosted runner
+against the `ci` host descriptor. It catches:
 
 - Nix evaluation errors (typos, wrong types, missing imports)
 - Build failures in any package

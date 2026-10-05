@@ -49,6 +49,9 @@ The `outputs` section defines:
   `homeModules`).
 - `hosts` attrset — registers `m5` and `ci`. Adding a host means
   adding an entry here (see [hosts.md](hosts.md)).
+- `checks` — every host's system, grouped by platform. `nix flake
+  check` ignores `darwinConfigurations` on its own, so this output is
+  what makes `nix flake check --no-build` actually evaluate the hosts.
 
 Home-manager is configured with `useGlobalPkgs`, `useUserPackages`, and
 `backupFileExtension = "hm-backup"` — pre-existing files that would
@@ -130,11 +133,12 @@ pyright, rust_analyzer, jsonls, yamlls, marksman, dockerls, bashls),
 nvim-cmp + luasnip, Telescope (+fzf-native, file-browser), neo-tree,
 Treesitter (+context, +textobjects), bufferline/lualine.
 
-To check it builds without doing a full rebuild:
+To check it evaluates without doing a full rebuild:
 
 ```bash
 cd ~/.dotfiles/nix && nix flake check --no-build
 # or evaluate one host: nix eval .#darwinConfigurations.m5.system.drvPath
+# or build without switching: darwin-rebuild build --flake .#m5
 ```
 
 (The old `nix flake check ~/.dotfiles/nix/nixvim` no longer works —

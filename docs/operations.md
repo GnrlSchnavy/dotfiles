@@ -21,8 +21,11 @@ sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName)
 # Roll back the last rebuild
 sudo darwin-rebuild --rollback
 
-# Evaluate without building/applying (fast sanity check)
+# Evaluate every host without building/applying (~1 min cold)
 cd ~/.dotfiles/nix && nix flake check --no-build
+
+# Lane-hook and cc-tooling tests
+~/.dotfiles/tests/run.sh
 ```
 
 ## Bootstrap a machine: `./setup.sh`

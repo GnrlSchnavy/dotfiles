@@ -83,14 +83,20 @@ Package source strategy (Nix vs Homebrew vs MAS):
 ## Verifying changes
 
 ```bash
-# Fast eval check (no build) — catches typos, type errors, missing files
+# Eval check (no build) — evaluates every host via the flake's `checks`
+# output, so it catches typos, type errors and missing files (~1 min cold).
+# On a non-darwin machine add --all-systems.
 cd ~/.dotfiles/nix && nix flake check --no-build
+
+# Lane-hook and cc-tooling tests (bash, jq, git — no Nix needed)
+~/.dotfiles/tests/run.sh
 
 # Full apply
 sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
 ```
 
-CI runs a fresh-install test on every push ([docs/ci.md](docs/ci.md)).
+CI runs both checks on Linux, then a fresh-install test on macOS, on
+every push ([docs/ci.md](docs/ci.md)).
 If you change m5's brews, check the hardcoded formula list in
 `.github/workflows/check.yml`'s smoke check.
 
