@@ -159,7 +159,7 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 
 [`.github/workflows/check.yml`](.github/workflows/check.yml) first
 evaluates every host and runs `tests/run.sh` on Linux (~2 min), then
-runs the full bootstrap on a clean macOS-15 GitHub-hosted runner
+runs the full bootstrap on a clean macOS 27 GitHub-hosted runner
 against the `ci` host descriptor. It catches:
 
 - Nix evaluation errors (typos, wrong types, missing imports)
@@ -174,12 +174,12 @@ managed symlink exists and key brew formulas are installed.
 ### Caveats
 
 - **Casks aren't tested in CI.** A few have DSL incompatibilities
-  with the macos-15 runner image's Homebrew that don't reproduce on
+  with the runner image's Homebrew that don't reproduce on
   real Macs. The CI host overrides `homebrew.casks = []`.
-- **macOS version mismatch.** Runner is macOS 15; the production
-  host runs macOS 26. A Tahoe-specific upstream bug wouldn't be
-  caught. When GitHub ships `macos-26` runners, switch the
-  `runs-on:` field.
+- **Same macOS major, not the same machine.** The runner is macOS 27 on
+  Apple Silicon, like the real host, but it's a fresh image: anything
+  that depends on local state (the Keychain, an existing Homebrew,
+  app-specific security prompts) only shows up on the Mac itself.
 
 ---
 
@@ -218,7 +218,7 @@ new config.
 
 ## Requirements
 
-- macOS 15+ (developed on macOS 26 / Tahoe)
+- macOS 15+ (developed on macOS 27)
 - Apple Silicon (Intel works for most of it; the `m5` host descriptor
   declares `aarch64-darwin` — change to `x86_64-darwin` for Intel)
 - Admin privileges (nix-darwin activation requires sudo)

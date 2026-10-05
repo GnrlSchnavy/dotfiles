@@ -22,11 +22,15 @@ There is no Stow and no manual symlinking.
 
 ## Flake wiring (`nix/flake.nix`)
 
-Inputs: `nixpkgs` (nixos-25.11), `nix-darwin` (release matched to
-nixpkgs), `home-manager` (release-25.11), `nix-homebrew`, and `nixvim`
-(nixos-25.11). **nixvim is an input of this flake, not a separate
-flake** — there is no `flake.nix` under `nix/nixvim/`, only a config
-module at `nix/nixvim/config/`.
+Inputs: `nixpkgs` (`nixpkgs-26.05-darwin`, the branch Hydra tests and
+caches for macOS), `nix-darwin` (`nix-darwin-26.05`), `home-manager`
+(`release-26.05`), `nix-homebrew`, and `nixvim` (`nixos-26.05`). Move
+them to the next release together, and leave `system.stateVersion` /
+`home.stateVersion` alone unless the release notes say otherwise.
+
+**nixvim is an input of this flake, not a separate flake** — there is
+no `flake.nix` under `nix/nixvim/`, only a config module at
+`nix/nixvim/config/`.
 
 The `outputs` section defines:
 

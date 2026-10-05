@@ -149,14 +149,14 @@ for f in /etc/nix/nix.conf /etc/bashrc /etc/zshrc; do
     fi
 done
 
-# Install nix-darwin and apply our flake in one step.
-# Pin to the same nix-darwin release that flake.nix uses to avoid
-# bootstrapping with a different version. sudo because nix-darwin's
+# Install nix-darwin and apply our flake in one step. --inputs-from takes
+# darwin-rebuild from the nix-darwin revision locked in flake.lock, so the
+# bootstrap can't drift from the config. sudo because nix-darwin's
 # activation step requires root.
 print_step "Bootstrapping nix-darwin and applying configuration for $HOSTNAME..."
 sudo nix run \
     --extra-experimental-features "nix-command flakes" \
-    "github:LnL7/nix-darwin/nix-darwin-25.11#darwin-rebuild" -- \
+    --inputs-from "$TARGET_DIR/nix" nix-darwin#darwin-rebuild -- \
     switch --flake "$TARGET_DIR/nix#$HOSTNAME"
 print_success "nix-darwin configuration applied"
 

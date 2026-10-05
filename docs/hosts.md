@@ -10,7 +10,7 @@ it is allowed to diverge on: `packages.nix`, `homebrew.nix`,
 | Host | Machine | User | Notes |
 |---|---|---|---|
 | `m5` | Apple Silicon Mac (personal + work) | `yvan-sytac` | The only real host. Git identity yvan.stemmerik@ah.nl |
-| `ci` | GitHub Actions `macos-15` runner | `runner` | Fresh-install test target only. Reuses `../m5/*` modules with CI overrides (casks forced to `[]`, cleanup `none`, no upgrade). Never use on a real machine |
+| `ci` | GitHub Actions `xcode-27` (macOS 27) runner | `runner` | Fresh-install test target only. Reuses `../m5/*` modules with CI overrides (casks forced to `[]`, cleanup `none`, no upgrade). Never use on a real machine |
 | `template` | — | — | Copy source for onboarding; placeholders `REPLACE_ME_*` |
 
 ### Decommissioned

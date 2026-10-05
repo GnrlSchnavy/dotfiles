@@ -1,0 +1,8 @@
+# Keeps the SHA-pinned GitHub Actions current: one PR per update, with the
+# new commit and version comment.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

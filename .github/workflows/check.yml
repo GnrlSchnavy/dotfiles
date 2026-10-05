@@ -8,15 +8,26 @@ name: fresh-install test
 # otherwise only discover by running setup on a fresh machine.
 #
 # The `ci` host skips casks (some have DSL incompatibilities specific
-# to the macos-15 runner image) and disables homebrew zap/upgrade,
-# keeping runs to ~10-15 min while still exercising the full path.
+# to the runner image) and disables homebrew zap/upgrade, keeping runs
+# to ~10-15 min while still exercising the full path. The runner is
+# macOS 27 on Apple Silicon, like the real host. GitHub now names macOS
+# images after their Xcode version, so the macOS 27 image is `xcode-27`
+# (public preview). If it queues or misbehaves, `macos-26` is the GA
+# fallback.
 
 on:
   push:
     branches: [master]
+    paths-ignore: ["docs/**", "*.md"]
   pull_request:
     branches: [master]
+    paths-ignore: ["docs/**", "*.md"]
   workflow_dispatch:
+
+# A newer push to the same branch or PR supersedes a running check.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -29,10 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v31
+        uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -50,13 +61,13 @@ jobs:
 
   fresh-install:
     needs: checks
-    runs-on: macos-15
+    runs-on: xcode-27
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v31
+        uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31.11.1
         with:
           # GITHUB_TOKEN gives us a higher rate limit when nix fetches
           # flake inputs from github.com (otherwise we share an
@@ -70,7 +81,7 @@ jobs:
       - name: Use the public Nix cache
         # Pull from nix-community for nixvim/home-manager artifacts that
         # aren't on cache.nixos.org. Cuts a few minutes off cold runs.
-        uses: cachix/cachix-action@v17
+        uses: cachix/cachix-action@38b082610b782e7e93e209c35fd730d399dee866 # v17
         with:
           name: nix-community
           skipPush: true
@@ -111,7 +122,7 @@ jobs:
           sudo nix run \
             --extra-experimental-features "nix-command flakes" \
             --option access-tokens "github.com=${GH_TOKEN}" \
-            "github:LnL7/nix-darwin/nix-darwin-25.11#darwin-rebuild" -- \
+            --inputs-from ./nix nix-darwin#darwin-rebuild -- \
             switch --flake ./nix#ci
 
       - name: Verify activation produced the expected symlinks

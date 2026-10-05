@@ -12,17 +12,15 @@
 #
 # ~/.config/mise/config.toml is a read-only Nix symlink: change the global
 # versions here, not with `mise use -g`.
-{ pkgs, ... }:
+{ ... }:
 
 {
   programs.mise = {
     enable = true;
-    # mise pulls in direnv, which isn't in the binary cache, and direnv's
-    # test suite runs fish, whose cached binary has an invalid code signature
-    # — macOS kills it (SIGKILL) and the build fails. Skip direnv's tests.
-    package = pkgs.mise.override {
-      direnv = pkgs.direnv.overrideAttrs { doCheck = false; };
-    };
+    # Use the stock package: on nixpkgs 26.05 mise and its direnv are in the
+    # binary cache. (On 25.11 they weren't, and building direnv locally failed:
+    # its test suite runs fish, whose cached binary has an invalid code
+    # signature, so macOS kills it. Overriding the package forces that build.)
     enableZshIntegration = true;
     globalConfig = {
       tools = {

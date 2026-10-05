@@ -11,7 +11,10 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    `cc-tooling` tests.
 2. **`fresh-install`** (macOS, needs `checks`) — replays what
    `setup.sh` does on a real Mac against the `ci` host descriptor on a
-   GitHub-hosted `macos-15` runner (~10–15 min). Described below.
+   GitHub-hosted `xcode-27` runner: macOS 27 on Apple Silicon, in
+   public preview (~10–15 min). GitHub names macOS images after their
+   Xcode version now; `macos-26` is the GA fallback if the preview
+   image queues or misbehaves. Described below.
 
 ## What the fresh-install job does
 
@@ -22,7 +25,7 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    nixvim/home-manager artifacts not on cache.nixos.org.
 3. **Move `/etc/nix/nix.conf`, `/etc/bashrc`, `/etc/zshrc` aside** —
    same step setup.sh performs.
-4. **`sudo nix run nix-darwin#darwin-rebuild -- switch --flake ./nix#ci`**.
+4. **`sudo nix run --inputs-from ./nix nix-darwin#darwin-rebuild -- switch --flake ./nix#ci`**.
    The GitHub token is passed via `--option access-tokens` because the
    nix.conf that held it was just moved aside, and sudo's root HOME
    doesn't see the user-level config.
@@ -33,6 +36,19 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    `~/.claude/settings.local.json`), `darwin-rebuild` and `brew` are on
    PATH, `mise` and its config are in place, and the formulas `kubectl`,
    `helm` are installed.
+
+## Scheduled jobs
+
+- [`update-flake-lock.yml`](../.github/workflows/update-flake-lock.yml)
+  opens a `flake: update inputs` PR every Monday (or on demand from the
+  Actions tab), so the inputs don't fall behind. PRs opened with the
+  default `GITHUB_TOKEN` don't trigger `check.yml`; add a fine-grained
+  token for this repo (Contents + Pull requests: read and write) as the
+  `FLAKE_UPDATE_TOKEN` secret so CI runs on them, or run `check.yml` on
+  the branch by hand.
+- [Dependabot](../.github/dependabot.yml) proposes updates for the
+  GitHub Actions, which are pinned to commit SHAs (the version is in the
+  trailing comment).
 
 ## The `ci` host (`nix/hosts/ci/default.nix`)
 
@@ -56,8 +72,10 @@ errors, home-manager activation problems, brew formula issues.
 Misses:
 
 - **Cask problems** (casks are dropped in CI).
-- **macOS version drift** — runner is macOS 15, real machines run
-  macOS 26. Switch `runs-on:` when `macos-26` runners ship.
+- **Local machine state** — the runner tracks the real host's macOS
+  major (now 27; moved off macOS 15 after a build that passed there
+  failed on the Mac), but it's a fresh image: Keychain, existing
+  Homebrew state and app security prompts only show up on the Mac.
 - Less than it used to: CI now mirrors `m5`, the only real host, so
   the old gap where an m5-only typo passed CI is gone.
 
@@ -70,6 +88,6 @@ Misses:
   brews change, update the workflow list.
 - The smoke check's symlink list must track `nix/home/files.nix` —
   add a check when adding an important managed file.
-- The bootstrap pins `github:LnL7/nix-darwin/nix-darwin-25.11`; keep
-  it in sync with the `nix-darwin` input in `nix/flake.nix` (setup.sh
-  has the same pin).
+- The bootstrap runs `darwin-rebuild` via `--inputs-from ./nix
+  nix-darwin#darwin-rebuild`, i.e. from the nix-darwin revision in
+  `flake.lock` (setup.sh does the same) — no separate pin to keep in sync.

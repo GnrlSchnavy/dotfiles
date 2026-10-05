@@ -8,22 +8,27 @@ guide.
 
 ## `update.sh`
 
-Pull the repo, refresh flake inputs, rebuild against the current host,
-sanity-check the toolchain.
+Pull the repo, refresh flake inputs, build, then switch — and commit
+`nix/flake.lock` once the switch succeeds (push it yourself).
 
 ```bash
 ./scripts/update.sh
 ```
 
-Equivalent to running:
+It stops if the pull fails, and builds before switching: if the build
+fails nothing is applied and the previous `flake.lock` is restored. Roughly:
 
 ```bash
 git pull --ff-only
 nix flake update --flake ./nix
+darwin-rebuild build --flake ~/.dotfiles/nix#$(scutil --get LocalHostName)
 sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName)
+git commit -m "flake: update inputs" -- nix/flake.lock
 ```
 
-with status output in between.
+Inputs are also bumped weekly by CI as a pull request (see
+[`docs/ci.md`](../docs/ci.md)); merging that and pulling is the
+low-effort path.
 
 ## `check.sh`
 

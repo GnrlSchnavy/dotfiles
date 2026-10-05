@@ -1,6 +1,6 @@
 # CI host descriptor.
 #
-# Matches the GitHub Actions macos-15 runner environment so the CI
+# Matches the GitHub Actions xcode-27 (macOS 27) runner so the CI
 # pipeline can apply the full config (`darwin-rebuild switch`) end-to-end
 # as a fresh-install test. Not intended for use on a real machine.
 {
@@ -8,8 +8,8 @@
   username = "runner";
 
   # Use the runner's pre-installed Homebrew instead of letting
-  # nix-homebrew install/migrate its own. Since the July 2026 macos-15
-  # image, /opt/homebrew is no longer a git checkout, so autoMigrate
+  # nix-homebrew install/migrate its own. Since the July 2026 runner
+  # images, /opt/homebrew is no longer a git checkout, so autoMigrate
   # fails with "does not look like a Homebrew checkout". brew bundle
   # (homebrew.*) still runs against the existing install.
   manageHomebrew = false;
@@ -24,7 +24,7 @@
   module =
     { lib, ... }:
     {
-      # GitHub-hosted macos-15 runners are Apple Silicon.
+      # GitHub-hosted xcode-27 runners are Apple Silicon.
       nixpkgs.hostPlatform = "aarch64-darwin";
 
       system.stateVersion = 5;
@@ -49,7 +49,7 @@
       # Drop GUI casks for CI. They're slow (multi-GB), don't add
       # much coverage (we test brew bundle *runs*, not that every
       # specific cask installs), and a few have DSL incompatibilities
-      # with the macos-15 runner's Homebrew that don't reproduce on
+      # with the runner's Homebrew that don't reproduce on
       # real machines. Brews still run — they're smaller, exercise
       # the same brew-bundle path, and surface real config issues.
       homebrew.casks = lib.mkForce [ ];
