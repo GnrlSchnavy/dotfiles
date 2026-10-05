@@ -3,12 +3,14 @@
 #   personal → config dir ~/.claude       → Claude Max login
 #              (desktop app, `claude`, or `cc-personal`)
 #   work     → config dir ~/.claude-work  → TechNL GenAI gateway via DevAI CLI
-#              (`cc-work` → `devai-claude`, terminal only)
+#              (`cc-work` → `devai-claude` in a terminal, or
+#               `cc-work-desktop` → `devai-claude-desktop` for the desktop app)
 #
-# The Claude desktop app has ONE inference setup for the whole app (Max login
-# or a single third-party gateway) and no CLAUDE_CONFIG_DIR, so it can only
-# host the personal lane. The work lane is the CLI under `cc-work` — run it in
-# any terminal, including the desktop app's own terminal pane.
+# The Claude desktop app runs in ONE deployment mode at a time: 1p (Claude
+# account, profile dir "Claude") or 3p (gateway, profile dir "Claude-3p").
+# Switching relaunches the app. So the desktop app is either the personal lane
+# or — via cc-work-desktop — the work lane, never both at once; personal work
+# can move to another Claude Code front end (e.g. T3 Code) while it's in 3p.
 #
 # Gateway vs isolation: DevAI CLI (`devai-claude`, Ahold's sanctioned
 # launcher) owns the gateway — Entra ID / key auth, its local compatibility
@@ -24,7 +26,9 @@
 #   - cc-work launches devai-claude, and points codemem's work observer at the
 #     TechNL proxy (URL from pass-cli); it fails closed if either is missing.
 #   - Work hooks (lane-check.sh) block every prompt and tool call unless the
-#     session was started by cc-work with a non-Anthropic gateway in place.
+#     session's gateway URL is not Anthropic (1p desktop sessions get
+#     api.anthropic.com, plain `claude` gets none) and codemem's observer
+#     points at the TechNL proxy.
 #   - Personal hooks (work-lane-guard.sh) block every prompt and tool call that
 #     touches a client work tree, so opening an Ahold repo in the desktop app
 #     can't send it through Max.
@@ -63,25 +67,22 @@ let
     CC_WORK_ROOTS = lib.concatStringsSep ":" workRoots;
   };
 
-  # Non-secret work env, also written to ~/.claude-work/settings.json so
-  # codemem stays in the work lane even if devai-claude rebuilds the
-  # environment it hands to Claude Code.
+  # Non-secret work env, also written to ~/.claude-work/settings.json so every
+  # work session gets it — CLI (devai-claude may rebuild the launch env) and
+  # the desktop app's Code tab in gateway mode alike.
   workEnv = codememEnv "work-ahold" // {
     CODEMEM_CONFIG = "${home}/.config/codemem/work-ahold.json";
     CODEMEM_VIEWER_PORT = "4848";
     CODEMEM_PROJECT = "ahold";
+    CC_LANE = "work";
+    # Model aliases → TechNL model ids. Agents and /model use the aliases
+    # (opus/sonnet/haiku), so tiers resolve inside the gateway; /model can
+    # still pick any other id the gateway serves.
+    ANTHROPIC_DEFAULT_OPUS_MODEL = "claude-opus-5-5";
+    ANTHROPIC_DEFAULT_SONNET_MODEL = "claude-sonnet-5-5";
+    ANTHROPIC_DEFAULT_HAIKU_MODEL = "claude-haiku-4-5";
     # No telemetry, error reports, auto-updates or feature-flag calls to Anthropic.
     CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1";
-  };
-
-  # Model aliases → TechNL model ids, set on the launch env only (never in
-  # settings.json, whose env would override whatever devai-claude sets), so
-  # DevAI's own model routing wins when it provides one. Agents and /model use
-  # the aliases (opus/sonnet/haiku), so tiers resolve inside the gateway.
-  workModelEnv = {
-    ANTHROPIC_DEFAULT_OPUS_MODEL = "claude-opus-5-5";
-    ANTHROPIC_DEFAULT_SONNET_MODEL = "claude-sonnet-4-6";
-    ANTHROPIC_DEFAULT_HAIKU_MODEL = "claude-haiku-4-5";
   };
 
   # Everything either launcher sets or must not inherit from the calling shell.
@@ -91,7 +92,7 @@ let
     "ANTHROPIC_CUSTOM_HEADERS" "ANTHROPIC_MODEL" "CLAUDE_CODE_OAUTH_TOKEN"
     "CLAUDE_CODE_USE_BEDROCK" "CLAUDE_CODE_USE_VERTEX" "CLAUDE_CODE_USE_FOUNDRY"
     "CODEMEM_ANTHROPIC_ENDPOINT" "TECHNL_GENAI_KEY" "TECHNL_PROXY_URL"
-  ] ++ lib.attrNames workEnv ++ lib.attrNames workModelEnv ++ lib.attrNames personalEnv;
+  ] ++ lib.attrNames workEnv ++ lib.attrNames personalEnv;
 
   unsetLaneVars = lib.concatMapStringsSep " " (v: "-u ${v}") (lib.unique laneVars);
   assignments = env: lib.concatStringsSep " "
@@ -219,24 +220,25 @@ in
     cc-personal() {
       env ${unsetLaneVars} ${assignments personalEnv} claude "$@"
     }
-    cc-work() {
+    # Shared work-lane preparation for cc-work and cc-work-desktop. Sets
+    # $technl_proxy in the caller (declare it local there).
+    _cc_work_prepare() {
       # DevAI CLI owns the gateway (auth, local proxy, model routing).
       command -v devai-claude >/dev/null 2>&1 || {
-        print -u2 "cc-work: devai-claude not found — install DevAI CLI and run 'devai setup' first"; return 1
+        print -u2 "cc-work: DevAI CLI not found — install it and run 'devai setup' first"; return 1
       }
       # codemem's work observer calls the TechNL proxy directly (its key comes
       # from the pass-cli auth command in work-ahold.json). Without this
       # endpoint it would default to api.anthropic.com, so fail closed.
-      local technl_proxy
       technl_proxy="$(pass-cli item view 'pass://Ahold/TechNLGenAI/proxy_url')" || {
         print -u2 "cc-work: failed to resolve TechNL proxy URL from pass-cli"; return 1
       }
       [[ "$technl_proxy" == https://*/v1 ]] || {
         print -u2 "cc-work: unexpected TechNL proxy URL shape (expected https://…/v1)"; return 1
       }
-      # Also pin the endpoint in the work settings env (a local file, never in
-      # the repo), which Claude Code applies to its hooks and MCP servers even
-      # if devai-claude rebuilds the launch environment.
+      # Pin the endpoint in the work settings env (a local file, never in the
+      # repo), which Claude Code applies to its hooks and MCP servers however
+      # the session was launched.
       local settings=${lib.escapeShellArg "${workDir}/settings.json"} tmp
       tmp="$(mktemp "$settings.XXXXXX")" &&
         ${pkgs.jq}/bin/jq --arg ep "$technl_proxy/messages" \
@@ -249,13 +251,30 @@ in
       if lsof -nP -iTCP:38888 -sTCP:LISTEN -t >/dev/null 2>&1; then
         print -u2 "cc-work: a codemem viewer is listening on port 38888 and would receive work events; stop it first (lsof -nP -iTCP:38888)"; return 1
       fi
+    }
+    cc-work() {
+      local technl_proxy
+      _cc_work_prepare || return 1
       env ${unsetLaneVars} \
         CLAUDE_CONFIG_DIR=${lib.escapeShellArg workDir} \
-        CC_LANE=work \
         CODEMEM_ANTHROPIC_ENDPOINT="$technl_proxy/messages" \
         ${assignments workEnv} \
-        ${assignments workModelEnv} \
         devai-claude -- "$@"
+    }
+    # Work lane in the Claude desktop app: devai-claude-desktop switches the
+    # whole app to its gateway profile (Claude-3p) and RESTARTS it, so run this
+    # from a regular terminal, not the app's own terminal pane. --detach keeps
+    # DevAI's proxy running after this shell exits. The Code tab must also use
+    # ~/.claude-work: set CLAUDE_CONFIG_DIR in the work profile's local
+    # environment (see docs/claude-code.md) unless the launch env reaches it.
+    cc-work-desktop() {
+      local technl_proxy
+      _cc_work_prepare || return 1
+      env ${unsetLaneVars} \
+        CLAUDE_CONFIG_DIR=${lib.escapeShellArg workDir} \
+        CODEMEM_ANTHROPIC_ENDPOINT="$technl_proxy/messages" \
+        ${assignments workEnv} \
+        devai-claude-desktop --detach "$@"
     }
     # One-time per machine, after the first rebuild: install the codemem plugin
     # into both lanes (plugins are per config dir). Personal runs with

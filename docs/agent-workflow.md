@@ -59,10 +59,10 @@ alias, never a full provider model id. Each lane maps the aliases to its own
 endpoint:
 
 - personal → Anthropic's Opus / Sonnet via the Max login.
-- work (`cc-work`) → `ANTHROPIC_DEFAULT_{OPUS,SONNET,HAIKU}_MODEL` =
-  `claude-opus-5-5` / `claude-sonnet-4-6` / `claude-haiku-4-5`, all served by
-  the TechNL gateway (set on the launch env, so DevAI CLI's own model routing
-  wins if `devai-claude` sets any).
+- work (`cc-work` / `cc-work-desktop`) → `ANTHROPIC_DEFAULT_{OPUS,SONNET,HAIKU}_MODEL` =
+  `claude-opus-5-5` / `claude-sonnet-5-5` / `claude-haiku-4-5`, all served by
+  the TechNL gateway (set in the work `settings.json` env, so CLI and desktop
+  work sessions both get them; `/model` can still pick other gateway ids).
 
 Every request from the work lane — main session or subagent, whatever the
 tier — goes to the lane's `ANTHROPIC_BASE_URL`, so an alias can't route client
@@ -137,7 +137,7 @@ Don't infer a subagent's model from the session's own model. Check it:
   ```bash
   cc-work -p "use the planner subagent to plan: add a /health endpoint" \
     --output-format json | jq '.modelUsage | keys'
-  # → [ "claude-opus-5-5", "claude-sonnet-4-6", … ]
+  # → [ "claude-opus-5-5", "claude-sonnet-5-5", … ]
   ```
 
   An Opus id appearing confirms the `planner` tier; under `cc-work` the ids are

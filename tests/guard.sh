@@ -118,7 +118,8 @@ check() { # <block|allow> <name> <env assignments...>
 }
 ok_env=(CC_LANE=work ANTHROPIC_BASE_URL=http://127.0.0.1:8787 CODEMEM_ANTHROPIC_ENDPOINT=https://gateway.example/v1/messages)
 check allow "started by cc-work"         "${ok_env[@]}"
-check block "not started by cc-work"     ANTHROPIC_BASE_URL=http://127.0.0.1:8787 CODEMEM_ANTHROPIC_ENDPOINT=https://gateway.example/v1/messages
+check allow "desktop gateway mode"       CLAUDE_CODE_API_BASE_URL=http://127.0.0.1:8787 CODEMEM_ANTHROPIC_ENDPOINT=https://gateway.example/v1/messages
+check block "desktop gateway is Anthropic" CLAUDE_CODE_API_BASE_URL=https://API.anthropic.com CODEMEM_ANTHROPIC_ENDPOINT=https://gateway.example/v1/messages
 check block "no gateway"                 CC_LANE=work CODEMEM_ANTHROPIC_ENDPOINT=https://gateway.example/v1/messages
 check block "gateway is Anthropic"       CC_LANE=work ANTHROPIC_BASE_URL=https://api.anthropic.com CODEMEM_ANTHROPIC_ENDPOINT=https://gateway.example/v1/messages
 check block "gateway is Anthropic (case)" CC_LANE=work ANTHROPIC_BASE_URL=https://API.Anthropic.COM CODEMEM_ANTHROPIC_ENDPOINT=https://gateway.example/v1/messages

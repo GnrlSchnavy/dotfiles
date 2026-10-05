@@ -101,7 +101,7 @@ sudo darwin-rebuild --rollback
 | Dock layout / apps (per-host) | [`nix/hosts/<name>/dock.nix`](nix/hosts/m5/dock.nix) |
 | Shell config (zsh init, env vars) | [`nix/home/zsh.nix`](nix/home/zsh.nix) |
 | Java/Node versions (mise) | [`nix/home/mise.nix`](nix/home/mise.nix) |
-| Claude Code lanes (`cc-personal` / `cc-work`), hooks, settings merge | [`nix/home/claude-lanes.nix`](nix/home/claude-lanes.nix) |
+| Claude Code lanes (`cc-personal` / `cc-work` / `cc-work-desktop`), hooks, settings merge | [`nix/home/claude-lanes.nix`](nix/home/claude-lanes.nix) |
 | codemem memory (per-lane observer configs) | [`nix/home/codemem.nix`](nix/home/codemem.nix) |
 | Git config (per-host identity) | [`nix/hosts/<name>/git.nix`](nix/hosts/m5/git.nix) |
 | New dotfile to symlink (e.g. `.foorc`) | [`nix/home/files.nix`](nix/home/files.nix) |

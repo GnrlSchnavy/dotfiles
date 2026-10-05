@@ -136,8 +136,9 @@ lane.
    the client overlay), a `<client>Owned` block like `workOwned` (env, the
    lane-check / AGENTS.md hooks, `skipWebFetchPreflight`, default model), and a
    `run ${mergeSettings} …` line in `claudeLaneSettings`. The work hooks check
-   `CC_LANE=work`; give the new lane its own value and hooks dir (copy
-   `system/.claude-work/hooks/` and adjust).
+   for a non-Anthropic gateway URL and the codemem observer endpoint; give the
+   new lane its own hooks dir (copy `system/.claude-work/hooks/` and adjust)
+   and its own `CC_LANE` value in its env.
 
 5. **Overlay folder** — `system/.claude-<client>/<client>/*.md` (client *name*
    only, like Ahold's — no internal architecture), or keep the rules in the

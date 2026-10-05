@@ -68,8 +68,8 @@ never through the personal Max login:
 
 | Lane | Config dir | Inference | Start it with | codemem DB | Viewer port |
 |---|---|---|---|---|---|
-| personal | `~/.claude` | Claude Max login | the Claude desktop app (preferred), plain `claude`, or `cc-personal` | `~/.codemem/personal/` | 4747 |
-| work (Ahold) | `~/.claude-work` | the TechNL gateway, via DevAI CLI (`devai-claude`) | `cc-work` only, in a terminal | `~/.codemem/work-ahold/` | 4848 |
+| personal | `~/.claude` | Claude Max login | the Claude desktop app in its normal mode, T3 Code, plain `claude`, or `cc-personal` | `~/.codemem/personal/` | 4747 |
+| work (Ahold) | `~/.claude-work` | the TechNL gateway, via DevAI CLI | `cc-work` (terminal) or `cc-work-desktop` (the desktop app in gateway mode) | `~/.codemem/work-ahold/` | 4848 |
 
 Settings, plugins, transcripts, auto-memory and the Keychain credential
 are all per config dir, so the work lane never sees the personal Max
@@ -87,12 +87,14 @@ lane, whose observer extracts via Max). So `cc-work` wraps
 docs (`npm install -g @royalaholddelhaize/devai-cli`, needs a GitHub
 Packages token) before using `cc-work`.
 
-**Why the desktop app can't host the work lane:** it has one app-wide
-inference setup — the Max login *or* a single third-party gateway
-(Developer → Configure Third-Party Inference) — with no per-folder
-routing and no `CLAUDE_CONFIG_DIR`. So the desktop app is the personal
-lane, and the work lane is the CLI under `cc-work`, run in any terminal
-(including the desktop app's own terminal pane).
+**The desktop app is one lane at a time.** It runs in one *deployment
+mode*: `1p` (your Claude account, app profile
+`~/Library/Application Support/Claude`) or `3p` (a gateway, separate
+profile `…/Claude-3p` with its own chats, login and settings).
+Switching relaunches the app. So it is either the personal lane or —
+through `cc-work-desktop` — the work lane, never both at once. While
+it's in work mode, use T3 Code (or `claude` / `cc-personal`) for
+personal projects; personal chat still works at claude.ai in a browser.
 
 Requires Claude Code CLI **>= 2.1.285** (the `claude-code` cask) —
 older builds (e.g. 2.1.274) reject `claude-opus-5-5` as
@@ -112,16 +114,16 @@ older builds (e.g. 2.1.274) reject `claude-opus-5-5` as
   into `~/.claude-work/settings.json` (`env.CODEMEM_ANTHROPIC_ENDPOINT`,
   a local file, never in the repo), then strips inherited lane and
   gateway variables and runs `devai-claude` with:
-  - `CLAUDE_CONFIG_DIR=~/.claude-work`, `CC_LANE=work`;
+  - `CLAUDE_CONFIG_DIR=~/.claude-work`;
   - `CODEMEM_ANTHROPIC_ENDPOINT` (codemem's observer endpoint);
-  - model aliases `opus` → `claude-opus-5-5`, `sonnet` →
-    `claude-sonnet-4-6`, `haiku` → `claude-haiku-4-5`
-    (`ANTHROPIC_DEFAULT_*_MODEL`), on the launch env only so DevAI's own
-    model routing wins if it sets any;
-  - `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1` (no telemetry, error
-    reports, auto-updates or feature-flag calls to Anthropic);
-  - the per-lane codemem env (below), which is also in the work
-    `settings.json` in case `devai-claude` rebuilds the environment.
+  - the work env, which is also in the work `settings.json` so every
+    work session gets it however it was launched: `CC_LANE=work`, the
+    per-lane codemem env (below), model aliases `opus` →
+    `claude-opus-5-5`, `sonnet` → `claude-sonnet-5-5`, `haiku` →
+    `claude-haiku-4-5` (`ANTHROPIC_DEFAULT_*_MODEL`; `/model` can still
+    pick any other id the gateway serves — `devai status` lists them),
+    and `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1` (no telemetry,
+    error reports, auto-updates or feature-flag calls to Anthropic).
 
   The gateway variables (`ANTHROPIC_BASE_URL`, credentials) are left to
   `devai-claude`. Its arguments are Claude Code's (`cc-work -p …`,
@@ -130,10 +132,26 @@ older builds (e.g. 2.1.274) reject `claude-opus-5-5` as
   to start while anything listens on port
   38888 (see the [codemem known issue](#codemem-memory)).
 
-  **Verify on first use** (DevAI's internals weren't inspected from the
-  personal lane): `/status` shows a non-Anthropic base URL, and
-  `devai-claude` keeps the `CLAUDE_CONFIG_DIR` it is given — if it
-  forces its own, the work hooks and codemem plugin won't load.
+  Verified: `devai-claude` keeps the `CLAUDE_CONFIG_DIR` and env it is
+  given, and sessions get `ANTHROPIC_BASE_URL` = DevAI's local proxy.
+- **`cc-work-desktop`** — the same preparation, then
+  `devai-claude-desktop --detach`: DevAI starts its local proxy (kept
+  running after the shell exits), switches the desktop app to its
+  gateway profile and **restarts the app** (it asks first; pass
+  `--kill-existing-desktop` to skip the prompt). Run it from a regular
+  terminal — the desktop app's own terminal pane closes with the app.
+  **One-time step in work mode:** the Code tab must use
+  `~/.claude-work`, or it falls back to `~/.claude` (personal plugins,
+  the personal memory lane, and the Ahold guard blocking every work
+  repo). In the work-mode app, open the environment selector → *Local*
+  → settings, and add `CLAUDE_CONFIG_DIR` = the **absolute** path
+  `/Users/<you>/.claude-work` (the app ignores `~` or relative paths).
+  That editor belongs to the work profile, so personal mode is not
+  affected. Check it with `echo $CLAUDE_CONFIG_DIR` in a work Code
+  session.
+  To go back to personal mode, switch the app back to your Claude
+  account (the gateway setting under Developer → Configure Third-Party
+  Inference); `devai status` shows the desktop state.
 - **`cc-lanes-setup`** — one-time per machine, after the first rebuild:
   installs the codemem plugin into both lanes (plugins are per config
   dir).
@@ -144,10 +162,13 @@ Each lane has hooks that block a prompt or tool call (exit 2) before
 anything is sent — verified: a blocked prompt makes zero API calls.
 
 - **Work: `lane-check.sh`** (`UserPromptSubmit` + `PreToolUse`) — blocks
-  unless the session was started by `cc-work`: `CC_LANE=work`, an
-  `ANTHROPIC_BASE_URL` (DevAI's local proxy) that isn't `anthropic.com`,
-  and a `CODEMEM_ANTHROPIC_ENDPOINT` that isn't `anthropic.com`. Also
-  blocks while port 38888 is listening.
+  unless the session has a gateway URL (`ANTHROPIC_BASE_URL` or
+  `CLAUDE_CODE_API_BASE_URL`) that isn't `anthropic.com` and a
+  `CODEMEM_ANTHROPIC_ENDPOINT` that isn't `anthropic.com`. That covers
+  both launchers; a personal-mode desktop session using the work config
+  gets `ANTHROPIC_BASE_URL=https://api.anthropic.com` and plain `claude`
+  gets none, so both are blocked. Also blocks while port 38888 is
+  listening.
 - **Personal lane** — keeps client work trees (`workRoots` in
   `claude-lanes.nix`, exported as `CC_WORK_ROOTS`) out of Max, in three
   layers:

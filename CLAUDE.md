@@ -66,7 +66,7 @@ once per machine: `mise install` (the Java/Node versions) and
 | Java/Node versions (mise) | `nix/home/mise.nix` |
 | New dotfile symlink | `nix/home/files.nix` |
 | Secrets (Proton Pass refs, `pass-get`/`pass-render`) | `nix/home/secrets.nix` ([docs/secrets.md](docs/secrets.md)) |
-| Claude Code lanes (`cc-personal`/`cc-work`), guards, settings merge, model aliases | `nix/home/claude-lanes.nix` ([docs/claude-code.md](docs/claude-code.md#two-claude-code-lanes)) |
+| Claude Code lanes (`cc-personal`/`cc-work`/`cc-work-desktop`), guards, settings merge, model aliases | `nix/home/claude-lanes.nix` ([docs/claude-code.md](docs/claude-code.md#two-claude-code-lanes)) |
 | codemem memory (per-lane observer configs) | `nix/home/codemem.nix` ([docs/claude-code.md](docs/claude-code.md#codemem-memory)) |
 | Claude Code settings/agents/commands/skills, global `CLAUDE.md` | `system/.claude/` ([docs/claude-code.md](docs/claude-code.md)) |
 | Work-lane hooks + Ahold `CLAUDE.md` overlay | `system/.claude-work/` ([docs/claude-code.md](docs/claude-code.md#instructions--agents-per-lane)) |

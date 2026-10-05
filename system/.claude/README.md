@@ -59,8 +59,10 @@ session state) is untouched by home-manager.
 
 ## Work lane (`~/.claude-work`)
 
-The work lane is a separate config dir, used only through `cc-work`
-(Ahold, via the TechNL gateway — `cc-work` wraps DevAI CLI's `devai-claude`).
+The work lane is a separate config dir, used through `cc-work` (terminal)
+or `cc-work-desktop` (the desktop app in gateway mode) — Ahold, via the
+TechNL gateway; both wrap DevAI CLI (`devai-claude` /
+`devai-claude-desktop`).
 Declared in `claude-lanes.nix`:
 
 | Path | Source |
