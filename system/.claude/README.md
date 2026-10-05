@@ -39,6 +39,9 @@ keys the lane module owns into it —
 - `env` — the lane's codemem env and `CC_WORK_ROOTS` (other env keys kept);
 - `permissions.deny` — `Read`/`Edit` rules for each client work root
   (added when missing; your own rules kept);
+- `sandbox` — the Bash sandbox, on, with each work root unreadable and no
+  unsandboxed retries; the build caches/registries it allows are appended
+  to your own lists;
 - `hooks` — entries whose command lives under `~/.claude/hooks/` are
   replaced; plugin and hand-added hooks are kept.
 

@@ -198,28 +198,41 @@ anything is sent — verified: a blocked prompt makes zero API calls.
   and a `CODEMEM_ANTHROPIC_ENDPOINT` that isn't `anthropic.com`. Also
   blocks while port 38888 is listening.
 - **Personal lane** — keeps client work trees (`workRoots` in
-  `claude-lanes.nix`, exported as `CC_WORK_ROOTS`) out of Max, in two
+  `claude-lanes.nix`, exported as `CC_WORK_ROOTS`) out of Max, in three
   layers:
   1. **Permission deny rules** — `Read(//<root>/**)` and
      `Edit(//<root>/**)`, merged into `~/.claude/settings.json`. Claude
      Code resolves these paths itself (relative, `~`, symlinks), and Read
      rules also cover Grep, Glob and LSP. This is the boundary for the
      file tools.
-  2. **`work-lane-guard.sh`** (`UserPromptSubmit` + `PreToolUse`, logic in
-     `work-lane-guard.jq`) — what the rules can't express: prompts
-     (including `@` mentions), Bash commands, MCP tool arguments, and
-     case-insensitive matching (APFS). It expands `~`/`$HOME`, resolves
-     relative paths against the session cwd (following `cd`), and blocks
-     searches that would descend into a root from a parent folder
-     (`rg`/`find`/`grep -r` in `~`, Grep/Glob from `~/projects`). It
-     fails closed: if jq or the `.jq` file is missing, or the input can't
-     be parsed, the request is blocked.
+  2. **Bash sandbox** (macOS Seatbelt) — `sandbox.enabled` with each root
+     in `sandbox.filesystem.denyRead`, so a shell command (and anything it
+     starts: scripts, interpreters) can't read the work tree, whatever
+     path it uses. `allowUnsandboxedCommands: false` removes the escape
+     hatch of retrying a failed command outside the sandbox. Both are
+     forced on every rebuild; toggling them off in `/sandbox` only lasts
+     until the next one.
+  3. **`work-lane-guard.sh`** (`UserPromptSubmit` + `PreToolUse`, logic in
+     `work-lane-guard.jq`) — what neither covers: prompts (including `@`
+     mentions), MCP tool arguments, and case-insensitive matching (APFS).
+     It also checks Bash and the file tools as defence in depth: it
+     expands `~`/`$HOME`, resolves relative paths against the session cwd
+     (following `cd`), and blocks searches that would descend into a root
+     from a parent folder (`rg`/`find`/`grep -r` in `~`, Grep/Glob from
+     `~/projects`). It fails closed: if jq or the `.jq` file is missing,
+     or the input can't be parsed, the request is blocked.
 
-  Bash parsing is best-effort: a script or interpreter that opens files
-  itself, or a path assembled in ways the hook can't see, gets through.
-  The OS-enforced answer for shell commands is Claude Code's Bash sandbox
-  (`sandbox.enabled` + `sandbox.filesystem.denyRead`), which is not
-  enabled here yet.
+  What the sandbox changes for personal-lane Bash: commands can write
+  only to the project folder, `$TMPDIR`, `~/.m2`, `~/.gradle` and
+  `~/.npm`, and reach only Maven Central, Gradle and npm without asking
+  (other hosts prompt per domain). Add more in `claude-lanes.nix`
+  (`union.sandbox.filesystem.allowWrite`, `…network.allowedDomains`), or
+  in `/sandbox` — your own entries survive rebuilds. Known macOS
+  frictions: Docker and Go CLIs such as `gh` don't work inside Seatbelt,
+  and `git push` with the keychain helper is untested — run those
+  yourself, or list them in `sandbox.excludedCommands` (which runs them
+  fully unsandboxed). Bash prompts stay as they were
+  (`autoAllowBashIfSandboxed: false`, only written when unset).
 
   Practical effects: start personal sessions in a project folder, not in
   `~` or `~/projects` (recursive searches from there are blocked), and a
@@ -236,8 +249,12 @@ the keys the module owns** into whatever is there:
 - `env` — the lane's env keys overwrite; other env keys are kept;
 - `hooks` — entries whose command lives under the lane's `hooks/` dir
   are replaced; any other hooks (plugins, your own) are kept;
-- personal lane only: `permissions.deny` gets the work-root rules
-  (added when missing; your own allow/deny rules are kept);
+- personal lane only: `permissions.deny` and the sandbox lists
+  (`filesystem.denyRead`/`allowWrite`, `network.allowedDomains`) get the
+  owned entries appended when missing — your own entries are kept;
+  `sandbox.enabled` and `sandbox.allowUnsandboxedCommands: false` are
+  forced; `sandbox.autoAllowBashIfSandboxed: false` is written only when
+  unset;
 - work lane only: `skipWebFetchPreflight: true` (the preflight sends the
   target hostname to `api.anthropic.com`), and `model: "opus"` written
   only when unset (so `/model` keeps working).
