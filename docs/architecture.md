@@ -12,7 +12,7 @@ sudo darwin-rebuild switch --flake ~/.dotfiles/nix#<host> -v
 | Layer | Manages | Config lives in |
 |---|---|---|
 | **nix-darwin** | System: macOS defaults, dock, keyboard, launchd, system packages | `nix/modules/*.nix` (shared) + `nix/hosts/<name>/{packages,homebrew,dock}.nix` (per-host) |
-| **home-manager** | User: `~/.zshrc`, `~/.config/git/*`, `~/.ideavimrc`, `~/.claude/*` symlinks | `nix/home/*.nix` (shared) + `nix/hosts/<name>/git.nix` (per-host) |
+| **home-manager** | User: `~/.zshrc`, `~/.config/git/*`, `~/.ideavimrc`, `~/.claude/*` + `~/.claude-work/*` symlinks, Claude Code lane launchers | `nix/home/*.nix` (shared) + `nix/hosts/<name>/git.nix` (per-host) |
 | **nix-homebrew** | Homebrew itself + declared brews/casks/masApps | `nix/hosts/<name>/homebrew.nix` |
 
 home-manager runs as a nix-darwin module, so a single
@@ -93,16 +93,20 @@ nix/
 │   ├── system.nix       # macOS defaults, caps-lock→escape, dark mode, finder
 │   └── environment.nix  # EDITOR/VISUAL=nvim, kubectl aliases (k, kgp, kaf, …)
 ├── home/                # shared home-manager modules (every host)
-│   ├── default.nix      # imports files.nix + zsh.nix + codemem.nix; home.stateVersion
+│   ├── default.nix      # imports the modules below; home.stateVersion
 │   ├── zsh.nix          # .zprofile/.zshrc content, aliases, session vars
 │   ├── files.nix        # file-pointer dotfiles (.ideavimrc, .claude/*)
-│   └── codemem.nix      # OpenCode config + two-lane codemem memory (oc-personal/oc-work)
+│   ├── secrets.nix      # pass-get / pass-render / pass-check (Proton Pass)
+│   ├── claude-lanes.nix # two Claude Code lanes (cc-personal/cc-work), hooks, settings merge, cc-tooling
+│   └── codemem.nix      # per-lane codemem observer configs + runtime dirs
 └── nixvim/config/       # Neovim module (NOT a flake) — LSP, Telescope, Treesitter
 ```
 
 Repo root also holds the symlink *sources*: `editors/.ideavimrc`,
-`system/.claude/`, `system/.claude-mem/`, and the unmanaged Docker
-reference `development/.docker/config.json`.
+`system/.claude/` (personal lane), `system/.claude-work/` (work-lane
+hooks + Ahold overlay), `system/.claude-mem/`, `system/bin/`
+(`cc-tooling`), and the unmanaged Docker reference
+`development/.docker/config.json`.
 
 ## Shared vs per-host: the decision rule
 

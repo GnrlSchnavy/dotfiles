@@ -57,7 +57,7 @@ empty credential. An empty-but-successful lookup is treated as an
 error too.
 
 Fail-closed is load-bearing wherever the fallback would be worse than
-stopping — in `oc-work` a missing key must abort the launch, because
+stopping — in `cc-work` a missing key must abort the launch, because
 continuing would route client content straight to Anthropic instead of
 the sanctioned TechNL proxy.
 
@@ -144,9 +144,9 @@ reports a missing one.
 
 | Consumer | Reference | Defined in |
 |---|---|---|
-| `oc-work` (TechNL key + proxy URL) | `pass://Ahold/TechNLGenAI/{api_key,proxy_url}` | [`nix/home/codemem.nix`](../nix/home/codemem.nix) |
+| `cc-work` (TechNL proxy URL for codemem; the gateway credential itself is held by DevAI CLI) | `pass://Ahold/TechNLGenAI/proxy_url` | [`nix/home/claude-lanes.nix`](../nix/home/claude-lanes.nix) |
 | codemem work-lane observer auth | `pass://Ahold/TechNLGenAI/api_key` | [`nix/home/codemem.nix`](../nix/home/codemem.nix) |
-| Per-client OpenCode lanes | `pass://<Client>/<Channel>/{api_key,proxy_url}` | [opencode-client-tooling.md](opencode-client-tooling.md) |
+| Per-client Claude Code lanes | `pass://<Client>/<Channel>/{api_key,proxy_url}` | [client-tooling.md](client-tooling.md) |
 
 The codemem observer entry is a raw `observer_auth_command` array
 rather than a `pass-get` call: codemem spawns that command itself and

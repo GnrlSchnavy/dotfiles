@@ -104,7 +104,8 @@ sudo darwin-rebuild --rollback
 | macOS system default (finder, keyboard, etc.) | [`nix/modules/system.nix`](nix/modules/system.nix) |
 | Dock layout / apps (per-host) | [`nix/hosts/<name>/dock.nix`](nix/hosts/m5/dock.nix) |
 | Shell config (zsh init, lazy-loads, env vars) | [`nix/home/zsh.nix`](nix/home/zsh.nix) |
-| OpenCode config / codemem memory lanes | [`nix/home/codemem.nix`](nix/home/codemem.nix) |
+| Claude Code lanes (`cc-personal` / `cc-work`), hooks, settings merge | [`nix/home/claude-lanes.nix`](nix/home/claude-lanes.nix) |
+| codemem memory (per-lane observer configs) | [`nix/home/codemem.nix`](nix/home/codemem.nix) |
 | Git config (per-host identity) | [`nix/hosts/<name>/git.nix`](nix/hosts/m5/git.nix) |
 | New dotfile to symlink (e.g. `.foorc`) | [`nix/home/files.nix`](nix/home/files.nix) |
 | Neovim plugins / LSP / keymaps | [`nix/nixvim/config/`](nix/nixvim/config/) |
@@ -133,7 +134,9 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 │   │   ├── default.nix        ← entrypoint, imports submodules
 │   │   ├── zsh.nix            ← .zshrc / .zprofile / .zshenv content
 │   │   ├── files.nix          ← file-pointer dotfiles (.ideavimrc, .claude)
-│   │   └── codemem.nix        ← OpenCode config + two-lane codemem memory
+│   │   ├── secrets.nix        ← Proton Pass helpers (pass-get, pass-render)
+│   │   ├── claude-lanes.nix   ← two Claude Code lanes (cc-personal / cc-work)
+│   │   └── codemem.nix        ← per-lane codemem memory configs
 │   └── nixvim/                ← neovim configuration as a nix module
 │       └── config/            ← imported by flake.nix's per-host nvim build
 │
@@ -141,7 +144,10 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 ├── development/.docker/       ← Docker config reference (NOT symlinked — Docker
 │                                 Desktop rewrites the file at runtime, breaks on
 │                                 a Nix-store symlink)
-├── system/.claude/            ← Claude Code settings (referenced by home/files.nix)
+├── system/.claude/            ← Claude Code personal lane: settings, CLAUDE.md, agents,
+│                                 commands, skills, hooks (home/files.nix + claude-lanes.nix)
+├── system/.claude-work/       ← work lane: hooks + Ahold CLAUDE.md overlay
+├── system/bin/                ← cc-tooling (per-client tooling helper)
 │
 ├── .github/workflows/check.yml ← fresh-install CI
 ├── setup.sh                    ← bootstrap entry point
@@ -229,7 +235,10 @@ Canonical docs live in [`docs/`](docs/):
 - [`docs/hosts.md`](docs/hosts.md) — host inventory and new-host onboarding
 - [`docs/packages.md`](docs/packages.md) — Nix vs Homebrew vs MAS strategy, adding/removing packages
 - [`docs/shell-and-dotfiles.md`](docs/shell-and-dotfiles.md) — zsh setup, dotfile symlinking, files apps rewrite at runtime
-- [`docs/claude-code.md`](docs/claude-code.md) — Claude Code settings/agents/skills management
+- [`docs/claude-code.md`](docs/claude-code.md) — Claude Code settings/agents/skills, the two lanes, codemem memory
+- [`docs/agent-workflow.md`](docs/agent-workflow.md) — the `/flow` multi-agent workflow
+- [`docs/client-tooling.md`](docs/client-tooling.md) — per-client tooling (`cc-tooling`) and onboarding a client lane
+- [`docs/secrets.md`](docs/secrets.md) — Proton Pass references and helpers
 - [`docs/operations.md`](docs/operations.md) — rebuilds, updates, maintenance scripts, troubleshooting
 - [`docs/ci.md`](docs/ci.md) — the fresh-install CI workflow
 

@@ -61,7 +61,8 @@ a reference snapshot kept in the repo:
 
 | Runtime file | Repo reference | How it gets there |
 |---|---|---|
-| `~/.claude/settings.json` | `system/.claude/settings.json` | seeded by `setup.sh` only when absent |
+| `~/.claude/settings.json` | `system/.claude/settings.json` | seeded by `setup.sh` only when absent; lane-owned keys (env, hooks) merged on every rebuild by `claude-lanes.nix` |
+| `~/.claude-work/settings.json` | *(none)* | created and merged on every rebuild by `claude-lanes.nix` (owned keys only) |
 | `~/.claude-mem/settings.json` | `system/.claude-mem/settings.json` | seeded by `setup.sh` only when absent; absolute `/Users/<name>` paths are rewritten to the current `$HOME` during seeding |
 | `~/.docker/config.json` | `development/.docker/config.json` | never seeded — Docker Desktop owns it entirely |
 

@@ -1,122 +1,31 @@
-# Two-lane codemem memory for OpenCode — shared across all hosts.
+# Two-lane codemem memory — shared across all hosts.
 #
-# codemem gives OpenCode persistent memory. We run it in two isolated lanes
+# codemem gives Claude Code persistent memory. It runs in two isolated lanes
 # so client (Ahold) content is NEVER extracted via Anthropic directly — only
 # through the sanctioned TechNL proxy:
 #
-#   oc-personal  → DB ~/.codemem/personal     → extract via local Claude (Max)
-#   oc-work      → DB ~/.codemem/work-ahold    → extract via TechNL proxy
+#   personal → DB ~/.codemem/personal     → extract via local Claude (Max)
+#   work     → DB ~/.codemem/work-ahold   → extract via TechNL proxy
+#
+# This module owns the codemem side: the per-lane observer configs and runtime
+# folders. Which lane a session uses is decided by the Claude Code lane it runs
+# in (see claude-lanes.nix): each lane exports its own CODEMEM_DB /
+# CODEMEM_CONFIG / CODEMEM_VIEWER_PORT and hook spool/lock/context folders, and
+# the codemem plugin's hooks + MCP server (and the viewer the MCP server
+# auto-starts) inherit them.
 #
 # Isolation is by separate DB *folders* (the viewer lock is keyed on the DB's
-# directory), separate observer configs, and separate viewer ports — all set
-# per-lane by the oc-* functions below. The OpenCode plugin forwards
-# CODEMEM_DB / CODEMEM_CONFIG / CODEMEM_VIEWER_PORT into the viewer it
-# auto-starts, and the extraction sweeper runs inside that per-lane viewer, so
-# work extraction provably stays in the TechNL channel.
+# directory), separate observer configs, and separate viewer ports.
 #
 # No secrets live in this file: the TechNL key AND the proxy URL are resolved at
 # runtime via pass-cli (Proton Pass) — the proxy hostname is intentionally kept
-# out of these public dotfiles. Paths use config.home.homeDirectory so the same
-# module works regardless of the host's username.
+# out of these public dotfiles.
 { config, lib, ... }:
 
 let
   home = config.home.homeDirectory;
-  codememVersion = "0.36.0";
-  pluginSpec = "@codemem/opencode-plugin@${codememVersion}";
-
-  # codemem MCP server entry — identical in both lanes. It inherits
-  # CODEMEM_DB / CODEMEM_CONFIG from the launching oc-* function, so recall is
-  # automatically scoped to the active lane.
-  codememMcp.codemem = {
-    type = "local";
-    command = [ "npx" "-y" "codemem@${codememVersion}" "mcp" ];
-    enabled = true;
-  };
 in
 {
-  # ── Personal OpenCode config (Max via the opencode-with-claude proxy) ──
-  xdg.configFile."opencode/opencode.json".text = builtins.toJSON {
-    "$schema" = "https://opencode.ai/config.json";
-    plugin = [ "opencode-with-claude" pluginSpec ];
-    mcp = codememMcp;
-    provider.anthropic.options = {
-      baseURL = "http://127.0.0.1:3456";
-      apiKey = "dummy";
-    };
-    # Opus tier for the agent-workflow roles (Max serves Opus). Sonnet stays the
-    # default below; only the roles mapped in `agent` use Opus.
-    provider.anthropic.models."claude-opus-4-8" = {
-      name = "Claude Opus 4.8";
-      limit = {
-        context = 200000;
-        output = 64000;
-      };
-    };
-    model = "anthropic/claude-sonnet-4-6";
-    # Per-role model tiers. The agent prompts live in system/opencode/agent/ and
-    # are model-LESS; the tier is chosen here, per-lane. lead + planner run on
-    # Opus; every other role inherits the Sonnet default. See
-    # docs/claude-code.md#opencode-agent-workflow.
-    agent = {
-      lead.model = "anthropic/claude-opus-4-8";
-      planner.model = "anthropic/claude-opus-4-8";
-    };
-  };
-
-  # ── Work OpenCode config (direct TechNL provider, codemem only) ──
-  # Lives outside ~/.config, so home.file (not xdg.configFile). The api-key
-  # header is resolved by OpenCode from $TECHNL_GENAI_KEY (set by oc-work).
-  home.file."projects/ahold/opencode.json".text = builtins.toJSON {
-    "$schema" = "https://opencode.ai/config.json";
-    plugin = [ pluginSpec ];
-    mcp = codememMcp;
-    # Ahold client overlay — loaded ONLY in the work lane, on top of the global
-    # ~/.config/opencode/AGENTS.md. Glob of an absolute path: OpenCode resolves
-    # it as glob(basename, {cwd: dirname}), so every *.md in the folder loads
-    # (flat, one level), in every repo under oc-work. The folder is deployed by
-    # nix/home/opencode.nix; add files to extend it, new clients get their own
-    # folder + lane.
-    instructions = [ "${home}/.config/opencode/ahold/*.md" ];
-    provider.technl = {
-      npm = "@ai-sdk/anthropic";
-      name = "TechNL GenAI (work)";
-      options = {
-        # Proxy URL resolved at runtime from $TECHNL_PROXY_URL (set by oc-work
-        # from pass-cli), so the hostname stays out of these public dotfiles.
-        baseURL = "{env:TECHNL_PROXY_URL}";
-        apiKey = "dummy";
-        headers."api-key" = "{env:TECHNL_GENAI_KEY}";
-      };
-      models."claude-sonnet-4-6" = {
-        name = "Claude Sonnet 4.6 (TechNL)";
-        limit = {
-          context = 200000;
-          output = 64000;
-        };
-      };
-      # Opus tier for the agent-workflow roles. NOTE: confirm the TechNL proxy
-      # actually serves this model id and change it to whatever it exposes.
-      models."claude-opus-4-8" = {
-        name = "Claude Opus 4.8 (TechNL)";
-        limit = {
-          context = 200000;
-          output = 64000;
-        };
-      };
-    };
-    model = "technl/claude-sonnet-4-6";
-    # Per-role model tiers — MUST be set here too. Under oc-work the personal
-    # config loads as the base and this work config merges ON TOP; if lead +
-    # planner were left unset here they would inherit the personal `anthropic/*`
-    # Opus = a client-data leak. Pinning them to the `technl` provider keeps
-    # every role inside the sanctioned channel.
-    agent = {
-      lead.model = "technl/claude-opus-4-8";
-      planner.model = "technl/claude-opus-4-8";
-    };
-  };
-
   # ── codemem observer configs (no secrets) ──
   xdg.configFile."codemem/personal.json".text = builtins.toJSON {
     observer_runtime = "claude_sidecar";
@@ -125,11 +34,11 @@ in
 
   # NOTE: with observer_provider="anthropic", codemem's _callAnthropicDirect
   # IGNORES observer_base_url — it uses a hardcoded api.anthropic.com unless the
-  # env var CODEMEM_ANTHROPIC_ENDPOINT is set (done in oc-work below). So the
-  # TechNL endpoint is supplied via that env var, NOT via observer_base_url here.
+  # env var CODEMEM_ANTHROPIC_ENDPOINT is set (done by cc-work). So the TechNL
+  # endpoint is supplied via that env var, NOT via observer_base_url here.
   # The api-key header (what the TechNL proxy expects) is supplied via
-  # observer_headers; the token resolves from ANTHROPIC_API_KEY (set in oc-work),
-  # with the pass-cli command as a fallback.
+  # observer_headers; the token resolves from ANTHROPIC_API_KEY (set by
+  # cc-work), with the pass-cli command as a fallback.
   xdg.configFile."codemem/work-ahold.json".text = builtins.toJSON {
     observer_runtime = "api_http";
     observer_provider = "anthropic";
@@ -140,43 +49,6 @@ in
     # literal ${auth.token} — escaped so Nix doesn't interpolate it.
     observer_headers."api-key" = "\${auth.token}";
   };
-
-  # ── Launch functions (appended to the shared zsh initContent) ──
-  programs.zsh.initContent = lib.mkAfter ''
-    # codemem two-lane launchers (see nix/home/codemem.nix)
-    oc-personal() {
-      CODEMEM_DB="${home}/.codemem/personal/mem.sqlite" \
-      CODEMEM_CONFIG="${home}/.config/codemem/personal.json" \
-      CODEMEM_VIEWER_PORT=4747 \
-      CODEMEM_PLUGIN_LOG="${home}/.codemem/personal/plugin.log" \
-      OPENCODE_CONFIG="${home}/.config/opencode/opencode.json" \
-      opencode "$@"
-    }
-    oc-work() {
-      # Resolve the TechNL key + proxy URL once (used for both coding + observer
-      # auth). Both come from pass-cli so neither is baked into the dotfiles.
-      # Fail closed: if either can't be resolved, do NOT launch — never fall back
-      # to a path that could route client content to Anthropic directly.
-      local technl_key technl_proxy
-      technl_key="$(pass-cli item view 'pass://Ahold/TechNLGenAI/api_key')" || {
-        print -u2 "oc-work: failed to resolve TechNL key from pass-cli"; return 1
-      }
-      technl_proxy="$(pass-cli item view 'pass://Ahold/TechNLGenAI/proxy_url')" || {
-        print -u2 "oc-work: failed to resolve TechNL proxy URL from pass-cli"; return 1
-      }
-      CODEMEM_DB="${home}/.codemem/work-ahold/mem.sqlite" \
-      CODEMEM_CONFIG="${home}/.config/codemem/work-ahold.json" \
-      CODEMEM_VIEWER_PORT=4848 \
-      CODEMEM_PROJECT=ahold \
-      CODEMEM_PLUGIN_LOG="${home}/.codemem/work-ahold/plugin.log" \
-      CODEMEM_ANTHROPIC_ENDPOINT="$technl_proxy/messages" \
-      TECHNL_GENAI_KEY="$technl_key" \
-      TECHNL_PROXY_URL="$technl_proxy" \
-      ANTHROPIC_API_KEY="$technl_key" \
-      OPENCODE_CONFIG="${home}/projects/ahold/opencode.json" \
-      opencode "$@"
-    }
-  '';
 
   # ── Per-lane runtime folders (separate dirs → separate viewer locks) ──
   home.activation.codememDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

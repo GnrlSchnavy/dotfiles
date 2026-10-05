@@ -10,9 +10,9 @@ precise enough for both humans and AI agents making changes.
 | [packages.md](packages.md) | Add/remove software; decide Nix vs Homebrew vs Mac App Store |
 | [shell-and-dotfiles.md](shell-and-dotfiles.md) | Change zsh config, symlink a new dotfile, or understand which files must NOT be symlinked |
 | [secrets.md](secrets.md) | Reference a secret from Proton Pass (`pass-get`/`pass-render`), or onboard a machine to the vault |
-| [claude-code.md](claude-code.md) | Manage Claude Code settings, agents, commands, skills; OpenCode two-lane codemem + global agents |
-| [opencode-agent-workflow.md](opencode-agent-workflow.md) | Use or extend the multi-agent workflow (lead/planner/…), per-lane model tiers |
-| [opencode-client-tooling.md](opencode-client-tooling.md) | Set up per-client OpenCode tooling (private repo + `oc-tooling`), onboard/switch clients |
+| [claude-code.md](claude-code.md) | Manage Claude Code settings, agents, commands, skills; the two lanes (`cc-personal`/`cc-work`), guards, codemem memory |
+| [agent-workflow.md](agent-workflow.md) | Use or extend the multi-agent workflow (`/flow`, planner/…), per-lane model tiers |
+| [client-tooling.md](client-tooling.md) | Set up per-client Claude Code tooling (private repo + `cc-tooling`), onboard/switch clients |
 | [nvim-cheatsheet.md](nvim-cheatsheet.md) | Look up Neovim keybindings while learning the NixVim setup |
 | [operations.md](operations.md) | Rebuild, update, health-check, back up, troubleshoot |
 | [ci.md](ci.md) | Understand or modify the fresh-install CI workflow |
@@ -26,8 +26,8 @@ precise enough for both humans and AI agents making changes.
    `sudo darwin-rebuild switch --flake ~/.dotfiles/nix#<host> -v`
    (host = `m5`, or `$(scutil --get LocalHostName)`).
 3. **Never symlink files that apps rewrite at runtime**
-   (`~/.claude/settings.json`, `~/.claude-mem/settings.json`,
-   `~/.docker/config.json`). See
+   (`~/.claude/settings.json`, `~/.claude-work/settings.json`,
+   `~/.claude-mem/settings.json`, `~/.docker/config.json`). See
    [shell-and-dotfiles.md](shell-and-dotfiles.md#files-that-must-not-be-symlinked).
 4. **`homebrew.onActivation.cleanup = "zap"` uninstalls anything not
    declared.** Installing a formula/cask manually without adding it to

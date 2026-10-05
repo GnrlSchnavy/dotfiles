@@ -12,7 +12,7 @@
 #   - `darwin-rebuild` activation is non-interactive and runs partly as root,
 #     so pass-cli there would hang on a login prompt or fail outright.
 # "Declarative" here means the reference and the recipe are versioned; the
-# materialisation stays an explicit command you run (`pass-render`, `oc-work`).
+# materialisation stays an explicit command you run (`pass-render`, `cc-work`).
 #
 # Do NOT call these helpers at shell startup — each one is a network round
 # trip and would add latency to every new terminal. Call them from functions

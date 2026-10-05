@@ -26,7 +26,9 @@ sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName)
 
 Fresh machine bootstrap: `./setup.sh`
 ([docs/operations.md](docs/operations.md)). claude-mem needs a manual
-per-machine install step — see [docs/claude-code.md](docs/claude-code.md#claude-mem-manual-per-machine-install).
+per-machine install step — see [docs/claude-code.md](docs/claude-code.md#claude-mem-manual-per-machine-install);
+the codemem plugin is installed into both Claude Code lanes once with
+`cc-lanes-setup`.
 
 ## Hard rules (violations break the build or the machine)
 
@@ -35,9 +37,10 @@ per-machine install step — see [docs/claude-code.md](docs/claude-code.md#claud
    "path does not exist" errors.
 2. **`darwin-rebuild switch` needs `sudo`.**
 3. **Never symlink files that apps rewrite at runtime**:
-   `~/.claude/settings.json`, `~/.claude-mem/settings.json`,
-   `~/.docker/config.json`. They use the reference-snapshot + seed
-   pattern instead — see
+   `~/.claude/settings.json`, `~/.claude-work/settings.json`,
+   `~/.claude-mem/settings.json`, `~/.docker/config.json`. They use the
+   reference-snapshot + seed pattern (plus, for the Claude Code lanes,
+   an activation-time merge of owned keys) instead — see
    [docs/shell-and-dotfiles.md](docs/shell-and-dotfiles.md#files-that-must-not-be-symlinked).
 4. **`homebrew.onActivation.cleanup = "zap"`** — any brew/cask not
    declared in the host's `homebrew.nix` is uninstalled on rebuild.
@@ -64,11 +67,12 @@ per-machine install step — see [docs/claude-code.md](docs/claude-code.md#claud
 | Shell (zsh) init, env vars | `nix/home/zsh.nix` |
 | New dotfile symlink | `nix/home/files.nix` |
 | Secrets (Proton Pass refs, `pass-get`/`pass-render`) | `nix/home/secrets.nix` ([docs/secrets.md](docs/secrets.md)) |
-| OpenCode config / codemem memory lanes | `nix/home/codemem.nix` ([docs/claude-code.md](docs/claude-code.md#opencode--two-lane-codemem-memory)) |
-| OpenCode global rules (AGENTS.md) + agents | `system/opencode/` → `nix/home/opencode.nix` ([docs/claude-code.md](docs/claude-code.md#opencode-instructions--agents)) |
-| OpenCode agent workflow (roles, commands, per-lane model tiers) | `system/opencode/agent/` + `command/`, tiers in `nix/home/codemem.nix` ([docs/opencode-agent-workflow.md](docs/opencode-agent-workflow.md)) |
-| OpenCode per-client agents/rules | private per-client repo + `oc-tooling` ([docs/opencode-client-tooling.md](docs/opencode-client-tooling.md)) |
-| Claude Code settings/agents/skills | `system/.claude/` ([docs/claude-code.md](docs/claude-code.md)) |
+| Claude Code lanes (`cc-personal`/`cc-work`), guards, settings merge, model aliases | `nix/home/claude-lanes.nix` ([docs/claude-code.md](docs/claude-code.md#two-claude-code-lanes)) |
+| codemem memory (per-lane observer configs) | `nix/home/codemem.nix` ([docs/claude-code.md](docs/claude-code.md#codemem-memory)) |
+| Claude Code settings/agents/commands/skills, global `CLAUDE.md` | `system/.claude/` ([docs/claude-code.md](docs/claude-code.md)) |
+| Work-lane hooks + Ahold `CLAUDE.md` overlay | `system/.claude-work/` ([docs/claude-code.md](docs/claude-code.md#instructions--agents-per-lane)) |
+| Agent workflow (`/flow`, roles, per-lane tiers) | `system/.claude/agents/` + `commands/flow*.md` ([docs/agent-workflow.md](docs/agent-workflow.md)) |
+| Per-client agents/rules | private per-client repo + `cc-tooling` ([docs/client-tooling.md](docs/client-tooling.md)) |
 | Neovim (NixVim) | `nix/nixvim/config/` — built per-host by `mkNvim` in `nix/flake.nix`; it is **not** a standalone flake |
 | Flake inputs / host registration | `nix/flake.nix` |
 

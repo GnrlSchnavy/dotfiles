@@ -92,7 +92,6 @@
       # Development utilities
       "ansible"
       "gh"
-      "opencode"
       "openspec"
       "pnpm"
       "stripe-cli"
