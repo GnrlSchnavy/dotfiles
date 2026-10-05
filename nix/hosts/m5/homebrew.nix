@@ -33,7 +33,7 @@
       "intellij-idea"
       "lens"
       "visual-studio-code"
-      "warp" # Warp terminal (NOT cloudflare-warp, the VPN)
+      "warp" 
 
       # Media
       "jellyfin-media-player"
@@ -49,6 +49,7 @@
 
       # AI
       "github-copilot-app"
+      "wispr-flow"
 
       #VPN
       "tailscale-app"
@@ -56,7 +57,16 @@
       #Games
       "crossover"
       "steam"
+
+      #Utilities
+      "balenaetcher"
+      "taskexplorer"
+      "knockknock"
+      "little-snitch"
+      "oversight"
+
     ];
+
 
     # CLI Tools (brews) - use when not available in Nix or need Homebrew features
     brews = [
@@ -84,11 +94,13 @@
       # Development utilities
       "ansible"
       "gh"
+      "opencode"
       "openspec"
       "pnpm"
       "stripe-cli"
 
       # Utilities
+      "clamav"
       "nmap"
     ];
 

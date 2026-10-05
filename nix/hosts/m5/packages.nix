@@ -1,17 +1,28 @@
 { pkgs, ... }:
 
+let
+  # nixpkgs' feishin builds from source with electron-builder and fails on
+  # Darwin (needs Apple's codesign, absent in the Nix build). Wrap the
+  # official dmg instead — pinned, declarative, lands in Nix Apps.
+  feishin = pkgs.stdenvNoCC.mkDerivation rec {
+    pname = "feishin";
+    version = "1.15.1";
+    src = pkgs.fetchurl {
+      url = "https://github.com/jeffvli/feishin/releases/download/v${version}/Feishin-${version}-mac-arm64.dmg";
+      hash = "sha256-tkoqVIInq4JC3FxXCAeg1hCFrth808TjfkCjVDLRrCw=";
+    };
+    nativeBuildInputs = [ pkgs.undmg ];
+    sourceRoot = ".";
+    installPhase = ''
+      mkdir -p $out/Applications
+      cp -R Feishin.app $out/Applications/
+    '';
+  };
+in
 {
-  # Note: nvim is added per-host in flake.nix (mkNvim) so flakePath/
-  # darwinHost can be parameterized.
   environment.systemPackages = [
-    # Core development tools
     pkgs.git
     pkgs.maven
-
-    # Java and Node come from mise (nix/home/mise.nix), not nix, to allow
-    # per-project version switching.
-
-    # System utilities
     pkgs.tree
     pkgs.jq
     pkgs.curl
@@ -19,15 +30,13 @@
     pkgs.ripgrep
     pkgs.fd
     pkgs.bat
-
-    # Archive and compression
     pkgs.unzip
     pkgs.p7zip
-
-    # Development utilities
     pkgs.mkalias
     pkgs.htop
     pkgs.fastfetch
 
+    # Music
+    feishin
   ];
 }
