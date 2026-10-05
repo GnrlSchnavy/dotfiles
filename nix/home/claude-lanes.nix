@@ -226,7 +226,7 @@ in
         CODEMEM_ANTHROPIC_ENDPOINT="$technl_proxy/messages" \
         ${assignments workEnv} \
         ${assignments workModelEnv} \
-        devai-claude "$@"
+        devai-claude -- "$@"
     }
     # One-time per machine, after the first rebuild: install the codemem plugin
     # into both lanes (plugins are per config dir). Personal runs with

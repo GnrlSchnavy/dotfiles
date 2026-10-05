@@ -173,7 +173,10 @@ older builds (e.g. 2.1.274) reject `claude-opus-5-5` as
     `settings.json` in case `devai-claude` rebuilds the environment.
 
   The gateway variables (`ANTHROPIC_BASE_URL`, credentials) are left to
-  `devai-claude`. It refuses to start while anything listens on port
+  `devai-claude`. Its arguments are Claude Code's (`cc-work -p …`,
+  `cc-work --resume`) — it runs `devai-claude -- "$@"`; call
+  `devai-claude` directly for DevAI's own options (e.g. `-v`). It refuses
+  to start while anything listens on port
   38888 (see the [codemem known issue](#codemem-memory)).
 
   **Verify on first use** (DevAI's internals weren't inspected from the
