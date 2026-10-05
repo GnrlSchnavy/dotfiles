@@ -14,6 +14,7 @@
   imports = [
     ./files.nix
     ./zsh.nix
+    ./mise.nix
     ./secrets.nix
     ./codemem.nix
     ./claude-lanes.nix

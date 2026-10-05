@@ -49,6 +49,9 @@ The `outputs` section defines:
   `homeModules`).
 - `hosts` attrset — registers `m5` and `ci`. Adding a host means
   adding an entry here (see [hosts.md](hosts.md)).
+- `checks` — every host's system, grouped by platform. `nix flake
+  check` ignores `darwinConfigurations` on its own, so this output is
+  what makes `nix flake check --no-build` actually evaluate the hosts.
 
 Home-manager is configured with `useGlobalPkgs`, `useUserPackages`, and
 `backupFileExtension = "hm-backup"` — pre-existing files that would
@@ -95,6 +98,7 @@ nix/
 ├── home/                # shared home-manager modules (every host)
 │   ├── default.nix      # imports the modules below; home.stateVersion
 │   ├── zsh.nix          # .zprofile/.zshrc content, aliases, session vars
+│   ├── mise.nix         # Java/Node via mise: global versions, shell hook
 │   ├── files.nix        # file-pointer dotfiles (.ideavimrc, .claude/*)
 │   ├── secrets.nix      # pass-get / pass-render / pass-check (Proton Pass)
 │   ├── claude-lanes.nix # two Claude Code lanes (cc-personal/cc-work), hooks, settings merge, cc-tooling
@@ -104,7 +108,7 @@ nix/
 
 Repo root also holds the symlink *sources*: `editors/.ideavimrc`,
 `system/.claude/` (personal lane), `system/.claude-work/` (work-lane
-hooks + Ahold overlay), `system/.claude-mem/`, `system/bin/`
+hooks + Ahold overlay), `system/bin/`
 (`cc-tooling`), and the unmanaged Docker reference
 `development/.docker/config.json`.
 
@@ -130,11 +134,12 @@ pyright, rust_analyzer, jsonls, yamlls, marksman, dockerls, bashls),
 nvim-cmp + luasnip, Telescope (+fzf-native, file-browser), neo-tree,
 Treesitter (+context, +textobjects), bufferline/lualine.
 
-To check it builds without doing a full rebuild:
+To check it evaluates without doing a full rebuild:
 
 ```bash
 cd ~/.dotfiles/nix && nix flake check --no-build
 # or evaluate one host: nix eval .#darwinConfigurations.m5.system.drvPath
+# or build without switching: darwin-rebuild build --flake .#m5
 ```
 
 (The old `nix flake check ~/.dotfiles/nix/nixvim` no longer works —

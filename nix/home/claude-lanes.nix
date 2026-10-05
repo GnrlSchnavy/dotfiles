@@ -101,6 +101,27 @@ let
 
   personalOwned = {
     env = personalEnv;
+    union = {
+      # The boundary for the file tools: Claude Code resolves these paths itself
+      # (relative, ~, symlinks), and Read rules also cover Grep and Glob.
+      permissions.deny = lib.concatMap (root: [ "Read(/${root}/**)" "Edit(/${root}/**)" ]) workRoots;
+      # The boundary for Bash (macOS Seatbelt). Sandbox paths are plain
+      # absolute or ~/ — not the // form permission rules use. Builds still
+      # need their caches and registries.
+      sandbox.filesystem.denyRead = workRoots;
+      sandbox.filesystem.allowWrite = [ "~/.m2" "~/.gradle" "~/.npm" ];
+      sandbox.network.allowedDomains = [
+        "repo.maven.apache.org" "repo1.maven.org"
+        "services.gradle.org" "plugins.gradle.org" "downloads.gradle.org"
+        "registry.npmjs.org"
+      ];
+    };
+    # Forced on every rebuild: a failed sandboxed command may not be retried
+    # outside the sandbox, so the boundary holds in auto mode too.
+    set.sandbox = { enabled = true; allowUnsandboxedCommands = false; };
+    # Keep Bash permission prompts as they were (only written when unset).
+    default.sandbox.autoAllowBashIfSandboxed = false;
+    # work-lane-guard.sh adds prompts, MCP tools and case-insensitive matching.
     hooks = {
       UserPromptSubmit = [ { hooks = [ (hook "${personalDir}/hooks/work-lane-guard.sh") ]; } ];
       PreToolUse = [ { matcher = "*"; hooks = [ (hook "${personalDir}/hooks/work-lane-guard.sh") ]; } ];
@@ -122,9 +143,11 @@ let
   # merge-claude-settings <settings.json> <owned.json> <managed hook prefix> [seed.json]
   # A missing settings file starts from the seed (the reference snapshot), so
   # a fresh machine gets it even though this runs before setup.sh's seed step.
-  # Owned env keys and `set` keys overwrite; owned hooks replace any earlier
-  # hooks whose command lives under the managed prefix; `default` keys are
-  # written only when absent (so /model and friends keep working).
+  # Owned env keys and `set` keys overwrite; every list under `union` gets its
+  # missing entries appended (your own entries stay); owned hooks replace any
+  # earlier hooks whose command lives under the managed prefix; `default` keys,
+  # nested ones included, are written only when absent (so /model, /sandbox
+  # and friends keep working).
   mergeSettings = pkgs.writeShellScript "merge-claude-settings" ''
     set -euo pipefail
     file="$1"; owned="$2"; prefix="$3"; seed="''${4:-}"
@@ -136,6 +159,9 @@ let
     ${pkgs.jq}/bin/jq --slurpfile owned "$owned" --arg prefix "$prefix" '
       $owned[0] as $o
       | .env = ((.env // {}) + ($o.env // {}))
+      | reduce (($o.union // {}) | paths(type == "array")) as $p (.;
+          setpath($p; reduce ($o.union | getpath($p))[] as $x
+            ((getpath($p) // []); if any(.[]; . == $x) then . else . + [$x] end)))
       | .hooks = (
           ((.hooks // {})
             | with_entries(.value |= map(select(
@@ -144,9 +170,8 @@ let
           | reduce (($o.hooks // {}) | to_entries[]) as $e
               ($kept; .[$e.key] = ((.[$e.key] // []) + $e.value))
           | with_entries(select(.value | length > 0)))
+      | (($o.default // {}) * .)
       | . * ($o.set // {})
-      | reduce (($o.default // {}) | to_entries[]) as $d
-          (.; if has($d.key) then . else .[$d.key] = $d.value end)
     ' "$file" >"$tmp"
     mv "$tmp" "$file"
   '';
@@ -163,8 +188,12 @@ let
 in
 {
   home.packages = [
-    (pkgs.writeShellScriptBin "cc-tooling"
-      (builtins.readFile ../../system/bin/cc-tooling.sh))
+    # writeShellApplication shellchecks the script at build time and pins its tools.
+    (pkgs.writeShellApplication {
+      name = "cc-tooling";
+      runtimeInputs = [ pkgs.coreutils pkgs.findutils pkgs.gawk pkgs.git ];
+      text = builtins.readFile ../../system/bin/cc-tooling.sh;
+    })
   ];
 
   home.file = {

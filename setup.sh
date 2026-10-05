@@ -160,33 +160,6 @@ sudo nix run \
     switch --flake "$TARGET_DIR/nix#$HOSTNAME"
 print_success "nix-darwin configuration applied"
 
-# Seed the Claude settings that can't be symlinked.
-# ~/.claude/settings.json and ~/.claude-mem/settings.json are rewritten
-# by their apps at runtime, so home-manager keeps them as reference
-# copies (see nix/home/files.nix) rather than read-only symlinks. Seed
-# them here only when absent, so re-running setup never clobbers a file
-# the app has since updated.
-print_step "Seeding Claude reference settings (skipped if already present)..."
-seed_reference_file() {
-    local src="$1" dest="$2"
-    if [ ! -f "$src" ]; then
-        print_warning "Reference file missing in repo: $src — skipping"
-        return
-    fi
-    if [ -e "$dest" ]; then
-        print_warning "$dest already exists — leaving it untouched"
-        return
-    fi
-    mkdir -p "$(dirname "$dest")"
-    # The reference snapshots were taken on a specific machine, so any
-    # absolute home paths inside them (e.g. /Users/yvan) must be
-    # rewritten to this machine's home directory.
-    sed "s|/Users/[a-zA-Z0-9_-]*|$HOME|g" "$src" > "$dest"
-    print_success "Seeded $dest from repo reference (home paths rewritten to $HOME)"
-}
-seed_reference_file "$TARGET_DIR/system/.claude/settings.json" "$HOME/.claude/settings.json"
-seed_reference_file "$TARGET_DIR/system/.claude-mem/settings.json" "$HOME/.claude-mem/settings.json"
-
 # Final verification
 print_step "Performing final verification..."
 
@@ -213,11 +186,9 @@ print_success "🎉 Dotfiles setup complete!"
 echo
 echo "Next steps:"
 echo "1. Restart your terminal so PATH and home-manager-managed files take effect"
-echo "2. Bootstrap language toolchains (jenv/nvm install only the binaries,"
-echo "   not actual language versions):"
-echo "     jenv add /Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home"
-echo "     jenv global temurin-25  # adjust to whichever JDK you installed"
-echo "     nvm install --lts"
+echo "2. Install the Java and Node versions mise is configured for"
+echo "   (nix/home/mise.nix; projects can pin others via .java-version/.nvmrc):"
+echo "     mise install"
 echo
 echo "Configuration: ~/.dotfiles/"
 echo "Documentation: ~/.dotfiles/CLAUDE.md"

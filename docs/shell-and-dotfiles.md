@@ -9,20 +9,18 @@ source in `~/.dotfiles/` and rebuild.
 
 | Where | Written to | Contains |
 |---|---|---|
-| `programs.zsh.profileExtra` | `~/.zprofile` (login shells) | Homebrew shellenv, autojump, NVM sourcing |
-| `programs.zsh.initContent` | `~/.zshrc` (interactive shells) | jenv lazy-load, JAVA_HOME, kubectl completion cache, bun, PATH additions |
-| `home.sessionVariables` | hm session vars (all shells) | `BUN_INSTALL`, `NVM_DIR` |
+| `programs.zsh.profileExtra` | `~/.zprofile` (login shells) | Homebrew shellenv, autojump |
+| `programs.zsh.initContent` | `~/.zshrc` (interactive shells) | kubectl completion cache, PATH additions, `notes`/`note`; `mise activate` (from [`nix/home/mise.nix`](../nix/home/mise.nix)) |
+| `home.sessionPath` (mise.nix) | hm session vars (all shells) | mise shims, for non-interactive callers |
 | `environment.shellAliases` (in [`nix/modules/environment.nix`](../nix/modules/environment.nix)) | `/etc/zshrc` (system-wide) | kubectl shortcuts: `k`, `kg`, `kgp`, `kgd`, `kgs`, `kga`, `kd`, `kaf`, `kdf` |
 
 Notable mechanics:
 
-- **jenv is lazy-loaded**: `jenv`/`java`/`javac` are shell functions
-  that initialize jenv on first call, keeping shell startup fast.
-- **JAVA_HOME is set eagerly** at shell startup so `./mvnw` forks the
-  right JDK before jenv initializes. It reads `.java-version` from the
-  *current directory* (useful when a terminal opens inside a project),
-  falling back to `~/.jenv/version`, then the literal `24`. If you
-  change global JDK major versions, check this fallback.
+- **Java and Node come from mise**: `mise activate` switches `java`,
+  `node` and `JAVA_HOME` whenever you `cd` into a project with a
+  `.java-version`, `.nvmrc` or `mise.toml`, so `./mvnw` always gets the
+  project's JDK. Non-interactive shells use mise's shims instead. See
+  [packages.md](packages.md#language-runtimes-are-not-nix-managed).
 - **kubectl completion is cached** in `~/.zsh_kubectl_completion`,
   regenerated when older than 24h.
 - **pyenv was removed** (June 2026). There is deliberately no
@@ -61,9 +59,8 @@ a reference snapshot kept in the repo:
 
 | Runtime file | Repo reference | How it gets there |
 |---|---|---|
-| `~/.claude/settings.json` | `system/.claude/settings.json` | seeded by `setup.sh` only when absent; lane-owned keys (env, hooks) merged on every rebuild by `claude-lanes.nix` |
+| `~/.claude/settings.json` | `system/.claude/settings.json` | created from the snapshot when absent, then lane-owned keys merged on every rebuild by `claude-lanes.nix` |
 | `~/.claude-work/settings.json` | *(none)* | created and merged on every rebuild by `claude-lanes.nix` (owned keys only) |
-| `~/.claude-mem/settings.json` | `system/.claude-mem/settings.json` | seeded by `setup.sh` only when absent; absolute `/Users/<name>` paths are rewritten to the current `$HOME` during seeding |
 | `~/.docker/config.json` | `development/.docker/config.json` | never seeded — Docker Desktop owns it entirely |
 
 Before adding any new symlink to `files.nix`, ask: *does the app ever

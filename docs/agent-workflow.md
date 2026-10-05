@@ -34,7 +34,7 @@ dispatch other subagents. So the orchestrator has to be the main session — the
 `/flow` command loads the lead's instructions into it. For the same reason the
 lead (not the roles) routes specialist craft: when a task needs deep domain
 expertise it dispatches a specialist (`typescript-pro`, `spring-boot-engineer`,
-`kotlin-specialist`, `react-specialist`, `sql-pro`, `test-automator`,
+`kotlin-architect`, `react-specialist`, `sql-pro`, `test-automator`,
 `code-reviewer`, `architect-reviewer`, … — see `/agents`) instead of
 `developer`/`reviewer`.
 

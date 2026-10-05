@@ -21,8 +21,11 @@ sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName)
 # Roll back the last rebuild
 sudo darwin-rebuild --rollback
 
-# Evaluate without building/applying (fast sanity check)
+# Evaluate every host without building/applying (~1 min cold)
 cd ~/.dotfiles/nix && nix flake check --no-build
+
+# Lane-hook and cc-tooling tests
+~/.dotfiles/tests/run.sh
 ```
 
 ## Bootstrap a machine: `./setup.sh`
@@ -41,17 +44,16 @@ Idempotent; safe to re-run. Steps, in order:
    to `*.before-nix-darwin` so nix-darwin can take them over.
 6. `sudo nix run github:LnL7/nix-darwin/nix-darwin-25.11#darwin-rebuild -- switch --flake ~/.dotfiles/nix#<host>`
    — pinned to the same nix-darwin release as `flake.nix`.
-7. Seeds `~/.claude/settings.json` and `~/.claude-mem/settings.json`
-   from the repo snapshots (only when absent; `/Users/<name>` paths
-   rewritten to the current `$HOME`).
-8. Prints post-install steps (jenv/nvm toolchain bootstrap).
+7. Prints post-install steps (`mise install` for the Java/Node
+   versions). `~/.claude/settings.json` needs no step: the rebuild
+   creates it from the repo snapshot.
 
 ## Maintenance scripts (`scripts/`)
 
 | Script | What it does | When |
 |---|---|---|
 | `update.sh` | `git pull --ff-only` → `nix flake update` → `sudo darwin-rebuild switch` → PATH sanity check | weekly housekeeping. Note: it updates `flake.lock` but does not commit it — commit manually after a good rebuild |
-| `check.sh` | Health check: repo clean, flake evaluates, host descriptor exists, every home-manager symlink resolves, tooling on PATH, `~/.jenv` / `~/.nvm` exist | after a rebuild or when something feels off |
+| `check.sh` | Health check: repo clean, flake evaluates, host descriptor exists, every home-manager symlink resolves, tooling on PATH, mise's configured versions installed | after a rebuild or when something feels off |
 | `backup.sh` | Dereferences managed symlinks + brew package lists + system versions into `~/.dotfiles_backup_<timestamp>/` with a restore script | before a big flake update or experiment |
 
 None are required — `darwin-rebuild` does the real work.

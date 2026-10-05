@@ -10,7 +10,7 @@ source to use (it supersedes the old `nix/PACKAGE-STRATEGY.md`).
 |---|---|---|---|
 | CLI development tools | ✅ preferred | only if not in nixpkgs / needs a tap | never |
 | GUI applications | never | ✅ casks | only if App-Store-exclusive |
-| Version managers (jenv, nvm) | avoid | ✅ brews (need shell integration) | never |
+| Language runtimes (Java, Node) | via mise (`nix/home/mise.nix`) | never | never |
 | System utilities | ✅ preferred | if macOS-specific | rarely |
 
 Rules of thumb:
@@ -18,10 +18,10 @@ Rules of thumb:
 - **Nix packages** (`environment.systemPackages`): reproducible CLI
   tools — git, maven, jq, ripgrep, fd, bat, tree, curl, wget, htop…
 - **Homebrew brews**: CLI tools that need taps (`fluxcd/tap/flux`),
-  shell integration (jenv, nvm, autojump), or faster update cycles
+  shell integration (autojump), or faster update cycles
   (gh, kubectl, helm).
 - **Homebrew casks**: all GUI apps (browsers, IDEs, Slack, Docker
-  Desktop, …) and the `temurin@25` JDK.
+  Desktop, …). JDKs are not casks — mise installs them.
 - **masApps**: currently unused on every host; available if an app is
   App-Store-only.
 - One tool, one source — never declare the same tool in both Nix and
@@ -29,18 +29,29 @@ Rules of thumb:
 
 ## Language runtimes are NOT nix-managed
 
-Java and Node live behind version managers so each project can pin its
-own version:
+Java and Node come from **mise**, so each project can pin its own
+version. mise itself and its global config are declared in
+[`nix/home/mise.nix`](../nix/home/mise.nix) (global: Temurin 25, Node
+LTS); the runtimes are downloaded by mise into `~/.local/share/mise`.
+Bootstrap once per machine: `mise install`.
 
-- **Java**: `jenv` (brew) + JDKs from casks (`temurin@25`). Bootstrap:
-  `jenv add /Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home && jenv global temurin-25`.
-- **Node**: `nvm` (brew). Bootstrap: `nvm install --lts`.
+- **Per project**, mise reads `mise.toml` and the files other tools use:
+  `.java-version`, `.sdkmanrc`, `.nvmrc`, `.node-version`. `cd`-ing into
+  the project switches `java`/`node` and sets `JAVA_HOME`.
+- **Java vendor gotcha:** a bare `21` in `.java-version` means OpenJDK
+  21; write `temurin-21` for Temurin.
+- **Changing the global versions**: edit `mise.nix` and rebuild —
+  `~/.config/mise/config.toml` is a read-only Nix symlink, so
+  `mise use -g` can't write it. `mise use` (per project) works as usual.
+- **IntelliJ** doesn't see mise's JDKs automatically: point the project
+  SDK at `~/.local/share/mise/installs/java/<version>` once, or register
+  a JDK with macOS (`/usr/libexec/java_home`) as the
+  [mise Java docs](https://mise.jdx.dev/lang/java.html) describe.
 - **Python**: *not centrally managed.* pyenv was removed from the
   config (June 2026); don't re-add pyenv references to shell config,
   scripts, or docs. If a project needs Python, manage it per-project.
 
-Both jenv and nvm are lazy-loaded in
-[`nix/home/zsh.nix`](../nix/home/zsh.nix) — see
+mise hooks itself into the shell — see
 [shell-and-dotfiles.md](shell-and-dotfiles.md).
 
 ## Adding / removing a package
@@ -63,7 +74,7 @@ new entries alphabetically within their group.
 
 ## ⚠️ cleanup = "zap"
 
-Both real hosts set:
+The host (`m5`) sets:
 
 ```nix
 homebrew.onActivation = {
@@ -93,6 +104,6 @@ Consequences:
 - `nixpkgs.config.allowUnfree = true` is set once in
   `nix/modules/nix.nix`; don't repeat it per host.
 - The CI smoke check (`.github/workflows/check.yml`) asserts the
-  formulas `jenv`, `kubectl`, `helm` exist after activation. If you
+  formulas `kubectl`, `helm` exist after activation. If you
   remove one of those from **m5**'s brews, update the workflow too
   (ci mirrors m5's modules).

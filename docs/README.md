@@ -27,7 +27,7 @@ precise enough for both humans and AI agents making changes.
    (host = `m5`, or `$(scutil --get LocalHostName)`).
 3. **Never symlink files that apps rewrite at runtime**
    (`~/.claude/settings.json`, `~/.claude-work/settings.json`,
-   `~/.claude-mem/settings.json`, `~/.docker/config.json`). See
+   `~/.docker/config.json`). See
    [shell-and-dotfiles.md](shell-and-dotfiles.md#files-that-must-not-be-symlinked).
 4. **`homebrew.onActivation.cleanup = "zap"` uninstalls anything not
    declared.** Installing a formula/cask manually without adding it to

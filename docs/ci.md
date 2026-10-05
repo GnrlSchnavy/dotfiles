@@ -1,11 +1,19 @@
 # CI: fresh-install test
 
 [`.github/workflows/check.yml`](../.github/workflows/check.yml) runs
-on every push/PR to `master` (plus manual dispatch). It replays what
-`setup.sh` does on a real Mac against the `ci` host descriptor on a
-GitHub-hosted `macos-15` runner (~10–15 min).
+on every push/PR to `master` (plus manual dispatch). Two jobs:
 
-## What it does
+1. **`checks`** (Linux, ~2 min) — `nix flake check --no-build
+   --all-systems ./nix` evaluates every host (evaluation works
+   cross-platform), shellcheck on the hooks, `cc-tooling` and tests
+   (plus error-level shellcheck on `setup.sh` and `scripts/`), and
+   [`tests/run.sh`](../tests/run.sh): the lane-hook fixtures and the
+   `cc-tooling` tests.
+2. **`fresh-install`** (macOS, needs `checks`) — replays what
+   `setup.sh` does on a real Mac against the `ci` host descriptor on a
+   GitHub-hosted `macos-15` runner (~10–15 min). Described below.
+
+## What the fresh-install job does
 
 1. **Install Nix** (`cachix/install-nix-action`) with flakes enabled
    and a GitHub token for input fetches (avoids anonymous rate
@@ -23,7 +31,8 @@ GitHub-hosted `macos-15` runner (~10–15 min).
    asserts the home-manager symlinks exist (`~/.zshrc`, `~/.zprofile`,
    `~/.zshenv`, `~/.config/git/{config,ignore}`, `~/.ideavimrc`,
    `~/.claude/settings.local.json`), `darwin-rebuild` and `brew` are on
-   PATH, and the formulas `jenv`, `kubectl`, `helm` are installed.
+   PATH, `mise` and its config are in place, and the formulas `kubectl`,
+   `helm` are installed.
 
 ## The `ci` host (`nix/hosts/ci/default.nix`)
 
@@ -54,7 +63,10 @@ Misses:
 
 ## Maintenance couplings
 
-- The smoke check hardcodes formulas `jenv kubectl helm`. If m5's
+- New guard behaviour or a new bypass found? Add a fixture to
+  [`tests/guard.sh`](../tests/guard.sh) — blocking cases and the
+  everyday work that must stay allowed.
+- The smoke check hardcodes formulas `kubectl helm`. If m5's
   brews change, update the workflow list.
 - The smoke check's symlink list must track `nix/home/files.nix` —
   add a check when adding an important managed file.

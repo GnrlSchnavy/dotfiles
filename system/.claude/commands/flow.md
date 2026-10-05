@@ -21,7 +21,7 @@ $ARGUMENTS
 
 Subagents cannot dispatch other subagents, so specialist craft is yours to
 route: when a task needs deep domain expertise, dispatch the specialist
-(`typescript-pro`, `java-architect`, `spring-boot-engineer`, `kotlin-specialist`,
+(`typescript-pro`, `java-architect`, `spring-boot-engineer`, `kotlin-architect`,
 `react-specialist`, `sql-pro`, `test-automator`, `code-reviewer`,
 `architect-reviewer`, …) directly instead of `developer`/`reviewer`.
 

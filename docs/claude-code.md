@@ -34,78 +34,29 @@ To change any of these: edit the file under
 symlinked directories are read-only at `~/.claude/` — they can only be
 changed through the repo.
 
-## Seeded reference snapshots (runtime-rewritten files)
+## Reference snapshot (runtime-rewritten settings)
 
-`~/.claude/settings.json` and `~/.claude-mem/settings.json` are
-rewritten by the apps at runtime (plugin toggles, effort level, etc.),
-so they **must not** be Nix-store symlinks. The repo keeps reference
-snapshots:
+`~/.claude/settings.json` is rewritten by Claude Code at runtime (plugin
+toggles, effort level, etc.), so it **must not** be a Nix-store symlink.
+The repo keeps a reference snapshot, `system/.claude/settings.json`, and
+every rebuild **merges** the keys the lane module owns into
+`~/.claude/settings.json` and `~/.claude-work/settings.json` (see
+[Settings merge](#settings-merge)). When `~/.claude/settings.json`
+doesn't exist yet the merge starts from the snapshot, so a fresh machine
+needs no manual step.
 
-- `system/.claude/settings.json`
-- `system/.claude-mem/settings.json`
-
-`setup.sh` copies them into place **only when the destination is
-absent** (so re-running setup never clobbers app-managed state), and
-rewrites any absolute `/Users/<name>` paths to the current `$HOME`
-during seeding (the snapshots were taken on a machine whose username
-differs from other hosts').
-
-On top of that, every rebuild **merges** the keys the lane module owns
-into `~/.claude/settings.json` and `~/.claude-work/settings.json` (see
-[Settings merge](#settings-merge)). Activation runs before `setup.sh`'s
-seed step, so when `~/.claude/settings.json` doesn't exist yet the merge
-starts from the reference snapshot itself; a fresh machine needs no
-manual step.
-
-Manual re-seed:
+Manual re-seed (then rebuild so the lane's owned keys are merged back in):
 
 ```bash
 cp ~/.dotfiles/system/.claude/settings.json ~/.claude/settings.json
-cp ~/.dotfiles/system/.claude-mem/settings.json ~/.claude-mem/settings.json
-# then fix any /Users/<other-user> paths inside if seeding by hand,
-# and rebuild so the lane env + hooks are merged back in
 ```
 
-To refresh a snapshot after changing settings in the app: copy the
-runtime file back into the repo and commit (strip the merged `env` and
-`hooks` keys — those are owned by `claude-lanes.nix`).
+To refresh the snapshot after changing settings in the app: copy the
+runtime file back into the repo and commit (strip the keys owned by
+`claude-lanes.nix` — `env`, `hooks`, `permissions.deny`, `sandbox`).
 
 Everything else under `~/.claude/` (transcripts, session state, plugin
 caches) is deliberately unmanaged.
-
-## claude-mem: manual per-machine install
-
-claude-mem can't be fully declared in Nix — it's an imperative
-installer that writes Claude Code lifecycle hooks, runs a background
-worker daemon, and builds a SQLite + Chroma store under
-`~/.claude-mem/`. We declare what we can and run the installer by hand
-once per machine:
-
-- **Declared:** its runtime deps `bun` + `uv` are pinned as brews in
-  `nix/hosts/<host>/homebrew.nix` (machine-scope, not behind nvm/pyenv —
-  bun runs the worker daemon, uv backs the Python vector search;
-  otherwise claude-mem auto-fetches unpinned copies). Its tuned config
-  snapshot lives at `system/.claude-mem/settings.json`.
-- **Manual:** after the first `darwin-rebuild switch` (so `bun`/`uv`
-  exist), run the installer, then restore the tuned settings:
-
-```bash
-npx claude-mem install                # writes hooks, starts the worker
-cp ~/.dotfiles/system/.claude-mem/settings.json ~/.claude-mem/settings.json
-npx claude-mem restart                # reload worker with tuned settings
-```
-
-`setup.sh`'s seed step only copies `~/.claude-mem/settings.json` when
-absent, and `npx claude-mem install` creates that file itself — so run
-the installer first, then the `cp` above to overwrite it with our
-snapshot. (On a host whose username differs from the snapshot's, fix
-the `/Users/<name>` paths inside afterward, as setup.sh's seeder does
-automatically.)
-
-Note: `bun` and `uv` are pinned in `nix/hosts/m5/homebrew.nix`. Add
-them to any new host's `homebrew.nix` before running the claude-mem
-installer there, or claude-mem will auto-fetch unpinned copies for its
-worker daemon and vector search.
 
 ## Two Claude Code lanes
 
@@ -197,10 +148,48 @@ anything is sent — verified: a blocked prompt makes zero API calls.
   `ANTHROPIC_BASE_URL` (DevAI's local proxy) that isn't `anthropic.com`,
   and a `CODEMEM_ANTHROPIC_ENDPOINT` that isn't `anthropic.com`. Also
   blocks while port 38888 is listening.
-- **Personal: `work-lane-guard.sh`** (`UserPromptSubmit` + `PreToolUse`)
-  — blocks any prompt or tool call that touches a client work tree
-  (`~/projects/ahold`, from `CC_WORK_ROOTS`), so opening an Ahold repo
-  in the desktop app can't send it through Max.
+- **Personal lane** — keeps client work trees (`workRoots` in
+  `claude-lanes.nix`, exported as `CC_WORK_ROOTS`) out of Max, in three
+  layers:
+  1. **Permission deny rules** — `Read(//<root>/**)` and
+     `Edit(//<root>/**)`, merged into `~/.claude/settings.json`. Claude
+     Code resolves these paths itself (relative, `~`, symlinks), and Read
+     rules also cover Grep, Glob and LSP. This is the boundary for the
+     file tools.
+  2. **Bash sandbox** (macOS Seatbelt) — `sandbox.enabled` with each root
+     in `sandbox.filesystem.denyRead`, so a shell command (and anything it
+     starts: scripts, interpreters) can't read the work tree, whatever
+     path it uses. `allowUnsandboxedCommands: false` removes the escape
+     hatch of retrying a failed command outside the sandbox. Both are
+     forced on every rebuild; toggling them off in `/sandbox` only lasts
+     until the next one.
+  3. **`work-lane-guard.sh`** (`UserPromptSubmit` + `PreToolUse`, logic in
+     `work-lane-guard.jq`) — what neither covers: prompts (including `@`
+     mentions), MCP tool arguments, and case-insensitive matching (APFS).
+     It also checks Bash and the file tools as defence in depth: it
+     expands `~`/`$HOME`, resolves relative paths against the session cwd
+     (following `cd`), and blocks searches that would descend into a root
+     from a parent folder (`rg`/`find`/`grep -r` in `~`, Grep/Glob from
+     `~/projects`). It fails closed: if jq or the `.jq` file is missing,
+     or the input can't be parsed, the request is blocked.
+
+  What the sandbox changes for personal-lane Bash: commands can write
+  only to the project folder, `$TMPDIR`, `~/.m2`, `~/.gradle` and
+  `~/.npm`, and reach only Maven Central, Gradle and npm without asking
+  (other hosts prompt per domain). Add more in `claude-lanes.nix`
+  (`union.sandbox.filesystem.allowWrite`, `…network.allowedDomains`), or
+  in `/sandbox` — your own entries survive rebuilds. Known macOS
+  frictions: Docker and Go CLIs such as `gh` don't work inside Seatbelt,
+  and `git push` with the keychain helper is untested — run those
+  yourself, or list them in `sandbox.excludedCommands` (which runs them
+  fully unsandboxed). Bash prompts stay as they were
+  (`autoAllowBashIfSandboxed: false`, only written when unset).
+
+  Practical effects: start personal sessions in a project folder, not in
+  `~` or `~/projects` (recursive searches from there are blocked), and a
+  command whose text literally contains a work-root path — e.g. grepping
+  these dotfiles for `~/projects/ahold` — is blocked too. Fixtures for
+  both hooks live in [`tests/guard.sh`](../tests/guard.sh).
 
 ### Settings merge
 
@@ -211,12 +200,18 @@ the keys the module owns** into whatever is there:
 - `env` — the lane's env keys overwrite; other env keys are kept;
 - `hooks` — entries whose command lives under the lane's `hooks/` dir
   are replaced; any other hooks (plugins, your own) are kept;
+- personal lane only: `permissions.deny` and the sandbox lists
+  (`filesystem.denyRead`/`allowWrite`, `network.allowedDomains`) get the
+  owned entries appended when missing — your own entries are kept;
+  `sandbox.enabled` and `sandbox.allowUnsandboxedCommands: false` are
+  forced; `sandbox.autoAllowBashIfSandboxed: false` is written only when
+  unset;
 - work lane only: `skipWebFetchPreflight: true` (the preflight sends the
   target hostname to `api.anthropic.com`), and `model: "opus"` written
   only when unset (so `/model` keeps working).
 
-It's idempotent and leaves plugins, permissions and the rest of the
-file alone.
+It's idempotent and leaves plugins, your own permission rules and the
+rest of the file alone.
 
 ### Instructions & agents per lane
 
@@ -276,7 +271,9 @@ stray viewer.
 resolved at runtime via `pass-cli` (Proton Pass), and paths use
 `config.home.homeDirectory` rather than a hardcoded `/Users/<name>`, so
 the modules survive a change of host or username. Prereqs on a host:
-`pass-cli` and `uv` declared in that host's `homebrew.nix`.
+`pass-cli` declared in that host's `homebrew.nix`, and Node 24.15+ (the
+plugin's hooks run `node`, its MCP server `npx`) — mise's global Node
+LTS covers it once `mise install` has run.
 
 ### Migrated from OpenCode
 
@@ -284,6 +281,17 @@ These lanes replaced an earlier OpenCode setup, which is fully removed.
 Leftovers not managed by Nix can be deleted by hand:
 `~/.local/share/opencode`, `~/.cache/opencode`, and any
 `~/.config/opencode` remnants.
+
+### Removed: claude-mem
+
+codemem is the only memory system; claude-mem (personal lane only, one
+machine-wide worker, Sonnet extraction) was removed along with its `bun`
+and `uv` brews. On a machine that still has it, once:
+
+```bash
+npx claude-mem uninstall   # stops the worker, removes the plugin and its settings entries
+rm -rf ~/.claude-mem       # its memories, if you don't want to keep them
+```
 
 ## Agent workflow
 

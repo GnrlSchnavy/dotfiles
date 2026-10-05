@@ -27,8 +27,9 @@ lane, the client overlay stack on top.
   (`~/.dotfiles`). Prefer declarative Nix modules over imperative install
   commands. Flakes only see git-tracked files — `git add` new files before a
   rebuild.
-- Default toolchain assumptions: Node via nvm, Java via jenv, Kubernetes via
-  kubectl. Python is **not** centrally managed (no pyenv).
+- Default toolchain assumptions: Java and Node via mise (per-project
+  `.java-version` / `.nvmrc` / `mise.toml`), Kubernetes via kubectl. Python
+  is **not** centrally managed (no pyenv).
 
 ## Privacy
 

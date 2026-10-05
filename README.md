@@ -67,16 +67,12 @@ git commit -m "host: add <your-hostname>"
 
 ## Post-install steps
 
-The setup installs version managers (`jenv`, `nvm`) but not the
-language toolchains they manage. Bootstrap whichever you need:
+The setup installs mise but not the Java/Node versions it manages, and
+the codemem plugin is installed per Claude Code lane:
 
 ```bash
-# Java: install a JDK (e.g. via `brew install temurin@25`), then point jenv at it
-jenv add /Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home
-jenv global temurin-25
-
-# Node
-nvm install --lts
+mise install      # Temurin 25 + Node LTS (nix/home/mise.nix); projects pin others
+cc-lanes-setup    # codemem plugin in both Claude Code lanes
 ```
 
 ---
@@ -103,7 +99,8 @@ sudo darwin-rebuild --rollback
 | New GUI app (cask) or brew formula | [`nix/hosts/<name>/homebrew.nix`](nix/hosts/m5/homebrew.nix) |
 | macOS system default (finder, keyboard, etc.) | [`nix/modules/system.nix`](nix/modules/system.nix) |
 | Dock layout / apps (per-host) | [`nix/hosts/<name>/dock.nix`](nix/hosts/m5/dock.nix) |
-| Shell config (zsh init, lazy-loads, env vars) | [`nix/home/zsh.nix`](nix/home/zsh.nix) |
+| Shell config (zsh init, env vars) | [`nix/home/zsh.nix`](nix/home/zsh.nix) |
+| Java/Node versions (mise) | [`nix/home/mise.nix`](nix/home/mise.nix) |
 | Claude Code lanes (`cc-personal` / `cc-work`), hooks, settings merge | [`nix/home/claude-lanes.nix`](nix/home/claude-lanes.nix) |
 | codemem memory (per-lane observer configs) | [`nix/home/codemem.nix`](nix/home/codemem.nix) |
 | Git config (per-host identity) | [`nix/hosts/<name>/git.nix`](nix/hosts/m5/git.nix) |
@@ -133,6 +130,7 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 │   ├── home/                  ← shared home-manager (user-level) modules
 │   │   ├── default.nix        ← entrypoint, imports submodules
 │   │   ├── zsh.nix            ← .zshrc / .zprofile / .zshenv content
+│   │   ├── mise.nix           ← Java/Node via mise (global versions)
 │   │   ├── files.nix          ← file-pointer dotfiles (.ideavimrc, .claude)
 │   │   ├── secrets.nix        ← Proton Pass helpers (pass-get, pass-render)
 │   │   ├── claude-lanes.nix   ← two Claude Code lanes (cc-personal / cc-work)
@@ -149,18 +147,20 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 ├── system/.claude-work/       ← work lane: hooks + Ahold CLAUDE.md overlay
 ├── system/bin/                ← cc-tooling (per-client tooling helper)
 │
-├── .github/workflows/check.yml ← fresh-install CI
+├── .github/workflows/check.yml ← Linux eval + tests, then fresh-install CI
 ├── setup.sh                    ← bootstrap entry point
-└── scripts/                    ← maintenance helpers (check, update, backup)
+├── scripts/                    ← maintenance helpers (check, update, backup)
+└── tests/                      ← lane-hook and cc-tooling tests (tests/run.sh)
 ```
 
 ---
 
 ## CI: fresh-install verification
 
-[`.github/workflows/check.yml`](.github/workflows/check.yml) runs the
-full bootstrap on a clean macOS-15 GitHub-hosted runner against the
-`ci` host descriptor. It catches:
+[`.github/workflows/check.yml`](.github/workflows/check.yml) first
+evaluates every host and runs `tests/run.sh` on Linux (~2 min), then
+runs the full bootstrap on a clean macOS-15 GitHub-hosted runner
+against the `ci` host descriptor. It catches:
 
 - Nix evaluation errors (typos, wrong types, missing imports)
 - Build failures in any package

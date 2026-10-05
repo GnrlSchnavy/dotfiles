@@ -18,8 +18,38 @@ on:
     branches: [master]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
+  checks:
+    # Fast gate on Linux (~2 min): evaluates every host — eval works
+    # cross-platform, so a typo fails here before the macOS job starts — and
+    # runs the lane-hook and cc-tooling tests.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Evaluate every host (no build)
+        run: nix flake check --no-build --all-systems ./nix
+
+      - name: shellcheck
+        run: |
+          nix shell --inputs-from ./nix nixpkgs#shellcheck --command sh -c '
+            shellcheck -s bash -S style system/.claude/hooks/*.sh system/.claude-work/hooks/*.sh system/bin/cc-tooling.sh tests/*.sh &&
+            shellcheck -s bash -S error setup.sh scripts/*.sh'
+
+      - name: Hook and cc-tooling tests
+        run: tests/run.sh
+
   fresh-install:
+    needs: checks
     runs-on: macos-15
     timeout-minutes: 90
     steps:
@@ -112,9 +142,13 @@ jobs:
           # darwin-rebuild ships in the system profile
           command -v darwin-rebuild >/dev/null || fail "darwin-rebuild not on PATH"
 
+          # mise (Java/Node) ships in the home-manager profile, with its config
+          command -v mise >/dev/null || fail "mise not on PATH"
+          [ -L ~/.config/mise/config.toml ] || fail "~/.config/mise/config.toml is not a symlink"
+
           # Brew bundle should have left every declared formula installed
           command -v brew >/dev/null || fail "brew not on PATH"
-          for formula in jenv kubectl helm; do
+          for formula in kubectl helm; do
             brew list --formula "$formula" >/dev/null 2>&1 || fail "brew formula $formula missing after activation"
           done
 
