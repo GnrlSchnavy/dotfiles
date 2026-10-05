@@ -101,6 +101,10 @@ let
 
   personalOwned = {
     env = personalEnv;
+    # The boundary for the file tools: Claude Code resolves these paths itself
+    # (relative, ~, symlinks), and Read rules also cover Grep and Glob.
+    # work-lane-guard.sh adds prompts, Bash and case-insensitive matching.
+    permissions.deny = lib.concatMap (root: [ "Read(/${root}/**)" "Edit(/${root}/**)" ]) workRoots;
     hooks = {
       UserPromptSubmit = [ { hooks = [ (hook "${personalDir}/hooks/work-lane-guard.sh") ]; } ];
       PreToolUse = [ { matcher = "*"; hooks = [ (hook "${personalDir}/hooks/work-lane-guard.sh") ]; } ];
@@ -122,9 +126,10 @@ let
   # merge-claude-settings <settings.json> <owned.json> <managed hook prefix> [seed.json]
   # A missing settings file starts from the seed (the reference snapshot), so
   # a fresh machine gets it even though this runs before setup.sh's seed step.
-  # Owned env keys and `set` keys overwrite; owned hooks replace any earlier
-  # hooks whose command lives under the managed prefix; `default` keys are
-  # written only when absent (so /model and friends keep working).
+  # Owned env keys and `set` keys overwrite; owned permissions.deny rules are
+  # added when missing; owned hooks replace any earlier hooks whose command
+  # lives under the managed prefix; `default` keys are written only when absent
+  # (so /model and friends keep working).
   mergeSettings = pkgs.writeShellScript "merge-claude-settings" ''
     set -euo pipefail
     file="$1"; owned="$2"; prefix="$3"; seed="''${4:-}"
@@ -136,6 +141,10 @@ let
     ${pkgs.jq}/bin/jq --slurpfile owned "$owned" --arg prefix "$prefix" '
       $owned[0] as $o
       | .env = ((.env // {}) + ($o.env // {}))
+      | if ($o.permissions.deny // []) == [] then . else
+          .permissions.deny = reduce $o.permissions.deny[] as $rule
+            ((.permissions.deny // []); if any(.[]; . == $rule) then . else . + [$rule] end)
+        end
       | .hooks = (
           ((.hooks // {})
             | with_entries(.value |= map(select(

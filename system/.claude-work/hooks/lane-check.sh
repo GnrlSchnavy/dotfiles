@@ -11,11 +11,13 @@ fail() {
   exit 2
 }
 
+lower() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
+
 [ "${CC_LANE:-}" = work ] || fail "this session was not started by cc-work"
-case "${ANTHROPIC_BASE_URL:-}" in
+case "$(lower "${ANTHROPIC_BASE_URL:-}")" in
   "" | *anthropic.com*) fail "ANTHROPIC_BASE_URL does not point at the DevAI/TechNL gateway" ;;
 esac
-case "${CODEMEM_ANTHROPIC_ENDPOINT:-}" in
+case "$(lower "${CODEMEM_ANTHROPIC_ENDPOINT:-}")" in
   "" | *anthropic.com*) fail "codemem's observer endpoint is not the TechNL proxy" ;;
 esac
 # codemem <= 0.36 hook ingest posts to 127.0.0.1:38888 regardless of

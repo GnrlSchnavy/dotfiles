@@ -197,10 +197,35 @@ anything is sent — verified: a blocked prompt makes zero API calls.
   `ANTHROPIC_BASE_URL` (DevAI's local proxy) that isn't `anthropic.com`,
   and a `CODEMEM_ANTHROPIC_ENDPOINT` that isn't `anthropic.com`. Also
   blocks while port 38888 is listening.
-- **Personal: `work-lane-guard.sh`** (`UserPromptSubmit` + `PreToolUse`)
-  — blocks any prompt or tool call that touches a client work tree
-  (`~/projects/ahold`, from `CC_WORK_ROOTS`), so opening an Ahold repo
-  in the desktop app can't send it through Max.
+- **Personal lane** — keeps client work trees (`workRoots` in
+  `claude-lanes.nix`, exported as `CC_WORK_ROOTS`) out of Max, in two
+  layers:
+  1. **Permission deny rules** — `Read(//<root>/**)` and
+     `Edit(//<root>/**)`, merged into `~/.claude/settings.json`. Claude
+     Code resolves these paths itself (relative, `~`, symlinks), and Read
+     rules also cover Grep, Glob and LSP. This is the boundary for the
+     file tools.
+  2. **`work-lane-guard.sh`** (`UserPromptSubmit` + `PreToolUse`, logic in
+     `work-lane-guard.jq`) — what the rules can't express: prompts
+     (including `@` mentions), Bash commands, MCP tool arguments, and
+     case-insensitive matching (APFS). It expands `~`/`$HOME`, resolves
+     relative paths against the session cwd (following `cd`), and blocks
+     searches that would descend into a root from a parent folder
+     (`rg`/`find`/`grep -r` in `~`, Grep/Glob from `~/projects`). It
+     fails closed: if jq or the `.jq` file is missing, or the input can't
+     be parsed, the request is blocked.
+
+  Bash parsing is best-effort: a script or interpreter that opens files
+  itself, or a path assembled in ways the hook can't see, gets through.
+  The OS-enforced answer for shell commands is Claude Code's Bash sandbox
+  (`sandbox.enabled` + `sandbox.filesystem.denyRead`), which is not
+  enabled here yet.
+
+  Practical effects: start personal sessions in a project folder, not in
+  `~` or `~/projects` (recursive searches from there are blocked), and a
+  command whose text literally contains a work-root path — e.g. grepping
+  these dotfiles for `~/projects/ahold` — is blocked too. Fixtures for
+  both hooks live in [`tests/guard.sh`](../tests/guard.sh).
 
 ### Settings merge
 
@@ -211,12 +236,14 @@ the keys the module owns** into whatever is there:
 - `env` — the lane's env keys overwrite; other env keys are kept;
 - `hooks` — entries whose command lives under the lane's `hooks/` dir
   are replaced; any other hooks (plugins, your own) are kept;
+- personal lane only: `permissions.deny` gets the work-root rules
+  (added when missing; your own allow/deny rules are kept);
 - work lane only: `skipWebFetchPreflight: true` (the preflight sends the
   target hostname to `api.anthropic.com`), and `model: "opus"` written
   only when unset (so `/model` keeps working).
 
-It's idempotent and leaves plugins, permissions and the rest of the
-file alone.
+It's idempotent and leaves plugins, your own permission rules and the
+rest of the file alone.
 
 ### Instructions & agents per lane
 

@@ -18,7 +18,7 @@ commands from here — see [below](#work-lane-claude-work).
 | `agents/` | symlink → `~/.claude/agents` (read-only dir) | Custom subagent definitions (both lanes) |
 | `commands/` | symlink → `~/.claude/commands` (read-only dir) | Custom slash commands, incl. `/flow*` (both lanes) |
 | `skills/` | symlink → `~/.claude/skills` (read-only dir) | Custom skills (vault-* etc.), personal lane only |
-| `hooks/` | symlink → `~/.claude/hooks` (read-only dir) | `work-lane-guard.sh` — blocks client work trees in the personal lane |
+| `hooks/` | symlink → `~/.claude/hooks` (read-only dir) | `work-lane-guard.sh` + `.jq` — blocks client work trees in the personal lane |
 | `settings.json` | **NOT symlinked** — reference snapshot | Seeded to `~/.claude/settings.json` by `setup.sh` only when absent; owned keys merged on every rebuild |
 
 `../.claude-mem/settings.json` is the same kind of reference snapshot
@@ -37,11 +37,13 @@ It is no longer *only* seeded, though: on every rebuild the
 keys the lane module owns into it —
 
 - `env` — the lane's codemem env and `CC_WORK_ROOTS` (other env keys kept);
+- `permissions.deny` — `Read`/`Edit` rules for each client work root
+  (added when missing; your own rules kept);
 - `hooks` — entries whose command lives under `~/.claude/hooks/` are
   replaced; plugin and hand-added hooks are kept.
 
-The merge is idempotent and leaves plugins, permissions and every other
-key alone. So: change owned keys in `claude-lanes.nix`, everything else
+The merge is idempotent and leaves plugins, your own permission rules and
+every other key alone. So: change owned keys in `claude-lanes.nix`, everything else
 in the app.
 
 To re-seed manually (then rebuild to re-merge the owned keys):
