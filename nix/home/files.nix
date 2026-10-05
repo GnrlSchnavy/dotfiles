@@ -34,13 +34,11 @@
     ".claude/commands".source = ../../system/.claude/commands;
     ".claude/skills".source = ../../system/.claude/skills;
 
-    # NOTE: ~/.claude/settings.json and ~/.claude-mem/settings.json are
-    # intentionally NOT symlinked. Both are rewritten at runtime (plugin
-    # toggles, effortLevel, feedbackSurveyState, etc.); a read-only
-    # Nix-store symlink breaks the app's atomic rename(2) — the same
-    # failure mode as ~/.docker/config.json above. The copies under
-    # system/.claude/settings.json and system/.claude-mem/settings.json
-    # are kept as reference snapshots to re-seed a fresh machine; copy
-    # them into place manually after the first rebuild (see CLAUDE.md).
+    # NOTE: ~/.claude/settings.json is intentionally NOT symlinked. Claude
+    # Code rewrites it at runtime (plugin toggles, effortLevel, etc.); a
+    # read-only Nix-store symlink breaks the app's atomic rename(2) — the
+    # same failure mode as ~/.docker/config.json above. claude-lanes.nix
+    # creates it from the system/.claude/settings.json snapshot and merges
+    # its owned keys into it on every rebuild.
   };
 }

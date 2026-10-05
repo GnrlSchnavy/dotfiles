@@ -7,7 +7,7 @@
     # Language servers for your main languages
     servers = {
       # Java development. Runtime auto-discovered from JAVA_HOME
-      # (set by jenv via .zshrc) — no hardcoded JDK path here.
+      # (set per project by mise) — no hardcoded JDK path here.
       jdtls = {
         enable = true;
       };

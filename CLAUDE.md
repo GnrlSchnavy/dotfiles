@@ -25,10 +25,9 @@ sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName)
 ```
 
 Fresh machine bootstrap: `./setup.sh`
-([docs/operations.md](docs/operations.md)). claude-mem needs a manual
-per-machine install step — see [docs/claude-code.md](docs/claude-code.md#claude-mem-manual-per-machine-install);
-the codemem plugin is installed into both Claude Code lanes once with
-`cc-lanes-setup`.
+([docs/operations.md](docs/operations.md)). After the first rebuild,
+once per machine: `mise install` (the Java/Node versions) and
+`cc-lanes-setup` (the codemem plugin, in both Claude Code lanes).
 
 ## Hard rules (violations break the build or the machine)
 
@@ -38,9 +37,8 @@ the codemem plugin is installed into both Claude Code lanes once with
 2. **`darwin-rebuild switch` needs `sudo`.**
 3. **Never symlink files that apps rewrite at runtime**:
    `~/.claude/settings.json`, `~/.claude-work/settings.json`,
-   `~/.claude-mem/settings.json`, `~/.docker/config.json`. They use the
-   reference-snapshot + seed pattern (plus, for the Claude Code lanes,
-   an activation-time merge of owned keys) instead — see
+   `~/.docker/config.json`. The Claude Code lanes use a reference
+   snapshot plus an activation-time merge of owned keys instead — see
    [docs/shell-and-dotfiles.md](docs/shell-and-dotfiles.md#files-that-must-not-be-symlinked).
 4. **`homebrew.onActivation.cleanup = "zap"`** — any brew/cask not
    declared in the host's `homebrew.nix` is uninstalled on rebuild.
@@ -65,6 +63,7 @@ the codemem plugin is installed into both Claude Code lanes once with
 | Git identity / ignores | `nix/hosts/<name>/git.nix` |
 | macOS defaults | `nix/modules/system.nix` |
 | Shell (zsh) init, env vars | `nix/home/zsh.nix` |
+| Java/Node versions (mise) | `nix/home/mise.nix` |
 | New dotfile symlink | `nix/home/files.nix` |
 | Secrets (Proton Pass refs, `pass-get`/`pass-render`) | `nix/home/secrets.nix` ([docs/secrets.md](docs/secrets.md)) |
 | Claude Code lanes (`cc-personal`/`cc-work`), guards, settings merge, model aliases | `nix/home/claude-lanes.nix` ([docs/claude-code.md](docs/claude-code.md#two-claude-code-lanes)) |
@@ -102,10 +101,10 @@ If you change m5's brews, check the hardcoded formula list in
 
 ## Development tools on these machines
 
-- **Java**: jenv + temurin casks (`jenv global <ver>`); JAVA_HOME is
-  set eagerly in zsh for `./mvnw` (see
-  [docs/shell-and-dotfiles.md](docs/shell-and-dotfiles.md))
-- **Node**: nvm (`nvm install <ver>`)
+- **Java & Node**: mise (`nix/home/mise.nix`) — global Temurin 25 and
+  Node LTS; per project from `.java-version`/`.nvmrc`/`mise.toml`, with
+  `JAVA_HOME` set on `cd`. A bare `21` in `.java-version` means OpenJDK,
+  `temurin-21` means Temurin (see [docs/packages.md](docs/packages.md))
 - **Kubernetes**: kubectl, helm, flux, kubeseal, kdoctor; aliases `k`,
   `kgp`, `kaf`, … from `nix/modules/environment.nix`
 - **Editors**: NixVim (Catppuccin, LSP, Telescope, Treesitter),

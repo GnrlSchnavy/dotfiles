@@ -142,9 +142,13 @@ jobs:
           # darwin-rebuild ships in the system profile
           command -v darwin-rebuild >/dev/null || fail "darwin-rebuild not on PATH"
 
+          # mise (Java/Node) ships in the home-manager profile, with its config
+          command -v mise >/dev/null || fail "mise not on PATH"
+          [ -L ~/.config/mise/config.toml ] || fail "~/.config/mise/config.toml is not a symlink"
+
           # Brew bundle should have left every declared formula installed
           command -v brew >/dev/null || fail "brew not on PATH"
-          for formula in jenv kubectl helm; do
+          for formula in kubectl helm; do
             brew list --formula "$formula" >/dev/null 2>&1 || fail "brew formula $formula missing after activation"
           done
 

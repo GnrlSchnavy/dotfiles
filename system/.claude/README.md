@@ -19,11 +19,7 @@ commands from here — see [below](#work-lane-claude-work).
 | `commands/` | symlink → `~/.claude/commands` (read-only dir) | Custom slash commands, incl. `/flow*` (both lanes) |
 | `skills/` | symlink → `~/.claude/skills` (read-only dir) | Custom skills (vault-* etc.), personal lane only |
 | `hooks/` | symlink → `~/.claude/hooks` (read-only dir) | `work-lane-guard.sh` + `.jq` — blocks client work trees in the personal lane |
-| `settings.json` | **NOT symlinked** — reference snapshot | Seeded to `~/.claude/settings.json` by `setup.sh` only when absent; owned keys merged on every rebuild |
-
-`../.claude-mem/settings.json` is the same kind of reference snapshot
-for claude-mem, seeded to `~/.claude-mem/settings.json` by `setup.sh`
-(with absolute home paths rewritten for the current user).
+| `settings.json` | **NOT symlinked** — reference snapshot | Creates `~/.claude/settings.json` when absent; owned keys merged on every rebuild |
 
 ## Why settings.json is not symlinked
 
@@ -94,8 +90,7 @@ rebuild, and it appears under `~/.claude/` (and, for agents/commands,
 
 ## New-machine setup
 
-`setup.sh` runs `darwin-rebuild switch` (creates the symlinks and
-merges the owned settings keys) and then seeds the non-symlinkable
-settings files if they don't exist yet (see the fresh-machine note
-above). After that, run `cc-lanes-setup` once to install the codemem
-plugin into both lanes.
+`setup.sh` runs `darwin-rebuild switch`, which creates the symlinks and
+the settings file (from the snapshot, with the owned keys merged in).
+After that, run `cc-lanes-setup` once to install the codemem plugin into
+both lanes.

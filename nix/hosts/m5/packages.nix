@@ -8,8 +8,8 @@
     pkgs.git
     pkgs.maven
 
-    # Language runtimes are managed by version managers (jenv, nvm, pyenv)
-    # not nix, to allow per-project version switching.
+    # Java and Node come from mise (nix/home/mise.nix), not nix, to allow
+    # per-project version switching.
 
     # System utilities
     pkgs.tree

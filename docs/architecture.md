@@ -98,6 +98,7 @@ nix/
 ├── home/                # shared home-manager modules (every host)
 │   ├── default.nix      # imports the modules below; home.stateVersion
 │   ├── zsh.nix          # .zprofile/.zshrc content, aliases, session vars
+│   ├── mise.nix         # Java/Node via mise: global versions, shell hook
 │   ├── files.nix        # file-pointer dotfiles (.ideavimrc, .claude/*)
 │   ├── secrets.nix      # pass-get / pass-render / pass-check (Proton Pass)
 │   ├── claude-lanes.nix # two Claude Code lanes (cc-personal/cc-work), hooks, settings merge, cc-tooling
@@ -107,7 +108,7 @@ nix/
 
 Repo root also holds the symlink *sources*: `editors/.ideavimrc`,
 `system/.claude/` (personal lane), `system/.claude-work/` (work-lane
-hooks + Ahold overlay), `system/.claude-mem/`, `system/bin/`
+hooks + Ahold overlay), `system/bin/`
 (`cc-tooling`), and the unmanaged Docker reference
 `development/.docker/config.json`.
 

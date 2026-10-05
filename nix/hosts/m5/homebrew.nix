@@ -47,10 +47,6 @@
       "proton-pass"
       "protonvpn"
 
-      # Programming languages
-      "temurin@25"
-      "temurin@21"
-
       # AI
       "github-copilot-app"
 
@@ -74,10 +70,6 @@
       # onActivation.upgrade picks up new versions on rebuild.
       "protonpass/tap/pass-cli"
 
-      # Version managers (need shell integration for lazy-loading)
-      "jenv"
-      "nvm"
-
       # Kubernetes ecosystem
       "fluxcd/tap/flux"
       "helm"
@@ -98,12 +90,6 @@
 
       # Utilities
       "nmap"
-      # AI tooling runtimes — pinned here (not via nvm) because
-      # claude-mem needs them present at machine scope: bun runs its
-      # worker daemon, uv backs its Python vector search. claude-mem
-      # would otherwise auto-fetch unpinned copies on first install.
-      "oven-sh/bun/bun"
-      "uv"
     ];
 
     # Homebrew maintenance settings

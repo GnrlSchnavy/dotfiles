@@ -115,10 +115,17 @@ for tool in git brew kubectl docker nvim code; do
     fi
 done
 
-# --- Version managers ---
-print_section "Version managers"
-[ -d "$HOME/.jenv" ]   && print_success "jenv installed"   || print_warning "jenv (~/.jenv missing)"
-[ -d "$HOME/.nvm" ]    && print_success "nvm installed"    || print_warning "nvm (~/.nvm missing)"
+# --- Language runtimes (mise) ---
+print_section "Language runtimes (mise)"
+if command -v mise > /dev/null 2>&1; then
+    if mise ls --current --missing 2>/dev/null | grep -q .; then
+        print_warning "configured versions not installed (run 'mise install')"
+    else
+        print_success "mise: $(mise current 2>/dev/null | tr '\n' ' ')"
+    fi
+else
+    print_error "mise not on PATH"
+fi
 
 # --- System info ---
 print_section "System"

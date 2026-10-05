@@ -31,7 +31,8 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    asserts the home-manager symlinks exist (`~/.zshrc`, `~/.zprofile`,
    `~/.zshenv`, `~/.config/git/{config,ignore}`, `~/.ideavimrc`,
    `~/.claude/settings.local.json`), `darwin-rebuild` and `brew` are on
-   PATH, and the formulas `jenv`, `kubectl`, `helm` are installed.
+   PATH, `mise` and its config are in place, and the formulas `kubectl`,
+   `helm` are installed.
 
 ## The `ci` host (`nix/hosts/ci/default.nix`)
 
@@ -65,7 +66,7 @@ Misses:
 - New guard behaviour or a new bypass found? Add a fixture to
   [`tests/guard.sh`](../tests/guard.sh) — blocking cases and the
   everyday work that must stay allowed.
-- The smoke check hardcodes formulas `jenv kubectl helm`. If m5's
+- The smoke check hardcodes formulas `kubectl helm`. If m5's
   brews change, update the workflow list.
 - The smoke check's symlink list must track `nix/home/files.nix` —
   add a check when adding an important managed file.
