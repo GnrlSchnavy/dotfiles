@@ -172,8 +172,12 @@ let
 in
 {
   home.packages = [
-    (pkgs.writeShellScriptBin "cc-tooling"
-      (builtins.readFile ../../system/bin/cc-tooling.sh))
+    # writeShellApplication shellchecks the script at build time and pins its tools.
+    (pkgs.writeShellApplication {
+      name = "cc-tooling";
+      runtimeInputs = [ pkgs.coreutils pkgs.findutils pkgs.gawk pkgs.git ];
+      text = builtins.readFile ../../system/bin/cc-tooling.sh;
+    })
   ];
 
   home.file = {

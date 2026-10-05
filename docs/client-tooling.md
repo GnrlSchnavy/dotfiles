@@ -70,14 +70,21 @@ client's `tree/` into a checkout:
 |---|---|
 | `cc-tooling clone <client> <url>` | clone the private repo to `~/.claude-clients/<client>/` |
 | `cc-tooling link <client> <path>` | symlink `~/.claude-clients/<client>` → an existing checkout of it |
-| `cc-tooling apply <client>/<repo>` | symlink `tree/` files into the current checkout + write a marked `.git/info/exclude` block |
+| `cc-tooling apply <client>/<repo>` | symlink `tree/` files into the current checkout + write a marked `info/exclude` block (refuses if a destination already exists) |
 | `cc-tooling status` | show what's applied in the current checkout |
 | `cc-tooling unapply` | remove the symlinks + the exclude block |
 | `cc-tooling list` | list set-up clients and their repos |
 
 `apply` **symlinks** the files in (single source of truth — edit the private
-repo once, every checkout updates) and adds their paths to `.git/info/exclude`
-inside a marked, removable block. So:
+repo once, every checkout updates) and adds their paths to the repo's
+`info/exclude` inside a marked, removable block (written first, so an
+interrupted apply never leaves visible links). It never overwrites: if any
+destination exists and isn't one of its own links — e.g. a tracked
+`AGENTS.md` in the client repo — it lists them and changes nothing. A
+re-apply removes links the tooling no longer provides; a `repos/<repo>` file
+overrides a `shared` one at the same path. It works in git worktrees too
+(their exclude file lives in the main repo's git dir and is shared by all
+worktrees). So:
 
 - Claude Code discovers them like any project tooling (`.claude/agents/`, the
   repo-root `AGENTS.md` via the work lane's `SessionStart` hook, nested files
