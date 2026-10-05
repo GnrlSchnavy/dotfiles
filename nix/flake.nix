@@ -130,7 +130,7 @@
       hosts = {
         m5 = import ./hosts/m5;
         # CI fresh-install test target. Matches the GitHub Actions
-        # macos-15 runner environment (user "runner", /Users/runner).
+        # xcode-27 (macOS 27) runner (user "runner", /Users/runner).
         # Not intended for use on a real machine.
         ci = import ./hosts/ci;
       };
