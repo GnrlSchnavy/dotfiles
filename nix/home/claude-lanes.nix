@@ -157,16 +157,9 @@ let
         "plugins.gradle.org"
         "downloads.gradle.org"
         "registry.npmjs.org"
-      ];
-      # Run outside the sandbox: they need SSH/keychain (git remotes) and the
-      # cluster API (kubectl/flux), which the network proxy can't carry.
-      sandbox.excludedCommands = [
-        "git push *"
-        "git fetch *"
-        "git pull *"
-        "git ls-remote *"
-        "kubectl *"
-        "flux *"
+        "192.168.1.106:6443" # k3s API (kubectl/flux, via the sandbox proxy)
+        "github.com" # git over SSH, tunnelled through the proxy
+        "api.cloudflare.com" # wrangler
       ];
     };
     set = lib.recursiveUpdate codememPlugin {
