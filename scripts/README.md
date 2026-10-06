@@ -49,9 +49,19 @@ Run it after a rebuild or whenever something feels off.
 
 ## `backup.sh`
 
-Snapshots the current state (dotfile contents, Homebrew package lists,
-macOS / nix-darwin versions) into `~/.dotfiles_backup_<timestamp>/`.
-Symlinks are dereferenced so the backup is portable.
+Copies the state git can't regenerate into
+`~/.dotfiles-backups/<timestamp>/` (owner-only, since some of it can
+hold credentials):
+
+- both lanes' `settings.json` and `.claude.json` (app-owned)
+- the codemem memory databases (`~/.codemem/*/mem.sqlite`, via
+  `sqlite3 .backup` so a running observer doesn't corrupt the copy)
+- `~/.docker/config.json`
+- Homebrew package lists, macOS / nix-darwin versions, the repo commit
+
+Managed dotfiles are skipped: a rebuild recreates them. The newest five
+backups are kept (`BACKUP_KEEP=10 ./scripts/backup.sh` keeps more). Each
+has a README with the restore commands.
 
 ```bash
 ./scripts/backup.sh
