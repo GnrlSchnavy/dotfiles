@@ -67,8 +67,10 @@ let
   # every login), so the sandbox can allow it and Claude can push and pull.
   sshAgentRelay = "${home}/.ssh/claude-agent.sock";
 
-  # GIT_SSH_COMMAND for the personal lane: plain ssh, except inside the Bash
-  # sandbox, where it tunnels through the sandbox proxy and uses the relay.
+  # SSH command for git in personal-lane Bash: tunnels through the sandbox
+  # proxy and uses the relay. Set per call by the git() function below, since
+  # the sandbox overwrites GIT_SSH_COMMAND with its own SOCKS command, which
+  # fails because the proxy wants credentials.
   claudeGitSsh = pkgs.writeShellApplication {
     name = "claude-git-ssh";
     runtimeInputs = [ pkgs.nmap ]; # ncat
@@ -92,7 +94,6 @@ let
     # shell keeps Docker Desktop. Ryuk mounts the socket path inside the VM.
     DOCKER_HOST = "unix://${personalDockerSock}";
     TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE = "/var/run/docker.sock";
-    GIT_SSH_COMMAND = "${claudeGitSsh}/bin/claude-git-ssh";
   };
 
   # Non-secret work env, also written to ~/.claude-work/settings.json so every
@@ -362,13 +363,15 @@ in
 
   # The ssh-agent relay behind sshAgentRelay. Each connection is forwarded to
   # the launchd agent's current socket ($SSH_AUTH_SOCK in the login session).
+  # First loads the keys whose passphrase is in the login Keychain (stored
+  # once with `ssh-add --apple-use-keychain`), since the sandbox can't prompt.
   launchd.agents.claude-ssh-agent-relay = {
     enable = true;
     config = {
       ProgramArguments = [
         "/bin/sh"
         "-c"
-        ''exec ${pkgs.socat}/bin/socat UNIX-LISTEN:${sshAgentRelay},fork,unlink-early,mode=600 UNIX-CONNECT:"$SSH_AUTH_SOCK"''
+        ''/usr/bin/ssh-add --apple-load-keychain >/dev/null 2>&1; exec ${pkgs.socat}/bin/socat UNIX-LISTEN:${sshAgentRelay},fork,unlink-early,mode=600 UNIX-CONNECT:"$SSH_AUTH_SOCK"''
       ];
       RunAtLoad = true;
       KeepAlive = true;
@@ -384,6 +387,13 @@ in
     # Claude Code lanes (see nix/home/claude-lanes.nix)
     cc-personal() {
       env ${unsetLaneVars} ${assignments personalEnv} claude "$@"
+    }
+    # Personal-lane Bash sandbox: git over SSH through the proxy and the
+    # ssh-agent relay (claudeGitSsh). A no-op everywhere else.
+    git() {
+      if [[ -n $SANDBOX_RUNTIME && $CC_LANE != work ]]; then
+        GIT_SSH_COMMAND=${claudeGitSsh}/bin/claude-git-ssh command git "$@"
+      else command git "$@"; fi
     }
     # Shared work-lane preparation for cc-work and cc-work-desktop. Sets
     # $technl_proxy in the caller (declare it local there).

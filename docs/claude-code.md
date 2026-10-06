@@ -294,14 +294,21 @@ session. Two things stop plain `ssh` inside the sandbox, and
 `claude-lanes.nix` works around both:
 
 - **No route out.** Sandboxed commands have no DNS and can only reach the
-  sandbox's HTTP proxy, which `ssh` ignores. `GIT_SSH_COMMAND` in the
-  lane env points at `claude-git-ssh`
-  ([`system/bin/claude-git-ssh.sh`](../system/bin/claude-git-ssh.sh)).
-  When `$SANDBOX_RUNTIME` is set, it adds a `ProxyCommand` that tunnels
-  through the proxy with `ncat`, using the per-command credentials in
-  `$HTTP_PROXY` and `127.0.0.1` (the proxy refuses `localhost`).
-  Everywhere else it runs plain `ssh`. `github.com` is in
-  `allowedDomains`; other SSH hosts would need adding there too.
+  sandbox's proxy. The sandbox sets its own `GIT_SSH_COMMAND`
+  (`nc -X 5` to its SOCKS port), but without credentials, so the proxy
+  refuses it ("This proxy requires authentication"). It also overwrites
+  any `GIT_SSH_COMMAND` from the settings env. So a `git()` shell
+  function (in `claude-lanes.nix`, reaching Bash through the shell
+  snapshot like the `kubectl`/`flux` ones in `zsh.nix`) sets
+  `GIT_SSH_COMMAND` per call to `claude-git-ssh`
+  ([`system/bin/claude-git-ssh.sh`](../system/bin/claude-git-ssh.sh))
+  when `$SANDBOX_RUNTIME` is set and the lane isn't work. That adds a
+  `ProxyCommand` tunnelling through the HTTP proxy with `ncat`, using
+  the per-command credentials in `$HTTP_PROXY` and `127.0.0.1` (the
+  proxy refuses `localhost`). Outside the sandbox `git` is untouched.
+  `github.com` is in `allowedDomains`; other SSH hosts would need adding
+  there too. Only `git` typed in Bash gets this, not a git run from
+  inside another program.
 - **No ssh-agent.** The personal GitHub key has a passphrase, so `ssh`
   needs the launchd ssh-agent, whose socket path changes every login and
   which the sandbox blocks. A launchd agent, `claude-ssh-agent-relay`,
@@ -309,14 +316,22 @@ session. Two things stop plain `ssh` inside the sandbox, and
   `$SSH_AUTH_SOCK`. The sandbox allows that one socket
   (`sandbox.network.allowUnixSockets`), and `claude-git-ssh` points
   `SSH_AUTH_SOCK` at it.
+- **No passphrase prompt.** The sandbox can't ask for the passphrase, so
+  the key must already be in the agent. The relay agent runs
+  `ssh-add --apple-load-keychain` at login, which loads every key whose
+  passphrase is in the login Keychain. Store it there once per machine
+  (this also stops your own terminal asking for it):
+
+  ```bash
+  /usr/bin/ssh-add --apple-use-keychain ~/.ssh/github_ed25519
+  ```
 
 Check it from a personal session with
 `SSH_AUTH_SOCK=~/.ssh/claude-agent.sock ssh-add -l` (lists the agent's
-keys through the relay) and `git ls-remote origin`. If the key isn't
-loaded in the agent yet, use it once in your own terminal first (or
-`ssh-add ~/.ssh/github_ed25519`), since the sandbox can't ask for the
-passphrase. Not covered: `gh` (HTTPS API) and HTTPS remotes; git.nix
-rewrites `https://github.com` to SSH anyway.
+keys through the relay; "The agent has no identities" means the step
+above is missing) and `git ls-remote origin`. Not covered: `gh` (HTTPS
+API) and HTTPS remotes; git.nix rewrites `https://github.com` to SSH
+anyway.
 
 The trade-off: sandboxed commands can use **every key loaded in the
 agent**, not just the GitHub one, for any SSH host the network allowlist

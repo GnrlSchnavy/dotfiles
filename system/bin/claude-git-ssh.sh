@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 #
-# claude-git-ssh — GIT_SSH_COMMAND for the personal Claude Code lane
-# (claude-lanes.nix), so Claude can push and pull over SSH.
+# claude-git-ssh — the SSH command git uses in the personal Claude Code lane
+# (set by the git() function in claude-lanes.nix), so Claude can push and pull.
 #
 # Inside the Bash sandbox ($SANDBOX_RUNTIME set) ssh can't resolve or reach
-# github.com, and the launchd ssh-agent socket is blocked. There, this routes
+# github.com: the sandbox's own GIT_SSH_COMMAND uses its SOCKS port without
+# credentials, which the proxy refuses, and the launchd ssh-agent socket is
+# blocked. There, this routes
 # ssh through the sandbox's HTTP proxy with ncat (127.0.0.1, not localhost:
 # the proxy refuses that) and points it at the agent relay socket the sandbox
 # allows ($CLAUDE_SSH_AGENT_RELAY, from the claude-ssh-agent-relay launchd
