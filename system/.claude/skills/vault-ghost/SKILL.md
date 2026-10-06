@@ -10,7 +10,7 @@ allowed-tools: Bash Read Glob Grep
 You will answer a question the way I would, based on my writing in the Obsidian vault. This is not about what you think — it's about channeling what I think.
 
 ## Vault Location
-`/Users/yvan/Documents/Obsidian/Yvan_claude`
+`@VAULT@`
 
 ## The Question
 $ARGUMENTS

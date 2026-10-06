@@ -7,8 +7,8 @@ home-manager appends every file in this folder to the work lane's global
 ## Hard rule
 
 - This is **client work for Ahold**. Client content must stay inside the
-  sanctioned **TechNL GenAI proxy** (the lane's `ANTHROPIC_BASE_URL` + `api-key`
-  header). It must **never** be sent to `api.anthropic.com` directly, and must
+  sanctioned **TechNL GenAI gateway** (reached through DevAI CLI, which sets the
+  lane's `ANTHROPIC_BASE_URL` and handles auth). It must **never** be sent to `api.anthropic.com` directly, and must
   **never** route through personal Claude Max auth.
 - Do not paste client code, data, or identifiers into any tool, web service, or
   channel outside the sanctioned proxy. That includes WebFetch/WebSearch to

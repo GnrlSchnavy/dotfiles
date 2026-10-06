@@ -47,9 +47,11 @@ else
 fi
 
 # Install Rosetta 2 (for Apple Silicon)
-if [[ "$NEED_ROSETTA" == "true" ]]; then
+if [[ "$NEED_ROSETTA" == "true" ]] && arch -x86_64 /usr/bin/true 2>/dev/null; then
+    print_success "Rosetta 2 already installed"
+elif [[ "$NEED_ROSETTA" == "true" ]]; then
     print_step "Installing Rosetta 2 for compatibility..."
-    if ! softwareupdate --install-rosetta --agree-to-license; then
+    if ! sudo softwareupdate --install-rosetta --agree-to-license; then
         print_warning "Rosetta installation failed or was cancelled"
     else
         print_success "Rosetta 2 installed"
@@ -66,10 +68,12 @@ else
     print_success "Xcode Command Line Tools already installed"
 fi
 
-# Clone dotfiles repository
+# Clone dotfiles repository. DOTFILES_DIR and DOTFILES_HOST override the
+# checkout and the host descriptor (CI runs this script on its own checkout
+# against the `ci` host).
 print_step "Cloning dotfiles repository..."
 REPO_URL="https://github.com/GnrlSchnavy/dotfiles.git"
-TARGET_DIR="$HOME/.dotfiles"
+TARGET_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 
 if [ -d "$TARGET_DIR" ]; then
     print_warning "$TARGET_DIR already exists; skipping clone."
@@ -83,7 +87,7 @@ fi
 # To onboard a new Mac, copy nix/hosts/template/ to nix/hosts/<your-hostname>/,
 # edit username/hostname, register it in nix/flake.nix's hosts attrset, and
 # commit before running this script.
-HOSTNAME=$(scutil --get LocalHostName)
+HOSTNAME="${DOTFILES_HOST:-$(scutil --get LocalHostName)}"
 HOST_DESCRIPTOR="$TARGET_DIR/nix/hosts/$HOSTNAME/default.nix"
 print_step "Detected hostname: $HOSTNAME"
 
@@ -152,9 +156,10 @@ done
 # Install nix-darwin and apply our flake in one step. --inputs-from takes
 # darwin-rebuild from the nix-darwin revision locked in flake.lock, so the
 # bootstrap can't drift from the config. sudo because nix-darwin's
-# activation step requires root.
+# activation step requires root; NIX_CONFIG is passed through so a caller
+# can supply settings (CI sets a GitHub token) now that nix.conf is aside.
 print_step "Bootstrapping nix-darwin and applying configuration for $HOSTNAME..."
-sudo nix run \
+sudo --preserve-env=NIX_CONFIG nix run \
     --extra-experimental-features "nix-command flakes" \
     --inputs-from "$TARGET_DIR/nix" nix-darwin#darwin-rebuild -- \
     switch --flake "$TARGET_DIR/nix#$HOSTNAME"
@@ -184,13 +189,17 @@ fi
 echo
 print_success "🎉 Dotfiles setup complete!"
 echo
-echo "Next steps:"
+echo "Next steps (once per machine; both are sign-ins, so they can't be declared):"
 echo "1. Restart your terminal so PATH and home-manager-managed files take effect"
-echo "2. Install the Java and Node versions mise is configured for"
-echo "   (nix/home/mise.nix; projects can pin others via .java-version/.nvmrc):"
-echo "     mise install"
+echo "2. Sign in to Proton Pass, the source of every runtime secret (docs/secrets.md):"
+echo "     pass-cli login"
+echo "3. Work lane: install the DevAI CLI and sign in to the gateway (docs/claude-code.md):"
+echo "     devai setup"
 echo
-echo "Configuration: ~/.dotfiles/"
-echo "Documentation: ~/.dotfiles/CLAUDE.md"
+echo "Java/Node (mise) were installed by the rebuild; Claude Code fetches its"
+echo "declared plugins, codemem included, when a session first starts."
+echo
+echo "Configuration: $TARGET_DIR/"
+echo "Documentation: $TARGET_DIR/CLAUDE.md"
 echo
 print_success "Happy coding! 🚀"

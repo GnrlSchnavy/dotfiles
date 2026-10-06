@@ -1,4 +1,46 @@
-nnoremap p "0p 
-nnoremap P "0P
-:set number relativenumber
+" IdeaVim (IntelliJ). The leader keys mirror NixVim (nix/nixvim/config/),
+" so the same muscle memory works in both editors.
+let mapleader=" "
+
+set number relativenumber
 set ideajoin
+set incsearch ignorecase smartcase
+set scrolloff=8
+
+" Bundled IdeaVim extensions: ys/cs/ds, gc, a flash on yank.
+set surround
+set commentary
+set highlightedyank
+
+" Paste from the yank register, so a delete doesn't replace what you paste.
+nnoremap p "0p
+nnoremap P "0P
+
+" Code navigation (NixVim lsp.nix)
+nmap gd <Action>(GotoDeclaration)
+nmap gr <Action>(FindUsages)
+nmap gi <Action>(GotoImplementation)
+nmap gt <Action>(GotoTypeDeclaration)
+nmap K <Action>(QuickJavaDoc)
+nmap <leader>rn <Action>(RenameElement)
+nmap <leader>ca <Action>(ShowIntentionActions)
+nmap [d <Action>(GotoPreviousError)
+nmap ]d <Action>(GotoNextError)
+nmap <leader>de <Action>(ShowErrorDescription)
+
+" Finding things (NixVim telescope.nix)
+nmap <leader>ff <Action>(GotoFile)
+nmap <leader>fg <Action>(FindInPath)
+nmap <leader>fb <Action>(Switcher)
+nmap <leader>fr <Action>(RecentFiles)
+nmap <leader>ls <Action>(FileStructurePopup)
+nmap <leader>lw <Action>(GotoSymbol)
+nmap <leader>gs <Action>(ActivateCommitToolWindow)
+nmap <leader>gb <Action>(Git.Branches)
+
+" Files and tabs (NixVim keymaps.nix)
+nmap <leader>e <Action>(ActivateProjectToolWindow)
+nmap <leader>o <Action>(SelectInProjectView)
+nmap <S-h> <Action>(PreviousTab)
+nmap <S-l> <Action>(NextTab)
+nmap <leader>bd <Action>(CloseContent)

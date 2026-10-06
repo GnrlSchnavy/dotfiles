@@ -10,7 +10,7 @@ allowed-tools: Bash Read Glob Grep
 You will pressure test a belief or topic using my own vault history. Find where my thinking contradicts itself, where evidence counters my position, and where my views have shifted.
 
 ## Vault Location
-`/Users/yvan/Documents/Obsidian/Yvan_claude`
+`@VAULT@`
 
 ## Topic to Challenge
 $ARGUMENTS

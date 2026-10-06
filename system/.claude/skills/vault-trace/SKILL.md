@@ -10,7 +10,7 @@ allowed-tools: Bash Read Glob Grep
 Track the evolution of a concept through my vault over time. Build a chronological map of how this idea appeared, developed, and connected to other ideas.
 
 ## Vault Location
-`/Users/yvan/Documents/Obsidian/Yvan_claude`
+`@VAULT@`
 
 ## Concept to Trace
 $ARGUMENTS

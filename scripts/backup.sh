@@ -2,6 +2,12 @@
 
 set -euo pipefail
 
+# Backs up the state git can't regenerate: app-owned settings, the codemem
+# memory databases and the Docker config, plus package and version lists.
+# Managed dotfiles are skipped — a rebuild recreates them from the repo.
+# Backups go to ~/.dotfiles-backups/<timestamp>/ (owner-only: the Docker
+# and Claude files can hold credentials); the newest $BACKUP_KEEP are kept.
+
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -9,7 +15,6 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Function to print colored output
 print_step() {
     echo -e "${BLUE}💾 $1${NC}"
 }
@@ -26,146 +31,90 @@ print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
-# Get current timestamp for backup naming
+umask 077
+
+BACKUP_ROOT="$HOME/.dotfiles-backups"
+BACKUP_KEEP="${BACKUP_KEEP:-5}"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_DIR="$HOME/.dotfiles_backup_$TIMESTAMP"
+BACKUP_DIR="$BACKUP_ROOT/$TIMESTAMP"
 
 echo "🗄️  Dotfiles Backup Script"
-echo "Creating backup of current configurations..."
 echo
 
-# Create backup directory
 print_step "Creating backup directory: $BACKUP_DIR"
 mkdir -p "$BACKUP_DIR"
 
-# Files to back up. Most live as symlinks into /nix/store now (managed
-# by home-manager); we copy with -L to capture the actual content so
-# the backup is portable even if the store path is gc'd later.
-declare -a DOTFILES=(
-    "$HOME/.zprofile"
-    "$HOME/.zshrc"
-    "$HOME/.zshenv"
-    "$HOME/.config/git/config"
-    "$HOME/.config/git/ignore"
-    "$HOME/.ideavimrc"
-    "$HOME/.docker/config.json"
-    "$HOME/.claude/settings.local.json"
+# App-owned files (paths relative to $HOME). Missing ones are skipped.
+declare -a STATE_FILES=(
+    ".claude/settings.json"
+    ".claude.json"
+    ".claude-work/settings.json"
+    ".claude-work/.claude.json"
+    ".docker/config.json"
 )
 
-# Backup individual dotfiles
-print_step "Backing up dotfiles..."
-for file in "${DOTFILES[@]}"; do
-    if [ -e "$file" ]; then
-        # Preserve directory structure
-        target_dir="$BACKUP_DIR/$(dirname "${file#$HOME/}")"
-        mkdir -p "$target_dir"
-
-        if [ -L "$file" ]; then
-            # It's a symlink - copy the target
-            cp -rL "$file" "$target_dir/" 2>/dev/null || echo "  ⚠️  Could not backup $file"
-            echo "  📄 $(basename "$file") (symlink target)"
-        else
-            # It's a regular file/directory
-            cp -r "$file" "$target_dir/" 2>/dev/null || echo "  ⚠️  Could not backup $file"
-            echo "  📄 $(basename "$file")"
-        fi
+print_step "Backing up app-owned settings..."
+for rel in "${STATE_FILES[@]}"; do
+    src="$HOME/$rel"
+    [ -f "$src" ] || continue
+    mkdir -p "$BACKUP_DIR/home/$(dirname "$rel")"
+    if cp "$src" "$BACKUP_DIR/home/$rel"; then
+        echo "  📄 ~/$rel"
+    else
+        print_warning "Could not back up ~/$rel"
     fi
 done
 
-# Backup current system state information
-print_step "Backing up system information..."
+# sqlite3's .backup takes a consistent copy even while codemem is writing.
+print_step "Backing up codemem memory databases..."
+for db in "$HOME"/.codemem/*/mem.sqlite; do
+    [ -f "$db" ] || continue
+    rel="${db#"$HOME"/}"
+    mkdir -p "$BACKUP_DIR/home/$(dirname "$rel")"
+    if sqlite3 "$db" ".backup '$BACKUP_DIR/home/$rel'" 2>/dev/null || cp "$db" "$BACKUP_DIR/home/$rel"; then
+        echo "  🧠 ~/$rel"
+    else
+        print_warning "Could not back up ~/$rel"
+    fi
+done
 
-# Nix Darwin generation info
+print_step "Recording system state..."
 if command -v darwin-version > /dev/null 2>&1; then
-    darwin-version > "$BACKUP_DIR/darwin-version.txt" 2>/dev/null
-    echo "  📋 Darwin version info"
+    darwin-version > "$BACKUP_DIR/darwin-version.txt" 2>/dev/null || true
 fi
-
-# Homebrew package list
 if command -v brew > /dev/null 2>&1; then
     brew list --cask > "$BACKUP_DIR/brew-casks.txt" 2>/dev/null || true
     brew list --formula > "$BACKUP_DIR/brew-formulas.txt" 2>/dev/null || true
-    echo "  📋 Homebrew package lists"
 fi
+sw_vers > "$BACKUP_DIR/system-version.txt" 2>/dev/null || true
+git -C "$HOME/.dotfiles" rev-parse HEAD > "$BACKUP_DIR/dotfiles-commit.txt" 2>/dev/null || true
 
-# System information
-sw_vers > "$BACKUP_DIR/system-version.txt" 2>/dev/null
-echo "  📋 System version info"
-
-# Create a restore script
-print_step "Creating restore script..."
-cat > "$BACKUP_DIR/restore.sh" << 'EOF'
-#!/bin/bash
-echo "🔄 Dotfiles Restore Script"
-echo "This script will help restore your backed-up configurations."
-echo
-echo "⚠️  WARNING: This will overwrite current configurations!"
-echo "   Make sure you understand what you're restoring."
-echo
-read -p "Do you want to continue? (y/N): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Restore cancelled."
-    exit 1
-fi
-
-echo "📁 Backup contents:"
-ls -la
-echo
-echo "📝 To manually restore individual files:"
-echo "   - Copy them from this backup to ~/ (mind the .config/ paths)"
-echo "   - On a managed system, prefer editing the source in"
-echo "     ~/.dotfiles/ and rebuilding instead of overwriting symlinks"
-echo
-echo "🚀 To restore the full dotfiles setup:"
-echo "   1. Clone the dotfiles repo to ~/.dotfiles"
-echo "   2. Run ~/.dotfiles/setup.sh"
-echo "   3. Bring across any local-only files from this backup"
-EOF
-
-chmod +x "$BACKUP_DIR/restore.sh"
-
-# Create backup summary
-print_step "Creating backup summary..."
 cat > "$BACKUP_DIR/README.md" << EOF
-# Dotfiles Backup - $TIMESTAMP
+# Backup $TIMESTAMP
 
-This backup was created on $(date) for user: $USER
+Taken on $(date) for $(id -un).
 
-## Contents
+\`home/\` mirrors \$HOME: copy a file back to the same path under \$HOME to
+restore it. Quit Claude Code (or Docker Desktop) first, since they rewrite
+these files. For example:
 
-### Dotfiles
-- Shell configurations (.zprofile, .zshrc)
-- Git configuration (.gitconfig, .gitignore_global)
-- Editor configurations (.ideavimrc)
-- Development tools (.docker/, .claude/)
+    cp home/.claude/settings.json ~/.claude/settings.json
+    cp home/.codemem/personal/mem.sqlite ~/.codemem/personal/mem.sqlite
 
-### System Information
-- \`darwin-version.txt\`: Nix Darwin generation info
-- \`brew-casks.txt\`: Installed Homebrew casks
-- \`brew-formulas.txt\`: Installed Homebrew formulas
-- \`system-version.txt\`: macOS version information
-
-### Restore Options
-
-1. **Full Setup**: Use the main dotfiles repository setup script
-2. **Manual Restore**: Copy specific files from this backup
-3. **Partial Restore**: Use \`restore.sh\` for guided restoration
-
-## Notes
-
-- Symlinked files have been resolved to their targets
-- This backup captures the state at the time of creation
-- Always review configurations before restoring to avoid conflicts
-
+Then rebuild, which merges the lane-owned keys back into the Claude settings.
+Everything else (dotfiles, packages) comes from the repo: clone it and run
+setup.sh. \`dotfiles-commit.txt\` is the repo commit at backup time.
 EOF
 
-print_success "Backup completed successfully!"
-echo
-echo "📍 Backup location: $BACKUP_DIR"
-echo "📋 Backup size: $(du -sh "$BACKUP_DIR" | cut -f1)"
-echo
-echo "💡 Next steps:"
-echo "  - Review the backup contents in: $BACKUP_DIR"
-echo "  - Run the restore script if needed: $BACKUP_DIR/restore.sh"
-echo "  - Consider archiving old backups to save space"
+print_step "Pruning old backups (keeping the newest $BACKUP_KEEP)..."
+count=$(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+excess=$((count - BACKUP_KEEP))
+if [ "$excess" -gt 0 ]; then
+    find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d | sort | head -n "$excess" | while read -r old; do
+        rm -rf "$old"
+        echo "  🗑  $(basename "$old")"
+    done
+fi
+
+print_success "Backup completed"
+echo "📍 $BACKUP_DIR ($(du -sh "$BACKUP_DIR" | cut -f1))"

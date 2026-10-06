@@ -9,7 +9,7 @@ allowed-tools: Bash Read Glob Grep
 You will compare what I said I would do against what I actually did. Surface the gap between intention and action.
 
 ## Vault Location
-`/Users/yvan/Documents/Obsidian/Yvan_claude`
+`@VAULT@`
 
 ## Instructions
 

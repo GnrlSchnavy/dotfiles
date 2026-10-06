@@ -18,7 +18,7 @@ Rules of thumb:
 - **Nix packages** (`environment.systemPackages`): reproducible CLI
   tools — git, maven, jq, ripgrep, fd, bat, tree, curl, wget, htop…
 - **Homebrew brews**: CLI tools that need taps (`fluxcd/tap/flux`),
-  shell integration (autojump), or faster update cycles
+  or faster update cycles
   (gh, kubectl, helm).
 - **Homebrew casks**: all GUI apps (browsers, IDEs, Slack, Docker
   Desktop, …). JDKs are not casks — mise installs them.
@@ -32,8 +32,9 @@ Rules of thumb:
 Java and Node come from **mise**, so each project can pin its own
 version. mise itself and its global config are declared in
 [`nix/home/mise.nix`](../nix/home/mise.nix) (global: Temurin 25, Node
-LTS); the runtimes are downloaded by mise into `~/.local/share/mise`.
-Bootstrap once per machine: `mise install`.
+LTS); the runtimes are downloaded by mise into `~/.local/share/mise`,
+by an activation step on every rebuild (a no-op once installed; offline
+it only warns).
 
 - **Per project**, mise reads `mise.toml` and the files other tools use:
   `.java-version`, `.sdkmanrc`, `.nvmrc`, `.node-version`. `cd`-ing into

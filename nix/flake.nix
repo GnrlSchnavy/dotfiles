@@ -100,7 +100,9 @@
             {
               nix-homebrew = {
                 enable = true;
-                enableRosetta = true;
+                # No Intel prefix (/usr/local): nothing here needs x86-only
+                # brews. Rosetta itself, for x86 apps, is separate.
+                enableRosetta = false;
                 user = host.username;
                 autoMigrate = true;
               };

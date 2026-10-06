@@ -9,7 +9,7 @@ it is allowed to diverge on: `packages.nix`, `homebrew.nix`,
 
 | Host | Machine | User | Notes |
 |---|---|---|---|
-| `m5` | Apple Silicon Mac (personal + work) | `yvan-sytac` | The only real host. Git identity yvan.stemmerik@ah.nl |
+| `m5` | Apple Silicon Mac (personal + work) | `yvan-sytac` | The only real host. Git identity by directory: work by default, personal under `~/projects/personal/` and `~/.dotfiles` (`git.nix`) |
 | `ci` | GitHub Actions `xcode-27` (macOS 27) runner | `runner` | Fresh-install test target only. Reuses `../m5/*` modules with CI overrides (casks forced to `[]`, cleanup `none`, no upgrade). Never use on a real machine |
 | `template` | — | — | Copy source for onboarding; placeholders `REPLACE_ME_*` |
 
@@ -29,6 +29,18 @@ git show 8594049:nix/hosts/m4/homebrew.nix
 Everything m4 declared was carried over into m5 with one exception:
 the nix package `wireguard-tools`, dropped because Tailscale replaced
 the raw WireGuard setup.
+
+## The dotfiles clones on m5
+
+`git.nix` assumes this repo may be cloned twice on m5:
+`~/projects/personal/dotfiles` to edit and `~/.dotfiles` to rebuild
+from. Both get the personal git identity and GitHub login. A change
+made in the editing clone reaches the machine after commit, push,
+`git pull` in `~/.dotfiles` and a rebuild; to try it before pushing,
+rebuild straight from the editing clone
+(`sudo darwin-rebuild switch --flake ~/projects/personal/dotfiles/nix#m5`).
+With a single clone, keep it at `~/.dotfiles` and drop the other
+`includes` entry.
 
 ## Onboarding a new Mac
 

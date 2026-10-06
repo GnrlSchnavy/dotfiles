@@ -6,9 +6,23 @@
 # Use `home.file` (and not `xdg.configFile`) for paths that are
 # relative to $HOME. Use `xdg.configFile` for things under
 # ~/.config/ when home-manager has a typed equivalent.
-{ ... }:
+{ config, pkgs, ... }:
 
+let
+  # The Obsidian vault: the vault-* skills and the notes/note shell functions.
+  vault = "${config.home.homeDirectory}/Documents/Obsidian/Yvan_claude";
+
+  # The skills name the vault as @VAULT@; fill in this machine's path.
+  skills = pkgs.runCommand "claude-skills" { } ''
+    cp -r ${../../system/.claude/skills} $out
+    chmod -R u+w $out
+    find $out -name '*.md' -exec sed -i 's|@VAULT@|${vault}|g' {} +
+    if grep -rq '@VAULT@' $out; then echo "unsubstituted @VAULT@" >&2; exit 1; fi
+  '';
+in
 {
+  home.sessionVariables.OBSIDIAN_VAULT = vault;
+
   home.file = {
     # IntelliJ IDEA Vim plugin config
     ".ideavimrc".source = ../../editors/.ideavimrc;
@@ -24,15 +38,13 @@
     # Claude Code config. Only manage the files/dirs we explicitly
     # version-control; leave everything else under ~/.claude/
     # (transcripts, plugin caches, session state) untouched.
-    ".claude/settings.local.json".source = ../../system/.claude/settings.local.json;
-    ".claude/settings.template.json".source = ../../system/.claude/settings.template.json;
     ".claude/README.md".source = ../../system/.claude/README.md;
 
     # Custom Claude content — static, never rewritten by the app, so
     # safe to symlink as read-only directories into the Nix store.
     ".claude/agents".source = ../../system/.claude/agents;
     ".claude/commands".source = ../../system/.claude/commands;
-    ".claude/skills".source = ../../system/.claude/skills;
+    ".claude/skills".source = skills;
 
     # NOTE: ~/.claude/settings.json is intentionally NOT symlinked. Claude
     # Code rewrites it at runtime (plugin toggles, effortLevel, etc.); a

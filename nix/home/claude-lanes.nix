@@ -100,6 +100,19 @@ let
 
   hook = command: { type = "command"; inherit command; };
 
+  # Plugins are declared rather than installed by hand: when an interactive
+  # session starts, Claude Code adds the declared marketplaces and fetches
+  # any enabled plugin it doesn't have yet (Anthropic's official marketplace
+  # is added on its own). false disables an installed plugin. A /plugin
+  # toggle on a plugin listed here lasts until the next rebuild.
+  codememPlugin = {
+    extraKnownMarketplaces.codemem-marketplace.source = {
+      source = "github";
+      repo = "kunickiaj/codemem";
+    };
+    enabledPlugins."codemem@codemem-marketplace" = true;
+  };
+
   personalOwned = {
     env = personalEnv;
     union = {
@@ -117,9 +130,25 @@ let
         "registry.npmjs.org"
       ];
     };
-    # Forced on every rebuild: a failed sandboxed command may not be retried
-    # outside the sandbox, so the boundary holds in auto mode too.
-    set.sandbox = { enabled = true; allowUnsandboxedCommands = false; };
+    set = lib.recursiveUpdate codememPlugin {
+      # Forced on every rebuild: a failed sandboxed command may not be
+      # retried outside the sandbox, so the boundary holds in auto mode too.
+      sandbox = { enabled = true; allowUnsandboxedCommands = false; };
+      enabledPlugins = {
+        "superpowers@claude-plugins-official" = true;
+        "frontend-design@claude-plugins-official" = true;
+        "context7@claude-plugins-official" = true;
+        "code-review@claude-plugins-official" = true;
+        "code-simplifier@claude-plugins-official" = true;
+        "skill-creator@claude-plugins-official" = true;
+        "playwright@claude-plugins-official" = true;
+        "feature-dev@claude-plugins-official" = true;
+        "kotlin-lsp@claude-plugins-official" = true;
+        # Not for JVM work.
+        "clangd-lsp@claude-plugins-official" = false;
+        "swift-lsp@claude-plugins-official" = false;
+      };
+    };
     # Keep Bash permission prompts as they were (only written when unset).
     default.sandbox.autoAllowBashIfSandboxed = false;
     # work-lane-guard.sh adds prompts, MCP tools and case-insensitive matching.
@@ -136,46 +165,20 @@ let
       UserPromptSubmit = [ { hooks = [ (hook "${workDir}/hooks/lane-check.sh") ]; } ];
       PreToolUse = [ { matcher = "*"; hooks = [ (hook "${workDir}/hooks/lane-check.sh") ]; } ];
     };
-    # WebFetch's preflight sends the target hostname to api.anthropic.com.
-    set.skipWebFetchPreflight = true;
+    set = codememPlugin // {
+      # WebFetch's preflight sends the target hostname to api.anthropic.com.
+      skipWebFetchPreflight = true;
+    };
     default.model = "opus";
   };
 
-  # merge-claude-settings <settings.json> <owned.json> <managed hook prefix> [seed.json]
-  # A missing settings file starts from the seed (the reference snapshot), so
-  # a fresh machine gets it even though this runs before setup.sh's seed step.
-  # Owned env keys and `set` keys overwrite; every list under `union` gets its
-  # missing entries appended (your own entries stay); owned hooks replace any
-  # earlier hooks whose command lives under the managed prefix; `default` keys,
-  # nested ones included, are written only when absent (so /model, /sandbox
-  # and friends keep working).
-  mergeSettings = pkgs.writeShellScript "merge-claude-settings" ''
-    set -euo pipefail
-    file="$1"; owned="$2"; prefix="$3"; seed="''${4:-}"
-    mkdir -p "$(dirname "$file")"
-    if [ ! -s "$file" ]; then
-      if [ -n "$seed" ]; then cat "$seed" >"$file"; else printf '{}\n' >"$file"; fi
-    fi
-    tmp="$(mktemp "$file.XXXXXX")"
-    ${pkgs.jq}/bin/jq --slurpfile owned "$owned" --arg prefix "$prefix" '
-      $owned[0] as $o
-      | .env = ((.env // {}) + ($o.env // {}))
-      | reduce (($o.union // {}) | paths(type == "array")) as $p (.;
-          setpath($p; reduce ($o.union | getpath($p))[] as $x
-            ((getpath($p) // []); if any(.[]; . == $x) then . else . + [$x] end)))
-      | .hooks = (
-          ((.hooks // {})
-            | with_entries(.value |= map(select(
-                ([.hooks[]?.command // ""] | any(startswith($prefix))) | not))))
-          as $kept
-          | reduce (($o.hooks // {}) | to_entries[]) as $e
-              ($kept; .[$e.key] = ((.[$e.key] // []) + $e.value))
-          | with_entries(select(.value | length > 0)))
-      | (($o.default // {}) * .)
-      | . * ($o.set // {})
-    ' "$file" >"$tmp"
-    mv "$tmp" "$file"
-  '';
+  # Merges each lane's owned keys into its settings.json on every rebuild;
+  # what it owns and how is described at the top of the script.
+  mergeSettings = pkgs.writeShellApplication {
+    name = "merge-claude-settings";
+    runtimeInputs = [ pkgs.coreutils pkgs.jq ];
+    text = builtins.readFile ../../system/bin/merge-claude-settings.sh;
+  };
 
   ownedJson = name: value: pkgs.writeText "${name}.json" (builtins.toJSON value);
 
@@ -211,8 +214,8 @@ in
   };
 
   home.activation.claudeLaneSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    run ${mergeSettings} ${personalDir}/settings.json ${ownedJson "claude-personal-owned" personalOwned} ${personalDir}/hooks/ ${../../system/.claude/settings.json}
-    run ${mergeSettings} ${workDir}/settings.json ${ownedJson "claude-work-owned" workOwned} ${workDir}/hooks/
+    run ${mergeSettings}/bin/merge-claude-settings ${personalDir}/settings.json ${ownedJson "claude-personal-owned" personalOwned} ${personalDir}/hooks/ ${../../system/.claude/settings.json}
+    run ${mergeSettings}/bin/merge-claude-settings ${workDir}/settings.json ${ownedJson "claude-work-owned" workOwned} ${workDir}/hooks/
   '';
 
   programs.zsh.initContent = lib.mkAfter ''
@@ -276,8 +279,9 @@ in
         ${assignments workEnv} \
         devai-claude-desktop --detach "$@"
     }
-    # One-time per machine, after the first rebuild: install the codemem plugin
-    # into both lanes (plugins are per config dir). Personal runs with
+    # Fallback only: the codemem plugin is declared in both lanes' settings and
+    # fetched by the first interactive session. This installs it right away
+    # (e.g. when a lane has only run `claude -p` so far). Personal runs with
     # CLAUDE_CONFIG_DIR unset so its global state stays in ~/.claude.json.
     cc-lanes-setup() {
       local lane

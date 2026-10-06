@@ -160,7 +160,8 @@ lane.
      history is the reference.
 
    Make the lane's `lane-check.sh` match what the launcher guarantees. Add the
-   lane to `cc-lanes-setup`.
+   lane to `cc-lanes-setup`, and declare codemem in its owned settings
+   (`codememPlugin`).
 
 7. **codemem observer config** in `codemem.nix` — extraction routed through the
    same channel, plus the runtime dir in `home.activation.codememDirs`:
@@ -178,8 +179,8 @@ lane.
    Why `CODEMEM_ANTHROPIC_ENDPOINT`: codemem's Anthropic observer ignores
    `observer_base_url` and calls `api.anthropic.com` unless that env var is set.
 
-8. `git add` the changed files, `darwin-rebuild switch`, then
-   `cc-lanes-setup` for the codemem plugin.
+8. `git add` the changed files and `darwin-rebuild switch`; the first
+   session in the new lane fetches the codemem plugin.
 
 9. **Verify isolation before real work**: in a throwaway repo, confirm the
    lane-check blocks a plain `claude` session in that config dir, the personal
@@ -198,8 +199,8 @@ lane.
 
 ## Runbook — restore after re-clone / OS reinstall
 
-1. `darwin-rebuild switch` → the dotfiles, lanes + `cc-tooling` are back; run
-   `cc-lanes-setup`.
+1. `darwin-rebuild switch` → the dotfiles, lanes, plugins + `cc-tooling` are
+   back.
 2. `cc-tooling clone <client> <url>` for each active client.
 3. `cc-tooling apply <client>/<repo>` in each checkout.
 
@@ -243,10 +244,11 @@ client-specific judgement is the **lane**:
   (a slash command), like `/flow`.
 - **Project agents shadow global ones** with the same `name`. Give client
   agents distinct names unless overriding is the point.
-- **Pushing the private repo.** git uses the `osxkeychain` helper (your
-  personal account), so pushing to a *work-account* private repo needs that
-  account's credentials: either run `gh auth setup-git` once, or a one-off
-  `git -c credential.helper= -c credential.helper='!gh auth git-credential' push`.
+- **Pushing the private repo.** git picks the GitHub login by checkout
+  location (`credential.username` in the host's `git.nix`): the work account
+  by default, the personal account under `~/projects/personal/` and
+  `~/.dotfiles`. Keep the private repo where its owning account applies, or
+  push once with `git -c credential.https://github.com.username=<account> push`.
 - **`unapply` leaves empty dirs** (e.g. an empty `.claude/agents/`) —
   harmless; re-apply repopulates them.
 - The client *name* (e.g. `ahold`) appears here as an example; the client's

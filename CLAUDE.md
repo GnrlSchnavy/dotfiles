@@ -26,8 +26,11 @@ sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName)
 
 Fresh machine bootstrap: `./setup.sh`
 ([docs/operations.md](docs/operations.md)). After the first rebuild,
-once per machine: `mise install` (the Java/Node versions) and
-`cc-lanes-setup` (the codemem plugin, in both Claude Code lanes).
+once per machine, only the sign-ins: `pass-cli login` and (work lane)
+`devai setup`. Java/Node (mise) install during the rebuild; Claude Code
+plugins, codemem included, are declared in `claude-lanes.nix`. Keep it
+that way: prefer an activation step or a declared setting over a manual
+post-install step.
 
 ## Hard rules (violations break the build or the machine)
 
@@ -87,7 +90,7 @@ Package source strategy (Nix vs Homebrew vs MAS):
 # On a non-darwin machine add --all-systems.
 cd ~/.dotfiles/nix && nix flake check --no-build
 
-# Lane-hook and cc-tooling tests (bash, jq, git — no Nix needed)
+# Lane-hook, cc-tooling and settings-merge tests (bash, jq, git — no Nix needed)
 ~/.dotfiles/tests/run.sh
 
 # Full apply

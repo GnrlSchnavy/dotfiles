@@ -9,7 +9,7 @@ allowed-tools: Bash Read Glob Grep
 You will surface ideas that my vault implies but I've never explicitly stated. Look for conclusions hiding in scattered premises, patterns I haven't named, and directions my thinking is heading without me realizing it.
 
 ## Vault Location
-`/Users/yvan/Documents/Obsidian/Yvan_claude`
+`@VAULT@`
 
 ## Instructions
 

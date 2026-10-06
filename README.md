@@ -67,13 +67,16 @@ git commit -m "host: add <your-hostname>"
 
 ## Post-install steps
 
-The setup installs mise but not the Java/Node versions it manages, and
-the codemem plugin is installed per Claude Code lane:
+Everything else is declared, so only the two sign-ins are left, once per
+machine (`setup.sh` prints the same list):
 
 ```bash
-mise install      # Temurin 25 + Node LTS (nix/home/mise.nix); projects pin others
-cc-lanes-setup    # codemem plugin in both Claude Code lanes
+pass-cli login    # Proton Pass: the source of every runtime secret (docs/secrets.md)
+devai setup       # work lane: gateway sign-in, after installing the DevAI CLI (docs/claude-code.md)
 ```
+
+The rebuild installs mise's Java/Node versions, and Claude Code fetches
+the declared plugins (codemem included) when a session first starts.
 
 ---
 
@@ -124,9 +127,10 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 │   │   ├── ci/                ← CI runner descriptor (mirrors m5's per-host modules)
 │   │   └── template/          ← copy this when adding a new host
 │   ├── modules/               ← shared nix-darwin (system-level) modules
-│   │   ├── system.nix         ← macOS defaults (keyboard, finder, login window)
+│   │   ├── system.nix         ← macOS defaults (keyboard, finder, login window), Touch ID sudo
 │   │   ├── environment.nix    ← system-wide env vars and aliases
-│   │   └── nix.nix            ← nix daemon config (gc, optimise, settings)
+│   │   ├── nix.nix            ← nix daemon config (gc, optimise, settings)
+│   │   └── homebrew-trust.nix ← brew trust for declared third-party taps
 │   ├── home/                  ← shared home-manager (user-level) modules
 │   │   ├── default.nix        ← entrypoint, imports submodules
 │   │   ├── zsh.nix            ← .zshrc / .zprofile / .zshenv content
@@ -150,7 +154,7 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 ├── .github/workflows/check.yml ← Linux eval + tests, then fresh-install CI
 ├── setup.sh                    ← bootstrap entry point
 ├── scripts/                    ← maintenance helpers (check, update, backup)
-└── tests/                      ← lane-hook and cc-tooling tests (tests/run.sh)
+└── tests/                      ← lane-hook, cc-tooling and settings-merge tests (tests/run.sh)
 ```
 
 ---

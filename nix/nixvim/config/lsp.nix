@@ -17,16 +17,21 @@
         enable = true;
       };
 
-      # Nix
+      # Nix. Everything resolves through this flake: a flake setup has no
+      # <nixpkgs> channel, and home-manager runs as a nix-darwin module, so
+      # its options come from the darwin configuration.
       nixd = {
         enable = true;
         settings = {
           nixpkgs = {
-            expr = "import <nixpkgs> { }";
+            expr = "import (builtins.getFlake \"${flakePath}\").inputs.nixpkgs { }";
           };
           options = {
             darwin = {
               expr = "(builtins.getFlake \"${flakePath}\").darwinConfigurations.${darwinHost}.options";
+            };
+            home-manager = {
+              expr = "(builtins.getFlake \"${flakePath}\").darwinConfigurations.${darwinHost}.options.home-manager.users.type.getSubOptions [ ]";
             };
           };
         };

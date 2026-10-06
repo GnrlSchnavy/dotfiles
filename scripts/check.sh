@@ -88,7 +88,7 @@ managed_files=(
     "$HOME/.config/git/config"
     "$HOME/.config/git/ignore"
     "$HOME/.ideavimrc"
-    "$HOME/.claude/settings.local.json"
+    "$HOME/.claude/README.md"
 )
 # Note: ~/.docker/config.json and ~/.claude/settings.json are
 # intentionally NOT home-manager-managed (apps rewrite them at runtime),
@@ -119,12 +119,23 @@ done
 print_section "Language runtimes (mise)"
 if command -v mise > /dev/null 2>&1; then
     if mise ls --current --missing 2>/dev/null | grep -q .; then
-        print_warning "configured versions not installed (run 'mise install')"
+        print_warning "configured versions not installed (the rebuild installs them; needs network)"
     else
         print_success "mise: $(mise current 2>/dev/null | tr '\n' ' ')"
     fi
 else
     print_error "mise not on PATH"
+fi
+
+# --- Screen lock ---
+# system.nix asks for the password immediately; recent macOS can ignore
+# that default, so check what's actually in effect.
+print_section "Screen lock"
+lock="$(sysadminctl -screenLock status 2>&1 || true)"
+if grep -qi immediate <<<"$lock"; then
+    print_success "password required immediately"
+else
+    print_warning "${lock:-unknown} — set it once with: sysadminctl -screenLock immediate -password -"
 fi
 
 # --- System info ---

@@ -9,7 +9,7 @@ allowed-tools: Bash Read Write Glob Grep
 Scan daily notes for ideas, insights, and original thinking that deserve their own standalone note. Present candidates for promotion, and create notes for the ones I approve.
 
 ## Vault Location
-`/Users/yvan/Documents/Obsidian/Yvan_claude`
+`@VAULT@`
 
 ## Instructions
 
