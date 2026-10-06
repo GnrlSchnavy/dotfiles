@@ -63,6 +63,19 @@ let
   # session can't reach a work tree or the work lane's Docker Desktop engine.
   personalDockerSock = "${home}/${config.services.colima.colimaHomeDir}/personal/docker.sock";
 
+  # A fixed-path relay to the launchd ssh-agent (whose socket path changes
+  # every login), so the sandbox can allow it and Claude can push and pull.
+  sshAgentRelay = "${home}/.ssh/claude-agent.sock";
+
+  # GIT_SSH_COMMAND for the personal lane: plain ssh, except inside the Bash
+  # sandbox, where it tunnels through the sandbox proxy and uses the relay.
+  claudeGitSsh = pkgs.writeShellApplication {
+    name = "claude-git-ssh";
+    runtimeInputs = [ pkgs.nmap ]; # ncat
+    runtimeEnv.CLAUDE_SSH_AGENT_RELAY = sshAgentRelay;
+    text = builtins.readFile ../../system/bin/claude-git-ssh.sh;
+  };
+
   codememEnv = lane: {
     CODEMEM_DB = "${home}/.codemem/${lane}/mem.sqlite";
     CODEMEM_PLUGIN_LOG = "${home}/.codemem/${lane}/plugin.log";
@@ -79,6 +92,7 @@ let
     # shell keeps Docker Desktop. Ryuk mounts the socket path inside the VM.
     DOCKER_HOST = "unix://${personalDockerSock}";
     TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE = "/var/run/docker.sock";
+    GIT_SSH_COMMAND = "${claudeGitSsh}/bin/claude-git-ssh";
   };
 
   # Non-secret work env, also written to ~/.claude-work/settings.json so every
@@ -170,7 +184,10 @@ let
         "github.com" # git over SSH, tunnelled through the proxy
         "api.cloudflare.com" # wrangler
       ];
-      sandbox.network.allowUnixSockets = [ personalDockerSock ];
+      sandbox.network.allowUnixSockets = [
+        personalDockerSock
+        sshAgentRelay
+      ];
     };
     set = lib.recursiveUpdate codememPlugin {
       # Forced on every rebuild: a failed sandboxed command may not be
@@ -340,6 +357,21 @@ in
           }
         ];
       };
+    };
+  };
+
+  # The ssh-agent relay behind sshAgentRelay. Each connection is forwarded to
+  # the launchd agent's current socket ($SSH_AUTH_SOCK in the login session).
+  launchd.agents.claude-ssh-agent-relay = {
+    enable = true;
+    config = {
+      ProgramArguments = [
+        "/bin/sh"
+        "-c"
+        ''exec ${pkgs.socat}/bin/socat UNIX-LISTEN:${sshAgentRelay},fork,unlink-early,mode=600 UNIX-CONNECT:"$SSH_AUTH_SOCK"''
+      ];
+      RunAtLoad = true;
+      KeepAlive = true;
     };
   };
 

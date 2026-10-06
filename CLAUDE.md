@@ -69,7 +69,7 @@ post-install step.
 | Java/Node versions (mise) | `nix/home/mise.nix` |
 | New dotfile symlink | `nix/home/files.nix` |
 | Secrets (Proton Pass refs, `pass-get`/`pass-render`) | `nix/home/secrets.nix` ([docs/secrets.md](docs/secrets.md)) |
-| Claude Code lanes (`cc-personal`/`cc-work`/`cc-work-desktop`), guards, settings merge, model aliases, personal-lane Docker (Colima) | `nix/home/claude-lanes.nix` ([docs/claude-code.md](docs/claude-code.md#two-claude-code-lanes), [Docker](docs/claude-code.md#docker-in-the-personal-lane)) |
+| Claude Code lanes (`cc-personal`/`cc-work`/`cc-work-desktop`), guards, settings merge, model aliases, personal-lane Docker (Colima) and git push/pull | `nix/home/claude-lanes.nix` ([docs/claude-code.md](docs/claude-code.md#two-claude-code-lanes), [Docker](docs/claude-code.md#docker-in-the-personal-lane), [git](docs/claude-code.md#git-pushpull-in-the-personal-lane)) |
 | codemem memory (per-lane observer configs) | `nix/home/codemem.nix` ([docs/claude-code.md](docs/claude-code.md#codemem-memory)) |
 | Claude Code settings/agents/commands/skills, global `CLAUDE.md` | `system/.claude/` ([docs/claude-code.md](docs/claude-code.md)) |
 | Work-lane hooks + Ahold `CLAUDE.md` overlay | `system/.claude-work/` ([docs/claude-code.md](docs/claude-code.md#instructions--agents-per-lane)) |

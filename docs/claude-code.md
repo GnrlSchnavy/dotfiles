@@ -200,11 +200,12 @@ anything is sent — verified: a blocked prompt makes zero API calls.
   (other hosts prompt per domain). Add more in `claude-lanes.nix`
   (`union.sandbox.filesystem.allowWrite`, `…network.allowedDomains`), or
   in `/sandbox` — your own entries survive rebuilds. Docker works
-  through the lane's own engine ([below](#docker-in-the-personal-lane)).
-  Known macOS frictions: Go CLIs such as `gh` don't work inside
-  Seatbelt, and `git push` with the keychain helper is untested — run
-  those yourself, or list them in `sandbox.excludedCommands` (which runs
-  them fully unsandboxed). Bash prompts stay as they were
+  through the lane's own engine ([below](#docker-in-the-personal-lane)),
+  and git push/pull over SSH through the sandbox proxy
+  ([below](#git-pushpull-in-the-personal-lane)). Known macOS friction:
+  Go CLIs such as `gh` don't work inside Seatbelt — run those yourself,
+  or list them in `sandbox.excludedCommands` (which runs them fully
+  unsandboxed). Bash prompts stay as they were
   (`autoAllowBashIfSandboxed: false`, only written when unset).
 
   Practical effects: start personal sessions in a project folder, not in
@@ -285,6 +286,42 @@ What it gives up, deliberately:
   codemem viewers, or DevAI's local gateway proxy while a work session
   runs. That sends personal-lane traffic *to* work services; it doesn't
   let work data into Max (the guards above still cover that).
+
+### Git push/pull in the personal lane
+
+Claude can `git push`, `pull` and `fetch` over SSH from a personal
+session. Two things stop plain `ssh` inside the sandbox, and
+`claude-lanes.nix` works around both:
+
+- **No route out.** Sandboxed commands have no DNS and can only reach the
+  sandbox's HTTP proxy, which `ssh` ignores. `GIT_SSH_COMMAND` in the
+  lane env points at `claude-git-ssh`
+  ([`system/bin/claude-git-ssh.sh`](../system/bin/claude-git-ssh.sh)).
+  When `$SANDBOX_RUNTIME` is set, it adds a `ProxyCommand` that tunnels
+  through the proxy with `ncat`, using the per-command credentials in
+  `$HTTP_PROXY` and `127.0.0.1` (the proxy refuses `localhost`).
+  Everywhere else it runs plain `ssh`. `github.com` is in
+  `allowedDomains`; other SSH hosts would need adding there too.
+- **No ssh-agent.** The personal GitHub key has a passphrase, so `ssh`
+  needs the launchd ssh-agent, whose socket path changes every login and
+  which the sandbox blocks. A launchd agent, `claude-ssh-agent-relay`,
+  runs `socat` to relay `~/.ssh/claude-agent.sock` to the current
+  `$SSH_AUTH_SOCK`. The sandbox allows that one socket
+  (`sandbox.network.allowUnixSockets`), and `claude-git-ssh` points
+  `SSH_AUTH_SOCK` at it.
+
+Check it from a personal session with
+`SSH_AUTH_SOCK=~/.ssh/claude-agent.sock ssh-add -l` (lists the agent's
+keys through the relay) and `git ls-remote origin`. If the key isn't
+loaded in the agent yet, use it once in your own terminal first (or
+`ssh-add ~/.ssh/github_ed25519`), since the sandbox can't ask for the
+passphrase. Not covered: `gh` (HTTPS API) and HTTPS remotes; git.nix
+rewrites `https://github.com` to SSH anyway.
+
+The trade-off: sandboxed commands can use **every key loaded in the
+agent**, not just the GitHub one, for any SSH host the network allowlist
+lets through (today only `github.com`). They can also push to any repo
+those keys can write to.
 
 ### Settings merge
 

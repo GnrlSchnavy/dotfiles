@@ -112,7 +112,7 @@ nix/
 │   ├── mise.nix         # Java/Node via mise: global versions, shell hook
 │   ├── files.nix        # file-pointer dotfiles (.ideavimrc, .claude/*)
 │   ├── secrets.nix      # pass-get / pass-render / pass-check (Proton Pass)
-│   ├── claude-lanes.nix # two Claude Code lanes (cc-personal/cc-work), hooks, settings merge, cc-tooling, personal Colima engine
+│   ├── claude-lanes.nix # two Claude Code lanes (cc-personal/cc-work), hooks, settings merge, cc-tooling, personal Colima engine, git-over-SSH relay
 │   └── codemem.nix      # per-lane codemem observer configs + runtime dirs
 └── nixvim/config/       # Neovim module (NOT a flake) — LSP, Telescope, Treesitter
 ```
