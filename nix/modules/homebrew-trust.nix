@@ -35,13 +35,12 @@ let
   runBrew = "PATH=\"${config.homebrew.prefix}/bin:$PATH\" sudo --preserve-env=PATH --set-home --user=${user} ${brew}";
 in
 {
-  system.activationScripts.preActivation.text =
-    lib.mkIf (config.homebrew.enable && taps != [ ]) ''
-      if [ -x ${brew} ] && ${runBrew} trust --help >/dev/null 2>&1; then
-        echo "trusting third-party Homebrew taps..." >&2
-        ${lib.concatMapStringsSep "\n  " (tap: ''
-          ${runBrew} trust ${tap} >/dev/null 2>&1 \
-              || echo "warning: could not trust Homebrew tap ${tap}" >&2'') taps}
-      fi
-    '';
+  system.activationScripts.preActivation.text = lib.mkIf (config.homebrew.enable && taps != [ ]) ''
+    if [ -x ${brew} ] && ${runBrew} trust --help >/dev/null 2>&1; then
+      echo "trusting third-party Homebrew taps..." >&2
+      ${lib.concatMapStringsSep "\n  " (tap: ''
+        ${runBrew} trust ${tap} >/dev/null 2>&1 \
+            || echo "warning: could not trust Homebrew tap ${tap}" >&2'') taps}
+    fi
+  '';
 }

@@ -81,52 +81,55 @@
         host:
         nix-darwin.lib.darwinSystem {
           specialArgs = { inherit inputs; };
-          modules = sharedModules ++ (host.systemModules or [ ]) ++ [
-            host.module
-            { system.configurationRevision = self.rev or self.dirtyRev or null; }
+          modules =
+            sharedModules
+            ++ (host.systemModules or [ ])
+            ++ [
+              host.module
+              { system.configurationRevision = self.rev or self.dirtyRev or null; }
 
-            # Add the per-host parameterized nvim to systemPackages.
-            ({ pkgs, ... }: {
-              environment.systemPackages = [ (mkNvim pkgs host) ];
-            })
-          ]
-          # nix-homebrew installs/manages the Homebrew prefix itself.
-          # Hosts can opt out (manageHomebrew = false) to use a
-          # pre-existing Homebrew install — the CI runner ships one in
-          # a layout nix-homebrew's autoMigrate can't adopt (not a git
-          # checkout). brew bundle still runs either way.
-          ++ inputs.nixpkgs.lib.optionals (host.manageHomebrew or true) [
-            nix-homebrew.darwinModules.nix-homebrew
-            {
-              nix-homebrew = {
-                enable = true;
-                # No Intel prefix (/usr/local): nothing here needs x86-only
-                # brews. Rosetta itself, for x86 apps, is separate.
-                enableRosetta = false;
-                user = host.username;
-                autoMigrate = true;
-              };
-            }
-          ]
-          ++ [
-            home-manager.darwinModules.home-manager
-            {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                # Auto-back up files home-manager would otherwise refuse
-                # to overwrite (e.g. an existing ~/.zshenv from nix-darwin
-                # or a stale Stow symlink). Backups land alongside the
-                # original with the .hm-backup suffix.
-                backupFileExtension = "hm-backup";
-                extraSpecialArgs = { inherit inputs; };
-                # Shared home config (./home) plus this host's homeModules.
-                users.${host.username} = {
-                  imports = [ ./home ] ++ (host.homeModules or [ ]);
+              # Add the per-host parameterized nvim to systemPackages.
+              ({ pkgs, ... }: {
+                environment.systemPackages = [ (mkNvim pkgs host) ];
+              })
+            ]
+            # nix-homebrew installs/manages the Homebrew prefix itself.
+            # Hosts can opt out (manageHomebrew = false) to use a
+            # pre-existing Homebrew install — the CI runner ships one in
+            # a layout nix-homebrew's autoMigrate can't adopt (not a git
+            # checkout). brew bundle still runs either way.
+            ++ inputs.nixpkgs.lib.optionals (host.manageHomebrew or true) [
+              nix-homebrew.darwinModules.nix-homebrew
+              {
+                nix-homebrew = {
+                  enable = true;
+                  # No Intel prefix (/usr/local): nothing here needs x86-only
+                  # brews. Rosetta itself, for x86 apps, is separate.
+                  enableRosetta = false;
+                  user = host.username;
+                  autoMigrate = true;
                 };
-              };
-            }
-          ];
+              }
+            ]
+            ++ [
+              home-manager.darwinModules.home-manager
+              {
+                home-manager = {
+                  useGlobalPkgs = true;
+                  useUserPackages = true;
+                  # Auto-back up files home-manager would otherwise refuse
+                  # to overwrite (e.g. an existing ~/.zshenv from nix-darwin
+                  # or a stale Stow symlink). Backups land alongside the
+                  # original with the .hm-backup suffix.
+                  backupFileExtension = "hm-backup";
+                  extraSpecialArgs = { inherit inputs; };
+                  # Shared home config (./home) plus this host's homeModules.
+                  users.${host.username} = {
+                    imports = [ ./home ] ++ (host.homeModules or [ ]);
+                  };
+                };
+              }
+            ];
         };
 
       hosts = {
@@ -136,9 +139,34 @@
         # Not intended for use on a real machine.
         ci = import ./hosts/ci;
       };
+
+      # The Mac, plus Linux for the CI runner.
+      forAllSystems =
+        f:
+        inputs.nixpkgs.lib.genAttrs [ "aarch64-darwin" "x86_64-linux" ] (
+          system: f inputs.nixpkgs.legacyPackages.${system}
+        );
     in
     {
-      darwinConfigurations = builtins.mapAttrs (_: host: mkDarwin host) hosts;
+      darwinConfigurations = builtins.mapAttrs (_: mkDarwin) hosts;
+
+      # `nix fmt` formats every .nix file in the repo.
+      formatter = forAllSystems (pkgs: pkgs.nixfmt-tree);
+
+      # `nix develop ./nix`: the tools scripts/lint.sh runs (the pre-commit
+      # hook and CI use it too).
+      devShells = forAllSystems (pkgs: {
+        default = pkgs.mkShellNoCC {
+          packages = [
+            pkgs.nixfmt
+            pkgs.statix
+            pkgs.deadnix
+            pkgs.shellcheck
+            pkgs.gitleaks
+            pkgs.jq
+          ];
+        };
+      });
 
       # `nix flake check` skips darwinConfigurations entirely; exposing each
       # host's system here is what makes `nix flake check --no-build` evaluate

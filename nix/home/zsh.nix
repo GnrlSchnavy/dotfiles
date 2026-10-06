@@ -4,7 +4,12 @@
 # highlighting, fzf, zoxide); the imperative rest (conditional
 # completions, shell functions) stays as raw strings in profileExtra
 # (.zprofile) and initContent (.zshrc).
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  osConfig,
+  ...
+}:
 
 {
   programs.zsh = {
@@ -32,7 +37,7 @@
     # Login shell init (was shell/.zprofile under Stow).
     profileExtra = ''
       # Homebrew environment setup
-      eval "$(/opt/homebrew/bin/brew shellenv)"
+      eval "$(${osConfig.homebrew.prefix}/bin/brew shellenv)"
     '';
 
     # Interactive shell init (was shell/.zshrc under Stow).
@@ -48,7 +53,9 @@
         [[ -s ~/.zsh_kubectl_completion ]] && source ~/.zsh_kubectl_completion
       fi
 
-      export PATH="$HOME/.local/bin:$PATH"
+      # Appended, so a stray tool there (an old native `claude` install, say)
+      # can't shadow the Homebrew or Nix one.
+      export PATH="$PATH:$HOME/.local/bin"
 
       # Obsidian CLI on PATH
       export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"

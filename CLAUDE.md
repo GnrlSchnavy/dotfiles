@@ -93,6 +93,10 @@ cd ~/.dotfiles/nix && nix flake check --no-build
 # Lane-hook, cc-tooling and settings-merge tests (bash, jq, git — no Nix needed)
 ~/.dotfiles/tests/run.sh
 
+# Lint: nixfmt, statix, deadnix, shellcheck, gitleaks (also the pre-commit
+# hook in .githooks/, enabled by git.nix). Fix formatting with `cd nix && nix fmt`.
+~/.dotfiles/scripts/lint.sh
+
 # Full apply
 sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
 ```

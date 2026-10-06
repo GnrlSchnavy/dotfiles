@@ -57,7 +57,16 @@
         sorting_strategy = "ascending";
         winblend = 0;
         border = true;
-        borderchars = [ "─" "│" "─" "│" "╭" "╮" "╯" "╰" ];
+        borderchars = [
+          "─"
+          "│"
+          "─"
+          "│"
+          "╭"
+          "╮"
+          "╯"
+          "╰"
+        ];
         color_devicons = true;
         use_less = true;
         set_env = {
@@ -67,7 +76,13 @@
 
       pickers = {
         find_files = {
-          find_command = [ "rg" "--files" "--hidden" "--glob" "!**/.git/*" ];
+          find_command = [
+            "rg"
+            "--files"
+            "--hidden"
+            "--glob"
+            "!**/.git/*"
+          ];
         };
         live_grep = {
           additional_args = [ "--hidden" ];

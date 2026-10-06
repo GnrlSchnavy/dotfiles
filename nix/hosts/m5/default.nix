@@ -8,7 +8,11 @@
   username = "yvan-sytac";
 
   # nix-darwin modules unique to this host (live in this directory).
-  systemModules = [ ./homebrew.nix ./packages.nix ./dock.nix ];
+  systemModules = [
+    ./homebrew.nix
+    ./packages.nix
+    ./dock.nix
+  ];
 
   # home-manager modules unique to this host (live in this directory).
   homeModules = [ ./git.nix ];

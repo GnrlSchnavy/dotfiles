@@ -43,7 +43,12 @@
 # No secrets live in this file: DevAI CLI holds the gateway credential, and
 # the TechNL proxy URL (codemem's observer endpoint) is resolved by pass-cli at
 # launch.
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   home = config.home.homeDirectory;
@@ -87,18 +92,32 @@ let
 
   # Everything either launcher sets or must not inherit from the calling shell.
   laneVars = [
-    "CLAUDE_CONFIG_DIR" "CC_LANE"
-    "ANTHROPIC_BASE_URL" "ANTHROPIC_API_KEY" "ANTHROPIC_AUTH_TOKEN"
-    "ANTHROPIC_CUSTOM_HEADERS" "ANTHROPIC_MODEL" "CLAUDE_CODE_OAUTH_TOKEN"
-    "CLAUDE_CODE_USE_BEDROCK" "CLAUDE_CODE_USE_VERTEX" "CLAUDE_CODE_USE_FOUNDRY"
-    "CODEMEM_ANTHROPIC_ENDPOINT" "TECHNL_GENAI_KEY" "TECHNL_PROXY_URL"
-  ] ++ lib.attrNames workEnv ++ lib.attrNames personalEnv;
+    "CLAUDE_CONFIG_DIR"
+    "CC_LANE"
+    "ANTHROPIC_BASE_URL"
+    "ANTHROPIC_API_KEY"
+    "ANTHROPIC_AUTH_TOKEN"
+    "ANTHROPIC_CUSTOM_HEADERS"
+    "ANTHROPIC_MODEL"
+    "CLAUDE_CODE_OAUTH_TOKEN"
+    "CLAUDE_CODE_USE_BEDROCK"
+    "CLAUDE_CODE_USE_VERTEX"
+    "CLAUDE_CODE_USE_FOUNDRY"
+    "CODEMEM_ANTHROPIC_ENDPOINT"
+    "TECHNL_GENAI_KEY"
+    "TECHNL_PROXY_URL"
+  ]
+  ++ lib.attrNames workEnv
+  ++ lib.attrNames personalEnv;
 
   unsetLaneVars = lib.concatMapStringsSep " " (v: "-u ${v}") (lib.unique laneVars);
-  assignments = env: lib.concatStringsSep " "
-    (lib.mapAttrsToList (k: v: "${k}=${lib.escapeShellArg v}") env);
+  assignments =
+    env: lib.concatStringsSep " " (lib.mapAttrsToList (k: v: "${k}=${lib.escapeShellArg v}") env);
 
-  hook = command: { type = "command"; inherit command; };
+  hook = command: {
+    type = "command";
+    inherit command;
+  };
 
   # Plugins are declared rather than installed by hand: when an interactive
   # session starts, Claude Code adds the declared marketplaces and fetches
@@ -118,22 +137,35 @@ let
     union = {
       # The boundary for the file tools: Claude Code resolves these paths itself
       # (relative, ~, symlinks), and Read rules also cover Grep and Glob.
-      permissions.deny = lib.concatMap (root: [ "Read(/${root}/**)" "Edit(/${root}/**)" ]) workRoots;
+      permissions.deny = lib.concatMap (root: [
+        "Read(/${root}/**)"
+        "Edit(/${root}/**)"
+      ]) workRoots;
       # The boundary for Bash (macOS Seatbelt). Sandbox paths are plain
       # absolute or ~/ — not the // form permission rules use. Builds still
       # need their caches and registries.
       sandbox.filesystem.denyRead = workRoots;
-      sandbox.filesystem.allowWrite = [ "~/.m2" "~/.gradle" "~/.npm" ];
+      sandbox.filesystem.allowWrite = [
+        "~/.m2"
+        "~/.gradle"
+        "~/.npm"
+      ];
       sandbox.network.allowedDomains = [
-        "repo.maven.apache.org" "repo1.maven.org"
-        "services.gradle.org" "plugins.gradle.org" "downloads.gradle.org"
+        "repo.maven.apache.org"
+        "repo1.maven.org"
+        "services.gradle.org"
+        "plugins.gradle.org"
+        "downloads.gradle.org"
         "registry.npmjs.org"
       ];
     };
     set = lib.recursiveUpdate codememPlugin {
       # Forced on every rebuild: a failed sandboxed command may not be
       # retried outside the sandbox, so the boundary holds in auto mode too.
-      sandbox = { enabled = true; allowUnsandboxedCommands = false; };
+      sandbox = {
+        enabled = true;
+        allowUnsandboxedCommands = false;
+      };
       enabledPlugins = {
         "superpowers@claude-plugins-official" = true;
         "frontend-design@claude-plugins-official" = true;
@@ -154,7 +186,12 @@ let
     # work-lane-guard.sh adds prompts, MCP tools and case-insensitive matching.
     hooks = {
       UserPromptSubmit = [ { hooks = [ (hook "${personalDir}/hooks/work-lane-guard.sh") ]; } ];
-      PreToolUse = [ { matcher = "*"; hooks = [ (hook "${personalDir}/hooks/work-lane-guard.sh") ]; } ];
+      PreToolUse = [
+        {
+          matcher = "*";
+          hooks = [ (hook "${personalDir}/hooks/work-lane-guard.sh") ];
+        }
+      ];
     };
   };
 
@@ -163,7 +200,12 @@ let
     hooks = {
       SessionStart = [ { hooks = [ (hook "${workDir}/hooks/agents-md.sh") ]; } ];
       UserPromptSubmit = [ { hooks = [ (hook "${workDir}/hooks/lane-check.sh") ]; } ];
-      PreToolUse = [ { matcher = "*"; hooks = [ (hook "${workDir}/hooks/lane-check.sh") ]; } ];
+      PreToolUse = [
+        {
+          matcher = "*";
+          hooks = [ (hook "${workDir}/hooks/lane-check.sh") ];
+        }
+      ];
     };
     set = codememPlugin // {
       # WebFetch's preflight sends the target hostname to api.anthropic.com.
@@ -176,26 +218,39 @@ let
   # what it owns and how is described at the top of the script.
   mergeSettings = pkgs.writeShellApplication {
     name = "merge-claude-settings";
-    runtimeInputs = [ pkgs.coreutils pkgs.jq ];
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.jq
+    ];
     text = builtins.readFile ../../system/bin/merge-claude-settings.sh;
   };
 
   ownedJson = name: value: pkgs.writeText "${name}.json" (builtins.toJSON value);
 
   overlayDir = ../../system/.claude-work/ahold;
-  overlayFiles = lib.sort lib.lessThan (lib.attrNames (lib.filterAttrs
-    (name: type: type == "regular" && lib.hasSuffix ".md" name)
-    (builtins.readDir overlayDir)));
-  workClaudeMd = lib.concatStringsSep "\n\n"
-    ([ (builtins.readFile ../../system/.claude/CLAUDE.md) ]
-      ++ map (f: builtins.readFile (overlayDir + "/${f}")) overlayFiles);
+  overlayFiles = lib.sort lib.lessThan (
+    lib.attrNames (
+      lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".md" name) (
+        builtins.readDir overlayDir
+      )
+    )
+  );
+  workClaudeMd = lib.concatStringsSep "\n\n" (
+    [ (builtins.readFile ../../system/.claude/CLAUDE.md) ]
+    ++ map (f: builtins.readFile (overlayDir + "/${f}")) overlayFiles
+  );
 in
 {
   home.packages = [
     # writeShellApplication shellchecks the script at build time and pins its tools.
     (pkgs.writeShellApplication {
       name = "cc-tooling";
-      runtimeInputs = [ pkgs.coreutils pkgs.findutils pkgs.gawk pkgs.git ];
+      runtimeInputs = [
+        pkgs.coreutils
+        pkgs.findutils
+        pkgs.gawk
+        pkgs.git
+      ];
       text = builtins.readFile ../../system/bin/cc-tooling.sh;
     })
   ];
@@ -233,22 +288,27 @@ in
       # codemem's work observer calls the TechNL proxy directly (its key comes
       # from the pass-cli auth command in work-ahold.json). Without this
       # endpoint it would default to api.anthropic.com, so fail closed.
-      technl_proxy="$(pass-cli item view 'pass://Ahold/TechNLGenAI/proxy_url')" || {
-        print -u2 "cc-work: failed to resolve TechNL proxy URL from pass-cli"; return 1
+      # pass-get (secrets.nix) fails closed, empty values included.
+      technl_proxy="$(pass-get 'pass://Ahold/TechNLGenAI/proxy_url')" || {
+        print -u2 "cc-work: failed to resolve the TechNL proxy URL"; return 1
       }
       [[ "$technl_proxy" == https://*/v1 ]] || {
         print -u2 "cc-work: unexpected TechNL proxy URL shape (expected https://…/v1)"; return 1
       }
       # Pin the endpoint in the work settings env (a local file, never in the
       # repo), which Claude Code applies to its hooks and MCP servers however
-      # the session was launched.
+      # the session was launched. Written only when it differs, so a launch
+      # doesn't race a running work session saving the same file.
       local settings=${lib.escapeShellArg "${workDir}/settings.json"} tmp
-      tmp="$(mktemp "$settings.XXXXXX")" &&
-        ${pkgs.jq}/bin/jq --arg ep "$technl_proxy/messages" \
-          '.env.CODEMEM_ANTHROPIC_ENDPOINT = $ep' "$settings" >"$tmp" &&
-        mv "$tmp" "$settings" || {
-        rm -f "$tmp"; print -u2 "cc-work: failed to update $settings"; return 1
-      }
+      local ep="$technl_proxy/messages"
+      if [[ "$(${pkgs.jq}/bin/jq -r '.env.CODEMEM_ANTHROPIC_ENDPOINT // empty' "$settings" 2>/dev/null)" != "$ep" ]]; then
+        tmp="$(mktemp "$settings.XXXXXX")" &&
+          ${pkgs.jq}/bin/jq --arg ep "$ep" \
+            '.env.CODEMEM_ANTHROPIC_ENDPOINT = $ep' "$settings" >"$tmp" &&
+          mv "$tmp" "$settings" || {
+          rm -f "$tmp"; print -u2 "cc-work: failed to update $settings"; return 1
+        }
+      fi
       # codemem <= 0.36 hook ingest posts to 127.0.0.1:38888 regardless of
       # CODEMEM_VIEWER_PORT, so a viewer there would receive work events.
       if lsof -nP -iTCP:38888 -sTCP:LISTEN -t >/dev/null 2>&1; then

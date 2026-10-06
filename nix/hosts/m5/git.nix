@@ -38,13 +38,31 @@ in
     includes = [
       {
         condition = "gitdir:~/projects/personal/";
-        contents = { user = personal; } // personalGitHub;
+        contents = {
+          user = personal;
+        }
+        // personalGitHub;
       }
       {
         condition = "gitdir:~/.dotfiles/";
-        contents = { user = personal; } // personalGitHub;
+        contents = {
+          user = personal;
+        }
+        // personalGitHub;
       }
-    ];
+    ]
+    # The dotfiles' own pre-commit hook (.githooks/: lint + secrets scan),
+    # in both clones. A relative hooksPath resolves from the repo root.
+    ++
+      map
+        (dir: {
+          condition = "gitdir:${dir}";
+          contents.core.hooksPath = ".githooks";
+        })
+        [
+          "~/.dotfiles/"
+          "~/projects/personal/dotfiles/"
+        ];
 
     settings = {
       # Work identity — the default for anything not matched above.

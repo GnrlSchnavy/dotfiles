@@ -15,15 +15,17 @@
           "<C-Space>" = "cmp.mapping.complete()";
           "<C-e>" = "cmp.mapping.abort()";
           "<CR>" = "cmp.mapping.confirm({ select = true })";
-          "<Tab>" = "cmp.mapping(function(fallback) if cmp.visible() then cmp.select_next_item() else fallback() end end, {'i', 's'})";
-          "<S-Tab>" = "cmp.mapping(function(fallback) if cmp.visible() then cmp.select_prev_item() else fallback() end end, {'i', 's'})";
+          "<Tab>" =
+            "cmp.mapping(function(fallback) if cmp.visible() then cmp.select_next_item() else fallback() end end, {'i', 's'})";
+          "<S-Tab>" =
+            "cmp.mapping(function(fallback) if cmp.visible() then cmp.select_prev_item() else fallback() end end, {'i', 's'})";
         };
 
         sources = [
-          { name = "nvim_lsp"; }         # LSP completions
-          { name = "luasnip"; }          # Snippet completions
-          { name = "buffer"; }           # Buffer completions
-          { name = "path"; }             # Path completions
+          { name = "nvim_lsp"; } # LSP completions
+          { name = "luasnip"; } # Snippet completions
+          { name = "buffer"; } # Buffer completions
+          { name = "path"; } # Path completions
         ];
 
         formatting = {

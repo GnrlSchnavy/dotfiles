@@ -6,7 +6,10 @@
   nixpkgs.config.allowUnfree = true;
 
   nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
+    experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
     # @admin covers any user in the admin group, which is the default
     # for the primaryUser on macOS — no need to hardcode a username.
     trusted-users = [ "@admin" ];
@@ -17,7 +20,10 @@
   # Runs Sundays at 3am via launchd.
   nix.gc = {
     automatic = true;
-    interval = { Weekday = 0; Hour = 3; };
+    interval = {
+      Weekday = 0;
+      Hour = 3;
+    };
     options = "--delete-older-than 30d";
   };
 

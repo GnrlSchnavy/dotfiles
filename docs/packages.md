@@ -44,10 +44,11 @@ it only warns).
 - **Changing the global versions**: edit `mise.nix` and rebuild —
   `~/.config/mise/config.toml` is a read-only Nix symlink, so
   `mise use -g` can't write it. `mise use` (per project) works as usual.
-- **IntelliJ** doesn't see mise's JDKs automatically: point the project
-  SDK at `~/.local/share/mise/installs/java/<version>` once, or register
-  a JDK with macOS (`/usr/libexec/java_home`) as the
-  [mise Java docs](https://mise.jdx.dev/lang/java.html) describe.
+- **macOS sees every JDK mise installed**: each rebuild links them into
+  `~/Library/Java/JavaVirtualMachines/mise-<version>.jdk`, so
+  `/usr/libexec/java_home -V`, IntelliJ's JDK list and Gradle toolchains
+  find them. A JDK a project installs between rebuilds is linked on the
+  next rebuild; one mise removes is unlinked then too.
 - **Python**: *not centrally managed.* pyenv was removed from the
   config (June 2026); don't re-add pyenv references to shell config,
   scripts, or docs. If a project needs Python, manage it per-project.

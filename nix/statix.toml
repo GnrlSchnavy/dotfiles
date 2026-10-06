@@ -1,0 +1,4 @@
+# Lints scripts/lint.sh turns off: `{ ... }:` is the usual module header
+# (statix wants `_:`), and repeated keys (`a.b = …; a.c = …;`) often read
+# better in module options than one nested block.
+disabled = [ "empty_pattern", "repeated_keys" ]
