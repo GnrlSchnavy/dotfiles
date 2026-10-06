@@ -72,15 +72,9 @@ in
       };
       credential."https://github.com".username = "yvanstemmerik-ah";
 
-      # Use Apple's signed keychain helper instead of the one in Nix's git.
-      # The keychain trusts a helper by its code signature; Nix's is adhoc
-      # (pinned to the exact binary), so every git bump re-prompted for
-      # each github.com login. The "" clears the osxkeychain helper that
-      # Nix's git sets in its system gitconfig.
-      credential.helper = [
-        ""
-        "/Library/Developer/CommandLineTools/usr/libexec/git-core/git-credential-osxkeychain"
-      ];
+      # Use SSH for GitHub instead of HTTPS. This avoids credential helper
+      # prompts entirely. ssh://git@github.com is converted transparently.
+      url."ssh://git@github.com".insteadOf = "https://github.com";
 
       init.defaultBranch = "main";
       pull.rebase = true;
