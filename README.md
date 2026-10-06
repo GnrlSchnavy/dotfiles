@@ -67,14 +67,16 @@ git commit -m "host: add <your-hostname>"
 
 ## Post-install steps
 
-Once per machine (`setup.sh` prints the same list):
+Everything else is declared, so only the two sign-ins are left, once per
+machine (`setup.sh` prints the same list):
 
 ```bash
-mise install      # Temurin 25 + Node LTS (nix/home/mise.nix); projects pin others
 pass-cli login    # Proton Pass: the source of every runtime secret (docs/secrets.md)
 devai setup       # work lane: gateway sign-in, after installing the DevAI CLI (docs/claude-code.md)
-cc-lanes-setup    # codemem plugin in both Claude Code lanes
 ```
+
+The rebuild installs mise's Java/Node versions, and Claude Code fetches
+the declared plugins (codemem included) when a session first starts.
 
 ---
 

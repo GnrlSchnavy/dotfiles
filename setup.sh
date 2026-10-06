@@ -189,17 +189,15 @@ fi
 echo
 print_success "🎉 Dotfiles setup complete!"
 echo
-echo "Next steps (once per machine):"
+echo "Next steps (once per machine; both are sign-ins, so they can't be declared):"
 echo "1. Restart your terminal so PATH and home-manager-managed files take effect"
-echo "2. Install the Java and Node versions mise is configured for"
-echo "   (nix/home/mise.nix; projects can pin others via .java-version/.nvmrc):"
-echo "     mise install"
-echo "3. Sign in to Proton Pass, the source of every runtime secret (docs/secrets.md):"
+echo "2. Sign in to Proton Pass, the source of every runtime secret (docs/secrets.md):"
 echo "     pass-cli login"
-echo "4. Work lane: install the DevAI CLI and sign in to the gateway (docs/claude-code.md):"
+echo "3. Work lane: install the DevAI CLI and sign in to the gateway (docs/claude-code.md):"
 echo "     devai setup"
-echo "5. Install the codemem plugin in both Claude Code lanes:"
-echo "     cc-lanes-setup"
+echo
+echo "Java/Node (mise) were installed by the rebuild; Claude Code fetches its"
+echo "declared plugins, codemem included, when a session first starts."
 echo
 echo "Configuration: $TARGET_DIR/"
 echo "Documentation: $TARGET_DIR/CLAUDE.md"

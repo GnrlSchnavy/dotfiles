@@ -148,9 +148,13 @@ older builds (e.g. 2.1.274) reject `claude-opus-5-5` as
   To go back to personal mode, switch the app back to your Claude
   account (the gateway setting under Developer → Configure Third-Party
   Inference); `devai status` shows the desktop state.
-- **`cc-lanes-setup`** — one-time per machine, after the first rebuild:
-  installs the codemem plugin into both lanes (plugins are per config
-  dir).
+- **Plugins** are declared per lane in `claude-lanes.nix`
+  (`enabledPlugins`, plus `extraKnownMarketplaces` for codemem's
+  marketplace) and merged into each lane's `settings.json`; Claude Code
+  fetches any it doesn't have when an interactive session starts.
+  `false` disables one; a `/plugin` toggle on a declared plugin lasts
+  until the next rebuild. `cc-lanes-setup` installs codemem in both
+  lanes right away, for a lane that has only run `claude -p`.
 
 ### Guards
 
@@ -226,6 +230,9 @@ the keys the module owns** into whatever is there:
   `sandbox.enabled` and `sandbox.allowUnsandboxedCommands: false` are
   forced; `sandbox.autoAllowBashIfSandboxed: false` is written only when
   unset;
+- both lanes: `enabledPlugins` and `extraKnownMarketplaces` for the
+  declared plugins (forced on or off; plugins you add yourself are
+  kept);
 - work lane only: `skipWebFetchPreflight: true` (the preflight sends the
   target hostname to `api.anthropic.com`), and `model: "opus"` written
   only when unset (so `/model` keeps working).
@@ -281,7 +288,7 @@ the latter are shared across lanes and would cross-contaminate.
 | personal | `claude_sidecar`, `claude-haiku-4-5` | local Claude (Max) |
 | work | `api_http` / `anthropic`, `claude-haiku-4-5`, `api-key` header | the TechNL proxy (`CODEMEM_ANTHROPIC_ENDPOINT` set by `cc-work`) |
 
-The codemem plugin is installed per lane with `cc-lanes-setup`. Its MCP
+The codemem plugin is declared in both lanes' settings (see above). Its MCP
 server auto-starts each lane's viewer on that lane's port, and the
 extraction sweep runs inside that viewer (~2 min after a session goes
 idle) — so work extraction stays in the TechNL channel.
@@ -298,7 +305,7 @@ resolved at runtime via `pass-cli` (Proton Pass), and paths use
 the modules survive a change of host or username. Prereqs on a host:
 `pass-cli` declared in that host's `homebrew.nix`, and Node 24.15+ (the
 plugin's hooks run `node`, its MCP server `npx`) — mise's global Node
-LTS covers it once `mise install` has run.
+LTS, installed by the rebuild, covers it.
 
 ### Migrated from OpenCode
 

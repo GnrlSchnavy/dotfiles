@@ -100,6 +100,19 @@ let
 
   hook = command: { type = "command"; inherit command; };
 
+  # Plugins are declared rather than installed by hand: when an interactive
+  # session starts, Claude Code adds the declared marketplaces and fetches
+  # any enabled plugin it doesn't have yet (Anthropic's official marketplace
+  # is added on its own). false disables an installed plugin. A /plugin
+  # toggle on a plugin listed here lasts until the next rebuild.
+  codememPlugin = {
+    extraKnownMarketplaces.codemem-marketplace.source = {
+      source = "github";
+      repo = "kunickiaj/codemem";
+    };
+    enabledPlugins."codemem@codemem-marketplace" = true;
+  };
+
   personalOwned = {
     env = personalEnv;
     union = {
@@ -117,9 +130,25 @@ let
         "registry.npmjs.org"
       ];
     };
-    # Forced on every rebuild: a failed sandboxed command may not be retried
-    # outside the sandbox, so the boundary holds in auto mode too.
-    set.sandbox = { enabled = true; allowUnsandboxedCommands = false; };
+    set = lib.recursiveUpdate codememPlugin {
+      # Forced on every rebuild: a failed sandboxed command may not be
+      # retried outside the sandbox, so the boundary holds in auto mode too.
+      sandbox = { enabled = true; allowUnsandboxedCommands = false; };
+      enabledPlugins = {
+        "superpowers@claude-plugins-official" = true;
+        "frontend-design@claude-plugins-official" = true;
+        "context7@claude-plugins-official" = true;
+        "code-review@claude-plugins-official" = true;
+        "code-simplifier@claude-plugins-official" = true;
+        "skill-creator@claude-plugins-official" = true;
+        "playwright@claude-plugins-official" = true;
+        "feature-dev@claude-plugins-official" = true;
+        "kotlin-lsp@claude-plugins-official" = true;
+        # Not for JVM work.
+        "clangd-lsp@claude-plugins-official" = false;
+        "swift-lsp@claude-plugins-official" = false;
+      };
+    };
     # Keep Bash permission prompts as they were (only written when unset).
     default.sandbox.autoAllowBashIfSandboxed = false;
     # work-lane-guard.sh adds prompts, MCP tools and case-insensitive matching.
@@ -136,8 +165,10 @@ let
       UserPromptSubmit = [ { hooks = [ (hook "${workDir}/hooks/lane-check.sh") ]; } ];
       PreToolUse = [ { matcher = "*"; hooks = [ (hook "${workDir}/hooks/lane-check.sh") ]; } ];
     };
-    # WebFetch's preflight sends the target hostname to api.anthropic.com.
-    set.skipWebFetchPreflight = true;
+    set = codememPlugin // {
+      # WebFetch's preflight sends the target hostname to api.anthropic.com.
+      skipWebFetchPreflight = true;
+    };
     default.model = "opus";
   };
 
@@ -248,8 +279,9 @@ in
         ${assignments workEnv} \
         devai-claude-desktop --detach "$@"
     }
-    # One-time per machine, after the first rebuild: install the codemem plugin
-    # into both lanes (plugins are per config dir). Personal runs with
+    # Fallback only: the codemem plugin is declared in both lanes' settings and
+    # fetched by the first interactive session. This installs it right away
+    # (e.g. when a lane has only run `claude -p` so far). Personal runs with
     # CLAUDE_CONFIG_DIR unset so its global state stays in ~/.claude.json.
     cc-lanes-setup() {
       local lane

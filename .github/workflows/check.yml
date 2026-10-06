@@ -135,6 +135,8 @@ jobs:
             jq -e --arg h "$hook" '[.hooks.PreToolUse[].hooks[].command] | index($h)' \
               "$dir/settings.json" >/dev/null || fail "$dir/settings.json lacks $hook"
             [ -x "$hook" ] || fail "$hook is not executable"
+            jq -e '.enabledPlugins["codemem@codemem-marketplace"] == true' \
+              "$dir/settings.json" >/dev/null || fail "$dir/settings.json doesn't declare codemem"
           done
           [ -d ~/.codemem/personal ] && [ -d ~/.codemem/work-ahold ] || fail "codemem lane dirs missing"
           command -v cc-tooling >/dev/null || fail "cc-tooling not on PATH"

@@ -44,10 +44,11 @@ Idempotent; safe to re-run. Steps, in order:
    to `*.before-nix-darwin` so nix-darwin can take them over.
 6. `sudo nix run --inputs-from ~/.dotfiles/nix nix-darwin#darwin-rebuild -- switch --flake ~/.dotfiles/nix#<host>`
    — `darwin-rebuild` comes from the nix-darwin revision locked in `flake.lock`.
-7. Prints the once-per-machine steps: `mise install` (Java/Node),
-   `pass-cli login`, `devai setup` (work lane) and `cc-lanes-setup`.
-   `~/.claude/settings.json` needs no step: the rebuild creates it from
-   the repo snapshot.
+7. Prints the two once-per-machine sign-ins: `pass-cli login` and
+   `devai setup` (work lane). Nothing else is manual: the rebuild installs
+   mise's Java/Node versions and creates `~/.claude/settings.json` from
+   the repo snapshot, and Claude Code fetches the declared plugins on its
+   first session.
 
 `DOTFILES_DIR` and `DOTFILES_HOST` override the checkout location and
 the host descriptor; CI uses them to run this script on its checkout

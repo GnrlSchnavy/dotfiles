@@ -36,8 +36,8 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    - the home-manager symlinks exist (`~/.zshrc`, `~/.zprofile`,
      `~/.zshenv`, `~/.config/git/{config,ignore}`, `~/.ideavimrc`);
    - both Claude Code lanes: `settings.json` is a regular file with the
-     lane's guard hook merged in, the hook is executable, the codemem
-     lane dirs exist, `cc-tooling` is on PATH, and the vault path was
+     lane's guard hook merged in and codemem declared, the hook is
+     executable, the codemem lane dirs exist, `cc-tooling` is on PATH, and the vault path was
      filled into the skills;
    - `darwin-rebuild`, `brew` and `mise` (with its config) are in
      place, and the formulas `kubectl`, `helm` are installed.

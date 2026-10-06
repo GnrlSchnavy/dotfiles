@@ -1,8 +1,9 @@
 # Language runtimes (Java, Node) via mise — shared across all hosts.
 #
 # mise and its global config are declared here; the runtimes themselves are
-# downloaded by mise into ~/.local/share/mise (`mise install` once per
-# machine). Runtimes stay out of Nix so each project can pin its own version.
+# downloaded by mise into ~/.local/share/mise, by the activation step below
+# on every rebuild. Runtimes stay out of Nix so each project can pin its own
+# version.
 #
 # Per project, mise reads mise.toml plus the version files other tools use:
 # .java-version, .sdkmanrc, .nvmrc, .node-version (idiomatic files are off by
@@ -12,7 +13,7 @@
 #
 # ~/.config/mise/config.toml is a read-only Nix symlink: change the global
 # versions here, not with `mise use -g`.
-{ ... }:
+{ config, lib, ... }:
 
 {
   programs.mise = {
@@ -35,4 +36,13 @@
   # Shims cover non-interactive callers that never run `mise activate`
   # (Claude Code hooks, IDE run configs, `zsh -c`).
   home.sessionPath = [ "$HOME/.local/share/mise/shims" ];
+
+  # Install the global versions on every rebuild, so no machine needs a
+  # manual `mise install`; once they're there it's a quick no-op. Run from /
+  # so a mise.toml in the directory you rebuild from isn't picked up. It
+  # needs network the first time, so a failure only warns.
+  home.activation.miseInstall = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    run ${lib.getExe config.programs.mise.package} --cd / install --yes \
+      || echo "mise install failed (offline?); the next rebuild retries" >&2
+  '';
 }

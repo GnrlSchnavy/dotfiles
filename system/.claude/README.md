@@ -38,7 +38,9 @@ keys the lane module owns into it —
   unsandboxed retries; the build caches/registries it allows are appended
   to your own lists;
 - `hooks` — hook entries whose command lives under `~/.claude/hooks/`
-  are replaced; plugin and hand-added hooks are kept.
+  are replaced; plugin and hand-added hooks are kept;
+- `enabledPlugins` / `extraKnownMarketplaces` — the declared plugins (on
+  or off) and codemem's marketplace; plugins you add yourself are kept.
 
 The merge is idempotent and leaves plugins, your own permission rules and
 every other key alone. So: change owned keys in `claude-lanes.nix`, everything else
@@ -92,5 +94,7 @@ rebuild, and it appears under `~/.claude/` (and, for agents/commands,
 
 `setup.sh` runs `darwin-rebuild switch`, which creates the symlinks and
 the settings file (from the snapshot, with the owned keys merged in).
-After that, run `cc-lanes-setup` once to install the codemem plugin into
-both lanes.
+The plugins are among those owned keys (`enabledPlugins`,
+`extraKnownMarketplaces`), so the first interactive session fetches them,
+codemem included; `cc-lanes-setup` installs codemem right away if a lane
+has only run `claude -p` so far.

@@ -32,8 +32,9 @@ Rules of thumb:
 Java and Node come from **mise**, so each project can pin its own
 version. mise itself and its global config are declared in
 [`nix/home/mise.nix`](../nix/home/mise.nix) (global: Temurin 25, Node
-LTS); the runtimes are downloaded by mise into `~/.local/share/mise`.
-Bootstrap once per machine: `mise install`.
+LTS); the runtimes are downloaded by mise into `~/.local/share/mise`,
+by an activation step on every rebuild (a no-op once installed; offline
+it only warns).
 
 - **Per project**, mise reads `mise.toml` and the files other tools use:
   `.java-version`, `.sdkmanrc`, `.nvmrc`, `.node-version`. `cd`-ing into

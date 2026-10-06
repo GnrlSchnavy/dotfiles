@@ -4,7 +4,7 @@
 # highlighting, fzf, zoxide); the imperative rest (conditional
 # completions, shell functions) stays as raw strings in profileExtra
 # (.zprofile) and initContent (.zshrc).
-{ ... }:
+{ config, lib, ... }:
 
 {
   programs.zsh = {
@@ -80,7 +80,15 @@
   # Ctrl-R fuzzy history search, Ctrl-T files, Alt-C directories.
   programs.fzf.enable = true;
 
-  # Frecency-ranked `cd`: `z proj` (and `j proj`). Import autojump's
-  # history once: zoxide import --from=autojump ~/Library/autojump/autojump.txt
+  # Frecency-ranked `cd`: `z proj` (and `j proj`).
   programs.zoxide.enable = true;
+
+  # Carries autojump's history over the first time: only while zoxide has
+  # no database yet, so it never runs twice.
+  home.activation.zoxideFromAutojump = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    aj="$HOME/Library/autojump/autojump.txt"
+    if [ -s "$aj" ] && [ ! -e "$HOME/Library/Application Support/zoxide/db.zo" ]; then
+      run ${lib.getExe config.programs.zoxide.package} import --from=autojump "$aj"
+    fi
+  '';
 }

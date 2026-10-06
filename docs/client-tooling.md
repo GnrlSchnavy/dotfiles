@@ -160,7 +160,8 @@ lane.
      history is the reference.
 
    Make the lane's `lane-check.sh` match what the launcher guarantees. Add the
-   lane to `cc-lanes-setup`.
+   lane to `cc-lanes-setup`, and declare codemem in its owned settings
+   (`codememPlugin`).
 
 7. **codemem observer config** in `codemem.nix` — extraction routed through the
    same channel, plus the runtime dir in `home.activation.codememDirs`:
@@ -178,8 +179,8 @@ lane.
    Why `CODEMEM_ANTHROPIC_ENDPOINT`: codemem's Anthropic observer ignores
    `observer_base_url` and calls `api.anthropic.com` unless that env var is set.
 
-8. `git add` the changed files, `darwin-rebuild switch`, then
-   `cc-lanes-setup` for the codemem plugin.
+8. `git add` the changed files and `darwin-rebuild switch`; the first
+   session in the new lane fetches the codemem plugin.
 
 9. **Verify isolation before real work**: in a throwaway repo, confirm the
    lane-check blocks a plain `claude` session in that config dir, the personal
@@ -198,8 +199,8 @@ lane.
 
 ## Runbook — restore after re-clone / OS reinstall
 
-1. `darwin-rebuild switch` → the dotfiles, lanes + `cc-tooling` are back; run
-   `cc-lanes-setup`.
+1. `darwin-rebuild switch` → the dotfiles, lanes, plugins + `cc-tooling` are
+   back.
 2. `cc-tooling clone <client> <url>` for each active client.
 3. `cc-tooling apply <client>/<repo>` in each checkout.
 
