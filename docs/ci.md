@@ -5,12 +5,12 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
 
 1. **`checks`** (Linux, ~2 min) — `nix flake check --no-build
    --all-systems ./nix` evaluates every host (evaluation works
-   cross-platform), shellcheck on the hooks, `cc-tooling` and tests
+   cross-platform), shellcheck on the hooks, `system/bin/` and tests
    (plus error-level shellcheck on `setup.sh` and `scripts/`), and
-   [`tests/run.sh`](../tests/run.sh): the lane-hook fixtures and the
-   `cc-tooling` tests.
-2. **`fresh-install`** (macOS, needs `checks`) — replays what
-   `setup.sh` does on a real Mac against the `ci` host descriptor on a
+   [`tests/run.sh`](../tests/run.sh): the lane-hook fixtures, the
+   `cc-tooling` tests and the settings-merge tests.
+2. **`fresh-install`** (macOS, needs `checks`) — runs `setup.sh`
+   itself against the `ci` host descriptor on a
    GitHub-hosted `xcode-27` runner: macOS 27 on Apple Silicon, in
    public preview (~10–15 min). GitHub names macOS images after their
    Xcode version now; `macos-26` is the GA fallback if the preview
@@ -23,19 +23,24 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    limits).
 2. **Use the `nix-community` cache** (`cachix-action`, `skipPush`) for
    nixvim/home-manager artifacts not on cache.nixos.org.
-3. **Move `/etc/nix/nix.conf`, `/etc/bashrc`, `/etc/zshrc` aside** —
-   same step setup.sh performs.
-4. **`sudo nix run --inputs-from ./nix nix-darwin#darwin-rebuild -- switch --flake ./nix#ci`**.
-   The GitHub token is passed via `--option access-tokens` because the
-   nix.conf that held it was just moved aside, and sudo's root HOME
-   doesn't see the user-level config.
-5. **Smoke checks**: PATH is prepended with
+3. **Run `./setup.sh` itself** with `DOTFILES_DIR` set to the checkout
+   and `DOTFILES_HOST=ci`. Xcode CLT, Homebrew and Nix are already on
+   the runner, so it skips those installers; it moves
+   `/etc/nix/nix.conf`, `/etc/bashrc`, `/etc/zshrc` aside and applies
+   the flake via `--inputs-from`. The GitHub token reaches the root
+   `nix run` through `NIX_CONFIG` (setup.sh passes it through sudo),
+   because the nix.conf that held it was just moved aside.
+4. **Smoke checks**: PATH is prepended with
    `/run/current-system/sw/bin` and the per-user profile, then it
-   asserts the home-manager symlinks exist (`~/.zshrc`, `~/.zprofile`,
-   `~/.zshenv`, `~/.config/git/{config,ignore}`, `~/.ideavimrc`,
-   `~/.claude/settings.local.json`), `darwin-rebuild` and `brew` are on
-   PATH, `mise` and its config are in place, and the formulas `kubectl`,
-   `helm` are installed.
+   asserts:
+   - the home-manager symlinks exist (`~/.zshrc`, `~/.zprofile`,
+     `~/.zshenv`, `~/.config/git/{config,ignore}`, `~/.ideavimrc`);
+   - both Claude Code lanes: `settings.json` is a regular file with the
+     lane's guard hook merged in, the hook is executable, the codemem
+     lane dirs exist, `cc-tooling` is on PATH, and the vault path was
+     filled into the skills;
+   - `darwin-rebuild`, `brew` and `mise` (with its config) are in
+     place, and the formulas `kubectl`, `helm` are installed.
 
 ## Scheduled jobs
 
@@ -88,6 +93,7 @@ Misses:
   brews change, update the workflow list.
 - The smoke check's symlink list must track `nix/home/files.nix` —
   add a check when adding an important managed file.
-- The bootstrap runs `darwin-rebuild` via `--inputs-from ./nix
-  nix-darwin#darwin-rebuild`, i.e. from the nix-darwin revision in
-  `flake.lock` (setup.sh does the same) — no separate pin to keep in sync.
+- The bootstrap is `setup.sh` itself, which runs `darwin-rebuild` via
+  `--inputs-from`, i.e. from the nix-darwin revision in `flake.lock` —
+  no separate pin to keep in sync. Steps that can't run on a runner
+  must stay skippable (they already are: each installer checks first).

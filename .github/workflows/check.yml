@@ -1,8 +1,7 @@
 name: fresh-install test
 
-# End-to-end test that mirrors what `./setup.sh` does on a real Mac:
-# install Nix, then `darwin-rebuild switch` against the `ci` host
-# descriptor (matches the runner's environment). Catches eval errors,
+# End-to-end test: install Nix, then run `./setup.sh` itself against the
+# `ci` host descriptor (matches the runner's environment). Catches eval errors,
 # build failures, activation script errors, home-manager activation
 # issues, and brew-bundle issues — the full surface area we'd
 # otherwise only discover by running setup on a fresh machine.
@@ -53,7 +52,7 @@ jobs:
       - name: shellcheck
         run: |
           nix shell --inputs-from ./nix nixpkgs#shellcheck --command sh -c '
-            shellcheck -s bash -S style system/.claude/hooks/*.sh system/.claude-work/hooks/*.sh system/bin/cc-tooling.sh tests/*.sh &&
+            shellcheck -s bash -S style system/.claude/hooks/*.sh system/.claude-work/hooks/*.sh system/bin/*.sh tests/*.sh &&
             shellcheck -s bash -S error setup.sh scripts/*.sh'
 
       - name: Hook and cc-tooling tests
@@ -86,44 +85,21 @@ jobs:
           name: nix-community
           skipPush: true
 
-      - name: Move pre-existing /etc files out of the way
-        # nix-darwin refuses to overwrite files it doesn't manage. The
-        # runner has /etc/nix/nix.conf, /etc/bashrc, /etc/zshrc from
-        # the Nix install; rename them so activation can take over.
-        # On a real fresh Mac, setup.sh does this same step.
-        run: |
-          for f in /etc/nix/nix.conf /etc/bashrc /etc/zshrc; do
-            if [ -f "$f" ] && [ ! -f "$f.before-nix-darwin" ]; then
-              sudo mv "$f" "$f.before-nix-darwin"
-            fi
-          done
-
       # Third-party tap trust is handled declaratively during
       # activation by nix/modules/homebrew-trust.nix — this run also
       # serves as its end-to-end test.
-      - name: Apply darwin configuration end-to-end
-        # Bootstrap nix-darwin and apply our `ci` host config in one
-        # shot — same path setup.sh takes, just with the runner's
-        # pre-installed Homebrew and Nix already in place.
-        #
-        # sudo because nix-darwin's activation step requires root.
-        #
-        # access-tokens is passed via --option (not env / nix.conf)
-        # because:
-        #   - the previous step moved /etc/nix/nix.conf aside so
-        #     nix-darwin can take it over, dropping the install-nix-action
-        #     access-tokens we configured there
-        #   - sudo runs as root which falls back to /var/root for HOME,
-        #     so user-level ~/.config/nix/nix.conf isn't read
-        # Passing on the command line bypasses both issues.
+      - name: Run setup.sh against the ci host
+        # The real bootstrap script on this checkout. Xcode CLT, Homebrew
+        # and Nix are already on the runner, so it skips those installers,
+        # moves the /etc files aside and applies the `ci` host.
+        # NIX_CONFIG carries the GitHub token (higher rate limit for input
+        # fetches) through sudo: setup.sh moves aside the nix.conf that
+        # install-nix-action wrote it to, and root doesn't read ours.
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          sudo nix run \
-            --extra-experimental-features "nix-command flakes" \
-            --option access-tokens "github.com=${GH_TOKEN}" \
-            --inputs-from ./nix nix-darwin#darwin-rebuild -- \
-            switch --flake ./nix#ci
+          DOTFILES_DIR: ${{ github.workspace }}
+          DOTFILES_HOST: ci
+          NIX_CONFIG: access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+        run: ./setup.sh
 
       - name: Verify activation produced the expected symlinks
         run: |
@@ -147,8 +123,22 @@ jobs:
           [ -L ~/.config/git/ignore ] || fail "~/.config/git/ignore is not a symlink"
 
           # home-manager file-pointer dotfiles
-          [ -L ~/.ideavimrc ]                     || fail "~/.ideavimrc is not a symlink"
-          [ -L ~/.claude/settings.local.json ]    || fail "~/.claude/settings.local.json is not a symlink"
+          [ -L ~/.ideavimrc ] || fail "~/.ideavimrc is not a symlink"
+
+          # Claude Code lanes: settings.json is a regular (app-owned) file
+          # with the lane's guard hook merged in, and the hook is executable.
+          for lane in .claude/work-lane-guard.sh .claude-work/lane-check.sh; do
+            dir="$HOME/${lane%%/*}" hook="$HOME/${lane%%/*}/hooks/${lane#*/}"
+            if [ ! -f "$dir/settings.json" ] || [ -L "$dir/settings.json" ]; then
+              fail "$dir/settings.json is not a regular file"
+            fi
+            jq -e --arg h "$hook" '[.hooks.PreToolUse[].hooks[].command] | index($h)' \
+              "$dir/settings.json" >/dev/null || fail "$dir/settings.json lacks $hook"
+            [ -x "$hook" ] || fail "$hook is not executable"
+          done
+          [ -d ~/.codemem/personal ] && [ -d ~/.codemem/work-ahold ] || fail "codemem lane dirs missing"
+          command -v cc-tooling >/dev/null || fail "cc-tooling not on PATH"
+          if grep -rq '@VAULT@' ~/.claude/skills/; then fail "vault path not filled in the skills"; fi
 
           # darwin-rebuild ships in the system profile
           command -v darwin-rebuild >/dev/null || fail "darwin-rebuild not on PATH"

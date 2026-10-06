@@ -24,7 +24,7 @@ sudo darwin-rebuild --rollback
 # Evaluate every host without building/applying (~1 min cold)
 cd ~/.dotfiles/nix && nix flake check --no-build
 
-# Lane-hook and cc-tooling tests
+# Lane-hook, cc-tooling and settings-merge tests
 ~/.dotfiles/tests/run.sh
 ```
 
@@ -44,9 +44,14 @@ Idempotent; safe to re-run. Steps, in order:
    to `*.before-nix-darwin` so nix-darwin can take them over.
 6. `sudo nix run --inputs-from ~/.dotfiles/nix nix-darwin#darwin-rebuild -- switch --flake ~/.dotfiles/nix#<host>`
    — `darwin-rebuild` comes from the nix-darwin revision locked in `flake.lock`.
-7. Prints post-install steps (`mise install` for the Java/Node
-   versions). `~/.claude/settings.json` needs no step: the rebuild
-   creates it from the repo snapshot.
+7. Prints the once-per-machine steps: `mise install` (Java/Node),
+   `pass-cli login`, `devai setup` (work lane) and `cc-lanes-setup`.
+   `~/.claude/settings.json` needs no step: the rebuild creates it from
+   the repo snapshot.
+
+`DOTFILES_DIR` and `DOTFILES_HOST` override the checkout location and
+the host descriptor; CI uses them to run this script on its checkout
+against the `ci` host.
 
 ## Maintenance scripts (`scripts/`)
 
@@ -54,7 +59,7 @@ Idempotent; safe to re-run. Steps, in order:
 |---|---|---|
 | `update.sh` | `git pull --ff-only` → `nix flake update` → `darwin-rebuild build` (restores the old lock if it fails) → `sudo darwin-rebuild switch` → commits `flake.lock` | when you want newer inputs before the weekly lock-update PR lands; push afterwards |
 | `check.sh` | Health check: repo clean, flake evaluates, host descriptor exists, every home-manager symlink resolves, tooling on PATH, mise's configured versions installed | after a rebuild or when something feels off |
-| `backup.sh` | Dereferences managed symlinks + brew package lists + system versions into `~/.dotfiles_backup_<timestamp>/` with a restore script | before a big flake update or experiment |
+| `backup.sh` | Copies the state git can't regenerate (Claude settings and `.claude.json` for both lanes, codemem DBs, Docker config) plus brew lists and versions into `~/.dotfiles-backups/<timestamp>/`, owner-only; keeps the newest 5 | before a big flake update or experiment |
 
 None are required — `darwin-rebuild` does the real work.
 
