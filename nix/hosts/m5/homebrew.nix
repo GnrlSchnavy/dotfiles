@@ -49,6 +49,7 @@
 
       # AI
       "github-copilot-app"
+      "handy"
       "wispr-flow"
 
       #VPN
