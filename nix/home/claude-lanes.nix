@@ -58,6 +58,11 @@ let
   # Client work trees the personal lane must never touch.
   workRoots = [ "${home}/projects/ahold" ];
 
+  # The personal lane's own Docker engine (Colima profile "personal", below).
+  # Its VM mounts only personal projects, so containers started from a personal
+  # session can't reach a work tree or the work lane's Docker Desktop engine.
+  personalDockerSock = "${home}/${config.services.colima.colimaHomeDir}/personal/docker.sock";
+
   codememEnv = lane: {
     CODEMEM_DB = "${home}/.codemem/${lane}/mem.sqlite";
     CODEMEM_PLUGIN_LOG = "${home}/.codemem/${lane}/plugin.log";
@@ -70,6 +75,10 @@ let
     CODEMEM_CONFIG = "${home}/.config/codemem/personal.json";
     CODEMEM_VIEWER_PORT = "4747";
     CC_WORK_ROOTS = lib.concatStringsSep ":" workRoots;
+    # docker, compose and Testcontainers use the personal engine; your own
+    # shell keeps Docker Desktop. Ryuk mounts the socket path inside the VM.
+    DOCKER_HOST = "unix://${personalDockerSock}";
+    TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE = "/var/run/docker.sock";
   };
 
   # Non-secret work env, also written to ~/.claude-work/settings.json so every
@@ -161,6 +170,7 @@ let
         "github.com" # git over SSH, tunnelled through the proxy
         "api.cloudflare.com" # wrangler
       ];
+      sandbox.network.allowUnixSockets = [ personalDockerSock ];
     };
     set = lib.recursiveUpdate codememPlugin {
       # Forced on every rebuild: a failed sandboxed command may not be
@@ -168,6 +178,10 @@ let
       sandbox = {
         enabled = true;
         allowUnsandboxedCommands = false;
+        # Lets sandboxed commands bind and connect to localhost, e.g. tests
+        # reaching a container's published ports. Without it only the sandbox
+        # proxy is reachable on localhost.
+        network.allowLocalBinding = true;
       };
       enabledPlugins = {
         "superpowers@claude-plugins-official" = true;
@@ -269,6 +283,64 @@ in
     ".claude-work/agents".source = ../../system/.claude/agents;
     ".claude-work/commands".source = ../../system/.claude/commands;
     ".claude-work/hooks".source = ../../system/.claude-work/hooks;
+  };
+
+  # The personal lane's Docker engine: a Colima VM started at login by a
+  # launchd agent. Not activated as the docker context and no DOCKER_HOST in
+  # the shell, so your terminal, IntelliJ and the work lane stay on Docker
+  # Desktop; only personal Claude sessions get DOCKER_HOST (personalEnv).
+  # colima.yaml is a store symlink, which is fine: the agent starts with
+  # --save-config=false, so Colima never rewrites it.
+  services.colima = {
+    enable = true;
+    profiles.personal = {
+      isService = true;
+      # Spelled out in full (Colima 0.10's `colima template` defaults) rather
+      # than relying on how Colima fills in keys a colima.yaml leaves out.
+      settings = {
+        cpu = 4;
+        memory = 8;
+        disk = 60;
+        rootDisk = 20;
+        arch = "host";
+        cpuType = "host";
+        runtime = "docker";
+        hostname = null;
+        kubernetes.enabled = false;
+        network = {
+          address = false;
+          mode = "shared";
+          interface = "en0";
+          preferredRoute = false;
+          dns = [ ];
+          dnsHosts."host.docker.internal" = "host.lima.internal";
+          hostAddresses = false;
+        };
+        forwardAgent = false;
+        docker = { };
+        vmType = "vz";
+        portForwarder = "ssh";
+        rosetta = false;
+        binfmt = true;
+        nestedVirtualization = false;
+        mountType = "virtiofs";
+        mountInotify = false;
+        provision = [ ];
+        sshPort = 0;
+        diskImage = "";
+        env = { };
+        # Keep the shell on Docker Desktop and ~/.ssh/config untouched.
+        autoActivate = false;
+        sshConfig = false;
+        # Replaces Colima's default mount of all of $HOME.
+        mounts = [
+          {
+            location = "${home}/projects/personal";
+            writable = true;
+          }
+        ];
+      };
+    };
   };
 
   home.activation.claudeLaneSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

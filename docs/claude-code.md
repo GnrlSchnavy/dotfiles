@@ -199,11 +199,12 @@ anything is sent — verified: a blocked prompt makes zero API calls.
   `~/.npm`, and reach only Maven Central, Gradle and npm without asking
   (other hosts prompt per domain). Add more in `claude-lanes.nix`
   (`union.sandbox.filesystem.allowWrite`, `…network.allowedDomains`), or
-  in `/sandbox` — your own entries survive rebuilds. Known macOS
-  frictions: Docker and Go CLIs such as `gh` don't work inside Seatbelt,
-  and `git push` with the keychain helper is untested — run those
-  yourself, or list them in `sandbox.excludedCommands` (which runs them
-  fully unsandboxed). Bash prompts stay as they were
+  in `/sandbox` — your own entries survive rebuilds. Docker works
+  through the lane's own engine ([below](#docker-in-the-personal-lane)).
+  Known macOS frictions: Go CLIs such as `gh` don't work inside
+  Seatbelt, and `git push` with the keychain helper is untested — run
+  those yourself, or list them in `sandbox.excludedCommands` (which runs
+  them fully unsandboxed). Bash prompts stay as they were
   (`autoAllowBashIfSandboxed: false`, only written when unset).
 
   Practical effects: start personal sessions in a project folder, not in
@@ -211,6 +212,79 @@ anything is sent — verified: a blocked prompt makes zero API calls.
   command whose text literally contains a work-root path — e.g. grepping
   these dotfiles for `~/projects/ahold` — is blocked too. Fixtures for
   both hooks live in [`tests/guard.sh`](../tests/guard.sh).
+
+### Docker in the personal lane
+
+Personal sessions get their own Docker engine, so Claude can run
+`docker`, `docker compose` and Testcontainers tests itself without
+reaching client work or the work lane's containers. It's a
+[Colima](https://github.com/abiosoft/colima) VM, profile `personal`,
+declared with home-manager's `services.colima` in `claude-lanes.nix`.
+
+| | Personal Claude sessions | Your shell, IntelliJ, work lane |
+|---|---|---|
+| Engine | Colima `personal` | Docker Desktop (unchanged) |
+| Selected by | `DOCKER_HOST` in the lane env (`personalEnv`) | Docker Desktop's `desktop-linux` context |
+| Sees host files under | `~/projects/personal` only | whatever Docker Desktop shares |
+
+How it fits together:
+
+- **The VM** — a launchd agent (`colima-personal`) starts it at login
+  with 4 CPUs, 8 GB RAM and a 60 GB disk (vz, virtiofs). Its only mount
+  is `~/projects/personal`, writable; this replaces Colima's default
+  mount of all of `$HOME`, so the work tree isn't in the VM at all.
+  `colima.yaml` is a store symlink, which is safe here because the agent
+  starts Colima with `--save-config=false`. Colima isn't activated as
+  the docker context and doesn't set `DOCKER_HOST` in the shell
+  (`autoActivate = false`), and `sshConfig = false` keeps
+  `~/.ssh/config` untouched.
+- **The lane env** — `DOCKER_HOST=unix://~/.colima/personal/docker.sock`
+  and `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock` (the
+  socket path inside the VM, which Ryuk mounts). Both are in
+  `personalEnv`, so `cc-work` unsets them like the other lane vars.
+- **The sandbox** — `sandbox.network.allowUnixSockets` lists that one
+  socket (Docker Desktop's stays blocked), and
+  `sandbox.network.allowLocalBinding: true` lets sandboxed commands bind
+  and connect to `localhost`. Without the latter, tests can't reach a
+  container's published ports: Seatbelt otherwise only allows the
+  sandbox proxy on localhost.
+
+Day to day:
+
+- Containers and images Claude creates live in Colima, not Docker
+  Desktop: the Docker Desktop UI and your shell's `docker ps` don't show
+  them. To look at them, use
+  `docker -H unix://$HOME/.colima/personal/docker.sock ps`. Images are
+  pulled and stored once per engine.
+- Both engines publish on the same `localhost`. If a work stack and a
+  personal stack publish the same port (e.g. Postgres on 5432), the
+  second fails to start; stop one.
+- Bind mounts outside `~/projects/personal` (including `$TMPDIR`) come
+  up empty inside containers; keep personal projects in that folder.
+  Testcontainers copies files over the API, so `withCopyFileToContainer`
+  works from anywhere.
+- Status and recovery: `colima status -p personal`,
+  `colima stop -p personal` (frees the RAM; it comes back at next login,
+  or start it with `colima start -p personal`). Log:
+  `~/.local/state/colima/personal.log`. Colima runs on Lima, which can
+  break after a macOS or Colima update; a stop/start usually fixes it.
+  Removing the profile from Nix doesn't delete the VM — run
+  `colima delete -p personal` too.
+
+What it gives up, deliberately:
+
+- **Writes beyond the project.** Whoever can use the socket controls
+  the engine, so a container started from a personal session can write
+  anywhere under `~/projects/personal`, not just in the current project
+  — wider than the sandbox's own write rule.
+- **The network allowlist.** Container traffic, image pulls included,
+  leaves through the VM, not the sandbox proxy, so
+  `sandbox.network.allowedDomains` doesn't apply to it.
+- **Localhost is open.** With `allowLocalBinding`, sandboxed commands
+  can reach any service listening on localhost — for example the
+  codemem viewers, or DevAI's local gateway proxy while a work session
+  runs. That sends personal-lane traffic *to* work services; it doesn't
+  let work data into Max (the guards above still cover that).
 
 ### Settings merge
 
