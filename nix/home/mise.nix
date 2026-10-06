@@ -45,4 +45,26 @@
     run ${lib.getExe config.programs.mise.package} --cd / install --yes \
       || echo "mise install failed (offline?); the next rebuild retries" >&2
   '';
+
+  # Lets macOS see mise's JDKs: /usr/libexec/java_home, and the tools that ask
+  # it (IntelliJ's JDK detection, Gradle/Maven toolchains), scan
+  # ~/Library/Java/JavaVirtualMachines. Each installed JDK gets a
+  # mise-<version>.jdk there whose Contents links into mise's install (the
+  # layout mise documents; java_home skips a symlinked .jdk itself). Rebuilt
+  # from scratch every time, so JDKs mise drops disappear too. Per user, so
+  # no sudo; JDKs a project installs later are linked on the next rebuild.
+  home.activation.miseJdkLinks = lib.hm.dag.entryAfter [ "miseInstall" ] ''
+    jvms="$HOME/Library/Java/JavaVirtualMachines"
+    run mkdir -p "$jvms"
+    for jdk in "$jvms"/mise-*.jdk; do
+      if [ -e "$jdk" ] || [ -L "$jdk" ]; then run rm -rf "$jdk"; fi
+    done
+    for dir in "$HOME"/.local/share/mise/installs/java/*; do
+      # Skip mise's version aliases (symlinks) and non-macOS layouts.
+      if [ -L "$dir" ] || [ ! -f "$dir/Contents/Info.plist" ]; then continue; fi
+      link="$jvms/mise-''${dir##*/}.jdk"
+      run mkdir -p "$link"
+      run ln -s "$dir/Contents" "$link/Contents"
+    done
+  '';
 }

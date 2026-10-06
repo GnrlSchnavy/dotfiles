@@ -40,7 +40,8 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
      executable, the codemem lane dirs exist, `cc-tooling` is on PATH, and the vault path was
      filled into the skills;
    - `darwin-rebuild`, `brew` and `mise` (with its config) are in
-     place, and the formulas `kubectl`, `helm` are installed.
+     place, macOS's `java_home` lists mise's Temurin 25, and the
+     formulas `kubectl`, `helm` are installed.
 
 ## Scheduled jobs
 
