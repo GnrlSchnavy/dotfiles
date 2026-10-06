@@ -69,6 +69,21 @@ has a README with the restore commands.
 
 Useful before a major flake update or experiment.
 
+## `lint.sh`
+
+nixfmt, statix, deadnix and shellcheck over the repo, plus a gitleaks
+scan of the working tree (the repo is public). Runs inside
+`nix develop ./nix` on its own if the tools aren't on PATH.
+
+```bash
+./scripts/lint.sh
+(cd nix && nix fmt)  # fixes what nixfmt flags (formats every .nix file)
+```
+
+The pre-commit hook in `.githooks/` runs it before every commit in
+either dotfiles clone (`core.hooksPath`, set by the host's `git.nix`);
+CI runs it too. Skip it once with `git commit --no-verify`.
+
 ## When to use which
 
 | Scenario | Script |

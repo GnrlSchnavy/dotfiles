@@ -58,6 +58,10 @@ The `outputs` section defines:
 - `checks` — every host's system, grouped by platform. `nix flake
   check` ignores `darwinConfigurations` on its own, so this output is
   what makes `nix flake check --no-build` actually evaluate the hosts.
+- `formatter` (`cd nix && nix fmt`, nixfmt over every `.nix` file) and
+  `devShells.default` (`nix develop ./nix`: nixfmt, statix, deadnix,
+  shellcheck, gitleaks, jq — what `scripts/lint.sh` needs), for the Mac
+  and for Linux CI. statix's config is `nix/statix.toml`.
 
 Home-manager is configured with `useGlobalPkgs`, `useUserPackages`, and
 `backupFileExtension = "hm-backup"` — pre-existing files that would

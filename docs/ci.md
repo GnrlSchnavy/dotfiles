@@ -5,8 +5,9 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
 
 1. **`checks`** (Linux, ~2 min) — `nix flake check --no-build
    --all-systems ./nix` evaluates every host (evaluation works
-   cross-platform), shellcheck on the hooks, `system/bin/` and tests
-   (plus error-level shellcheck on `setup.sh` and `scripts/`), and
+   cross-platform), [`scripts/lint.sh`](../scripts/lint.sh) in the
+   flake's dev shell (nixfmt, statix, deadnix, shellcheck, and a
+   gitleaks scan of the tree, since the repo is public), and
    [`tests/run.sh`](../tests/run.sh): the lane-hook fixtures, the
    `cc-tooling` tests and the settings-merge tests.
 2. **`fresh-install`** (macOS, needs `checks`) — runs `setup.sh`

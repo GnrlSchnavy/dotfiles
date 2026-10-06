@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Runs scripts/lint.sh before each commit in this repo. git uses this folder
+# because the host's git.nix sets core.hooksPath for the dotfiles clones.
+# Skip once with `git commit --no-verify`.
+exec "$(git rev-parse --show-toplevel)/scripts/lint.sh"

@@ -139,9 +139,34 @@
         # Not intended for use on a real machine.
         ci = import ./hosts/ci;
       };
+
+      # The Mac, plus Linux for the CI runner.
+      forAllSystems =
+        f:
+        inputs.nixpkgs.lib.genAttrs [ "aarch64-darwin" "x86_64-linux" ] (
+          system: f inputs.nixpkgs.legacyPackages.${system}
+        );
     in
     {
-      darwinConfigurations = builtins.mapAttrs (_: host: mkDarwin host) hosts;
+      darwinConfigurations = builtins.mapAttrs (_: mkDarwin) hosts;
+
+      # `nix fmt` formats every .nix file in the repo.
+      formatter = forAllSystems (pkgs: pkgs.nixfmt-tree);
+
+      # `nix develop ./nix`: the tools scripts/lint.sh runs (the pre-commit
+      # hook and CI use it too).
+      devShells = forAllSystems (pkgs: {
+        default = pkgs.mkShellNoCC {
+          packages = [
+            pkgs.nixfmt
+            pkgs.statix
+            pkgs.deadnix
+            pkgs.shellcheck
+            pkgs.gitleaks
+            pkgs.jq
+          ];
+        };
+      });
 
       # `nix flake check` skips darwinConfigurations entirely; exposing each
       # host's system here is what makes `nix flake check --no-build` evaluate

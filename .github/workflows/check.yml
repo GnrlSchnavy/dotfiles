@@ -49,13 +49,12 @@ jobs:
       - name: Evaluate every host (no build)
         run: nix flake check --no-build --all-systems ./nix
 
-      - name: shellcheck
-        run: |
-          nix shell --inputs-from ./nix nixpkgs#shellcheck --command sh -c '
-            shellcheck -s bash -S style system/.claude/hooks/*.sh system/.claude-work/hooks/*.sh system/bin/*.sh tests/*.sh &&
-            shellcheck -s bash -S error setup.sh scripts/*.sh'
+      # nixfmt, statix, deadnix, shellcheck and a gitleaks scan; the same
+      # script the pre-commit hook runs.
+      - name: Lint
+        run: nix develop ./nix --command scripts/lint.sh
 
-      - name: Hook and cc-tooling tests
+      - name: Hook, cc-tooling and settings-merge tests
         run: tests/run.sh
 
   fresh-install:
