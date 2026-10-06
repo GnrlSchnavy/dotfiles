@@ -33,7 +33,7 @@
       "intellij-idea"
       "lens"
       "visual-studio-code"
-      "warp" 
+      "warp"
 
       # Media
       "jellyfin-media-player"
@@ -66,7 +66,6 @@
       "oversight"
 
     ];
-
 
     # CLI Tools (brews) - use when not available in Nix or need Homebrew features
     brews = [

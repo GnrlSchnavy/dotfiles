@@ -29,7 +29,10 @@
         # codemem's hooks and MCP server need Node 24.15+.
         node = "lts";
       };
-      settings.idiomatic_version_file_enable_tools = [ "java" "node" ];
+      settings.idiomatic_version_file_enable_tools = [
+        "java"
+        "node"
+      ];
     };
   };
 

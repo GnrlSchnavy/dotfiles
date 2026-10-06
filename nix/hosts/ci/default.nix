@@ -18,7 +18,11 @@
   # end-to-end. Casks are force-dropped in `module` below; brews still run.
   # (Was m4 until that host was decommissioned in August 2026; m5 is now
   # the only real host, so CI and the machine no longer drift.)
-  systemModules = [ ../m5/homebrew.nix ../m5/packages.nix ../m5/dock.nix ];
+  systemModules = [
+    ../m5/homebrew.nix
+    ../m5/packages.nix
+    ../m5/dock.nix
+  ];
   homeModules = [ ../m5/git.nix ];
 
   module =

@@ -38,11 +38,17 @@ in
     includes = [
       {
         condition = "gitdir:~/projects/personal/";
-        contents = { user = personal; } // personalGitHub;
+        contents = {
+          user = personal;
+        }
+        // personalGitHub;
       }
       {
         condition = "gitdir:~/.dotfiles/";
-        contents = { user = personal; } // personalGitHub;
+        contents = {
+          user = personal;
+        }
+        // personalGitHub;
       }
     ];
 

@@ -84,19 +84,19 @@
     keymaps = {
       silent = true;
       lspBuf = {
-        "gd" = "definition";           # Go to definition
-        "gr" = "references";           # Find references
-        "gt" = "type_definition";      # Go to type definition
-        "gi" = "implementation";       # Go to implementation
-        "K" = "hover";                 # Show documentation
-        "<leader>rn" = "rename";       # Rename symbol
-        "<leader>ca" = "code_action";  # Code actions
+        "gd" = "definition"; # Go to definition
+        "gr" = "references"; # Find references
+        "gt" = "type_definition"; # Go to type definition
+        "gi" = "implementation"; # Go to implementation
+        "K" = "hover"; # Show documentation
+        "<leader>rn" = "rename"; # Rename symbol
+        "<leader>ca" = "code_action"; # Code actions
       };
       diagnostic = {
-        "[d" = "goto_prev";            # Previous diagnostic
-        "]d" = "goto_next";            # Next diagnostic
-        "<leader>de" = "open_float";   # Show diagnostic popup
-        "<leader>dq" = "setloclist";   # Add diagnostics to location list
+        "[d" = "goto_prev"; # Previous diagnostic
+        "]d" = "goto_next"; # Next diagnostic
+        "<leader>de" = "open_float"; # Show diagnostic popup
+        "<leader>dq" = "setloclist"; # Add diagnostics to location list
       };
     };
   };

@@ -44,7 +44,12 @@ in
     observer_provider = "anthropic";
     observer_model = "claude-haiku-4-5";
     observer_auth_source = "command";
-    observer_auth_command = [ "pass-cli" "item" "view" "pass://Ahold/TechNLGenAI/api_key" ];
+    observer_auth_command = [
+      "pass-cli"
+      "item"
+      "view"
+      "pass://Ahold/TechNLGenAI/api_key"
+    ];
     observer_auth_cache_ttl_s = 300;
     # literal ${auth.token} — escaped so Nix doesn't interpolate it.
     observer_headers."api-key" = "\${auth.token}";
