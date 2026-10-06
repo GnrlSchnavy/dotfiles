@@ -38,9 +38,11 @@ The `outputs` section defines:
   [`modules/nix.nix`](../nix/modules/nix.nix) (daemon settings, gc,
   store optimise, allowUnfree),
   [`modules/system.nix`](../nix/modules/system.nix) (macOS defaults,
-  keyboard remap), and
+  keyboard remap),
   [`modules/environment.nix`](../nix/modules/environment.nix)
-  (EDITOR/VISUAL, kubectl aliases).
+  (EDITOR/VISUAL, kubectl aliases), and
+  [`modules/homebrew-trust.nix`](../nix/modules/homebrew-trust.nix)
+  (`brew trust` for every third-party tap the host declares).
 - `mkNvim pkgs host` — builds a per-host Neovim from
   `nix/nixvim/config/`, injecting `flakePath`
   (`/Users/<username>/.dotfiles/nix`) and `darwinHost` (the hostname)
@@ -98,7 +100,8 @@ nix/
 ├── modules/             # shared nix-darwin modules (every host)
 │   ├── nix.nix          # nix daemon, gc (weekly, >30d), store optimise, allowUnfree
 │   ├── system.nix       # macOS defaults, caps-lock→escape, dark mode, finder
-│   └── environment.nix  # EDITOR/VISUAL=nvim, kubectl aliases (k, kgp, kaf, …)
+│   ├── environment.nix  # EDITOR/VISUAL=nvim, kubectl aliases (k, kgp, kaf, …)
+│   └── homebrew-trust.nix # brew trust for the host's third-party taps
 ├── home/                # shared home-manager modules (every host)
 │   ├── default.nix      # imports the modules below; home.stateVersion
 │   ├── zsh.nix          # .zprofile/.zshrc content, aliases, session vars

@@ -243,10 +243,11 @@ client-specific judgement is the **lane**:
   (a slash command), like `/flow`.
 - **Project agents shadow global ones** with the same `name`. Give client
   agents distinct names unless overriding is the point.
-- **Pushing the private repo.** git uses the `osxkeychain` helper (your
-  personal account), so pushing to a *work-account* private repo needs that
-  account's credentials: either run `gh auth setup-git` once, or a one-off
-  `git -c credential.helper= -c credential.helper='!gh auth git-credential' push`.
+- **Pushing the private repo.** git picks the GitHub login by checkout
+  location (`credential.username` in the host's `git.nix`): the work account
+  by default, the personal account under `~/projects/personal/` and
+  `~/.dotfiles`. Keep the private repo where its owning account applies, or
+  push once with `git -c credential.https://github.com.username=<account> push`.
 - **`unapply` leaves empty dirs** (e.g. an empty `.claude/agents/`) —
   harmless; re-apply repopulates them.
 - The client *name* (e.g. `ahold`) appears here as an example; the client's

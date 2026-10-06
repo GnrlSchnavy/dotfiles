@@ -32,9 +32,9 @@
         file_ignore_patterns = [
           "^.git/"
           "node_modules"
-          "*.pyc"
+          "%.pyc$"
           "__pycache__"
-          "*.class"
+          "%.class$"
           "target/"
           "build/"
           "dist/"

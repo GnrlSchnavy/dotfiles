@@ -57,9 +57,10 @@ empty credential. An empty-but-successful lookup is treated as an
 error too.
 
 Fail-closed is load-bearing wherever the fallback would be worse than
-stopping — in `cc-work` a missing key must abort the launch, because
-continuing would route client content straight to Anthropic instead of
-the sanctioned TechNL proxy.
+stopping — in `cc-work` a missing TechNL proxy URL must abort the
+launch, because codemem's work observer would otherwise fall back to
+`api.anthropic.com` and send client content there instead of through
+the sanctioned proxy.
 
 ### `pass-render`
 

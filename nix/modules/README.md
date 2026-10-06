@@ -10,6 +10,9 @@ by [`flake.nix`](../flake.nix) into every `darwinConfiguration` via
   and kubectl shell aliases.
 - **`nix.nix`** — nix daemon settings, `allowUnfree`, weekly GC of
   >30-day generations, automatic store dedup.
+- **`homebrew-trust.nix`** — runs `brew trust` during activation for
+  every third-party tap the host declares, which Homebrew requires
+  before it loads their formulae.
 
 Machine-specific modules (`homebrew.nix`, `packages.nix`, `dock.nix`,
 `git.nix`) live per-host in [`../hosts/<name>/`](../hosts/), not here.
