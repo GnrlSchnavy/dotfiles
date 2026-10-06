@@ -317,14 +317,18 @@ session. Two things stop plain `ssh` inside the sandbox, and
   (`sandbox.network.allowUnixSockets`), and `claude-git-ssh` points
   `SSH_AUTH_SOCK` at it.
 - **No passphrase prompt.** The sandbox can't ask for the passphrase, so
-  the key must already be in the agent. The relay agent runs
-  `ssh-add --apple-load-keychain` at login, which loads every key whose
-  passphrase is in the login Keychain. Store it there once per machine
-  (this also stops your own terminal asking for it):
-
-  ```bash
-  /usr/bin/ssh-add --apple-use-keychain ~/.ssh/github_ed25519
-  ```
+  the key must already be in the agent. `system.nix` declares, for
+  `Host github.com` only (in `/etc/ssh/ssh_config.d/`, leaving
+  `~/.ssh/config` unmanaged), `UseKeychain yes` and
+  `AddKeysToAgent yes`. So the first time you use the key in your own
+  terminal (a `git pull`, say), ssh asks for the passphrase once, stores
+  it in the login Keychain and loads the key into the agent. After that,
+  the relay agent runs `ssh-add --apple-load-keychain` at each login to
+  reload it. You type the passphrase once per machine; it can't be
+  more declarative than that, since the passphrase is a secret and the
+  repo only versions the recipe ([docs/secrets.md](secrets.md)). To
+  store it right away instead:
+  `/usr/bin/ssh-add --apple-use-keychain ~/.ssh/github_ed25519`.
 
 Check it from a personal session with
 `SSH_AUTH_SOCK=~/.ssh/claude-agent.sock ssh-add -l` (lists the agent's
