@@ -61,7 +61,9 @@ The `outputs` section defines:
 - `formatter` (`cd nix && nix fmt`, nixfmt over every `.nix` file) and
   `devShells.default` (`nix develop ./nix`: nixfmt, statix, deadnix,
   shellcheck, gitleaks, jq — what `scripts/lint.sh` needs), for the Mac
-  and for Linux CI. statix's config is `nix/statix.toml`.
+  and for Linux CI. statix's config is `nix/statix.toml`. The tool list
+  lives in `nix/lint-tools.nix`, shared with the personal Claude lane,
+  whose Bash sandbox can't run `nix develop`.
 
 Home-manager is configured with `useGlobalPkgs`, `useUserPackages`, and
 `backupFileExtension = "hm-backup"` — pre-existing files that would
@@ -97,6 +99,7 @@ Each `nix/hosts/<name>/default.nix` evaluates to a plain attrset:
 nix/
 ├── flake.nix            # inputs + mkDarwin/mkNvim + hosts attrset
 ├── flake.lock           # pinned input versions
+├── lint-tools.nix       # scripts/lint.sh's tools (dev shell + Claude sandbox)
 ├── hosts/
 │   ├── m5/              # descriptor + homebrew/packages/dock/git modules
 │   ├── ci/              # GitHub Actions runner; reuses ../m5/* modules with CI overrides

@@ -67,6 +67,11 @@ let
   # every login), so the sandbox can allow it and Claude can push and pull.
   sshAgentRelay = "${home}/.ssh/claude-agent.sock";
 
+  dotfilesLintTools = pkgs.buildEnv {
+    name = "dotfiles-lint-tools";
+    paths = import ../lint-tools.nix pkgs;
+  };
+
   # SSH command for git in personal-lane Bash: tunnels through the sandbox
   # proxy and uses the relay. Set per call by the git() function below, since
   # the sandbox overwrites GIT_SSH_COMMAND with its own SOCKS command, which
@@ -94,6 +99,9 @@ let
     # shell keeps Docker Desktop. Ryuk mounts the socket path inside the VM.
     DOCKER_HOST = "unix://${personalDockerSock}";
     TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE = "/var/run/docker.sock";
+    # The dotfiles' lint tools, for the pre-commit hook in the Bash sandbox,
+    # where `nix develop` can't run (.githooks/pre-commit).
+    DOTFILES_LINT_PATH = "${dotfilesLintTools}/bin";
   };
 
   # Non-secret work env, also written to ~/.claude-work/settings.json so every

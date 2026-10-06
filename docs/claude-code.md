@@ -333,7 +333,16 @@ session. Two things stop plain `ssh` inside the sandbox, and
 Check it from a personal session with
 `SSH_AUTH_SOCK=~/.ssh/claude-agent.sock ssh-add -l` (lists the agent's
 keys through the relay; "The agent has no identities" means the step
-above is missing) and `git ls-remote origin`. Not covered: `gh` (HTTPS
+above is missing) and `git ls-remote origin`.
+
+Commits in this repo run the lint pre-commit hook, which normally gets
+its tools from `nix develop` — unreachable from the sandbox (no Nix
+daemon socket). So the lane env sets `DOTFILES_LINT_PATH` to the same
+tools (`nix/lint-tools.nix`), and `.githooks/pre-commit` puts them on
+`PATH` when `$SANDBOX_RUNTIME` is set: Claude's commits get the full
+lint, gitleaks included, before anything can be pushed to this public
+repo. If the variable is missing (a session older than the rebuild),
+the hook skips with a warning and CI lints after the push. Not covered: `gh` (HTTPS
 API) and HTTPS remotes; git.nix rewrites `https://github.com` to SSH
 anyway.
 

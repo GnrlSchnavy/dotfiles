@@ -157,14 +157,7 @@
       # hook and CI use it too).
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShellNoCC {
-          packages = [
-            pkgs.nixfmt
-            pkgs.statix
-            pkgs.deadnix
-            pkgs.shellcheck
-            pkgs.gitleaks
-            pkgs.jq
-          ];
+          packages = import ./lint-tools.nix pkgs;
         };
       });
 

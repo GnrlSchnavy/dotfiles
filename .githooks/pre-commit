@@ -2,4 +2,18 @@
 # Runs scripts/lint.sh before each commit in this repo. git uses this folder
 # because the host's git.nix sets core.hooksPath for the dotfiles clones.
 # Skip once with `git commit --no-verify`.
+#
+# In Claude Code's Bash sandbox `nix develop` can't reach the Nix daemon, so
+# the personal lane provides the same tools on DOTFILES_LINT_PATH
+# (claude-lanes.nix). Without that (before a rebuild, say) the hook skips
+# with a warning and CI lints after the push.
+if [ -n "${SANDBOX_RUNTIME:-}" ]; then
+  if [ -d "${DOTFILES_LINT_PATH:-}" ]; then
+    PATH="$DOTFILES_LINT_PATH:$PATH"
+    export PATH
+  else
+    echo "pre-commit: Claude sandbox without DOTFILES_LINT_PATH; skipping lint (CI runs it after the push)" >&2
+    exit 0
+  fi
+fi
 exec "$(git rev-parse --show-toplevel)/scripts/lint.sh"
