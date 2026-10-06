@@ -53,6 +53,19 @@
         [[ -s ~/.zsh_kubectl_completion ]] && source ~/.zsh_kubectl_completion
       fi
 
+      # Inside Claude Code's sandbox, NO_PROXY (hardcoded there) sends the
+      # private k3s API past the proxy, where the sandbox blocks it. Drop it
+      # so kubectl/flux go through the proxy (the API is in allowedDomains,
+      # claude-lanes.nix). A no-op everywhere else.
+      kubectl() {
+        if [[ -n $SANDBOX_RUNTIME ]]; then env -u NO_PROXY -u no_proxy kubectl "$@"
+        else command kubectl "$@"; fi
+      }
+      flux() {
+        if [[ -n $SANDBOX_RUNTIME ]]; then env -u NO_PROXY -u no_proxy flux "$@"
+        else command flux "$@"; fi
+      }
+
       # Appended, so a stray tool there (an old native `claude` install, say)
       # can't shadow the Homebrew or Nix one.
       export PATH="$PATH:$HOME/.local/bin"
