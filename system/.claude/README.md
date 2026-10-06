@@ -11,8 +11,6 @@ commands from here — see [below](#work-lane-claude-work).
 
 | Path | Managed how | Purpose |
 |---|---|---|
-| `settings.local.json` | symlink → `~/.claude/settings.local.json` | Active permissions and tool access |
-| `settings.template.json` | symlink → `~/.claude/settings.template.json` | Starter template for new machines |
 | `README.md` | symlink → `~/.claude/README.md` | This file |
 | `CLAUDE.md` | symlink → `~/.claude/CLAUDE.md` | Global baseline instructions (both lanes) |
 | `agents/` | symlink → `~/.claude/agents` (read-only dir) | Custom subagent definitions (both lanes) |
@@ -32,14 +30,15 @@ It is no longer *only* seeded, though: on every rebuild the
 `claudeLaneSettings` activation step in `claude-lanes.nix` merges the
 keys the lane module owns into it —
 
-- `env` — the lane's codemem env and `CC_WORK_ROOTS` (other env keys kept);
+- `env` — the lane's codemem env and `CC_WORK_ROOTS` (other env keys
+  kept; a key removed from the module is removed on the next rebuild);
 - `permissions.deny` — `Read`/`Edit` rules for each client work root
   (added when missing; your own rules kept);
 - `sandbox` — the Bash sandbox, on, with each work root unreadable and no
   unsandboxed retries; the build caches/registries it allows are appended
   to your own lists;
-- `hooks` — entries whose command lives under `~/.claude/hooks/` are
-  replaced; plugin and hand-added hooks are kept.
+- `hooks` — hook entries whose command lives under `~/.claude/hooks/`
+  are replaced; plugin and hand-added hooks are kept.
 
 The merge is idempotent and leaves plugins, your own permission rules and
 every other key alone. So: change owned keys in `claude-lanes.nix`, everything else
@@ -77,15 +76,14 @@ vault. Full details: [`docs/claude-code.md`](../../docs/claude-code.md#two-claud
 
 ## Editing settings
 
-```bash
-$EDITOR ~/.dotfiles/system/.claude/settings.local.json
+Settings you want on every machine and kept in sync go into the owned
+keys in `claude-lanes.nix`; anything else, set in the app (`/config`,
+`/permissions`), which writes `~/.claude/settings.json`. Claude Code
+never reads a `settings.local.json` in the user config dir — that name
+is only a project's `.claude/settings.local.json`, where "don't ask
+again" approvals land.
 
-# Apply (rebuild reads the new content and updates the symlink target)
-sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
-```
-
-Changes are tracked in git automatically since the files live inside
-the dotfiles repo. The `agents/`, `commands/`, `skills/` and `hooks/`
+The `agents/`, `commands/`, `skills/` and `hooks/`
 directories are symlinked whole — add or edit a file here, `git add`,
 rebuild, and it appears under `~/.claude/` (and, for agents/commands,
 `~/.claude-work/`).

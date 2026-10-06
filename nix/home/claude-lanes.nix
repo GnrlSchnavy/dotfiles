@@ -141,41 +141,13 @@ let
     default.model = "opus";
   };
 
-  # merge-claude-settings <settings.json> <owned.json> <managed hook prefix> [seed.json]
-  # A missing settings file starts from the seed (the reference snapshot), so
-  # a fresh machine gets it even though this runs before setup.sh's seed step.
-  # Owned env keys and `set` keys overwrite; every list under `union` gets its
-  # missing entries appended (your own entries stay); owned hooks replace any
-  # earlier hooks whose command lives under the managed prefix; `default` keys,
-  # nested ones included, are written only when absent (so /model, /sandbox
-  # and friends keep working).
-  mergeSettings = pkgs.writeShellScript "merge-claude-settings" ''
-    set -euo pipefail
-    file="$1"; owned="$2"; prefix="$3"; seed="''${4:-}"
-    mkdir -p "$(dirname "$file")"
-    if [ ! -s "$file" ]; then
-      if [ -n "$seed" ]; then cat "$seed" >"$file"; else printf '{}\n' >"$file"; fi
-    fi
-    tmp="$(mktemp "$file.XXXXXX")"
-    ${pkgs.jq}/bin/jq --slurpfile owned "$owned" --arg prefix "$prefix" '
-      $owned[0] as $o
-      | .env = ((.env // {}) + ($o.env // {}))
-      | reduce (($o.union // {}) | paths(type == "array")) as $p (.;
-          setpath($p; reduce ($o.union | getpath($p))[] as $x
-            ((getpath($p) // []); if any(.[]; . == $x) then . else . + [$x] end)))
-      | .hooks = (
-          ((.hooks // {})
-            | with_entries(.value |= map(select(
-                ([.hooks[]?.command // ""] | any(startswith($prefix))) | not))))
-          as $kept
-          | reduce (($o.hooks // {}) | to_entries[]) as $e
-              ($kept; .[$e.key] = ((.[$e.key] // []) + $e.value))
-          | with_entries(select(.value | length > 0)))
-      | (($o.default // {}) * .)
-      | . * ($o.set // {})
-    ' "$file" >"$tmp"
-    mv "$tmp" "$file"
-  '';
+  # Merges each lane's owned keys into its settings.json on every rebuild;
+  # what it owns and how is described at the top of the script.
+  mergeSettings = pkgs.writeShellApplication {
+    name = "merge-claude-settings";
+    runtimeInputs = [ pkgs.coreutils pkgs.jq ];
+    text = builtins.readFile ../../system/bin/merge-claude-settings.sh;
+  };
 
   ownedJson = name: value: pkgs.writeText "${name}.json" (builtins.toJSON value);
 
@@ -211,8 +183,8 @@ in
   };
 
   home.activation.claudeLaneSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    run ${mergeSettings} ${personalDir}/settings.json ${ownedJson "claude-personal-owned" personalOwned} ${personalDir}/hooks/ ${../../system/.claude/settings.json}
-    run ${mergeSettings} ${workDir}/settings.json ${ownedJson "claude-work-owned" workOwned} ${workDir}/hooks/
+    run ${mergeSettings}/bin/merge-claude-settings ${personalDir}/settings.json ${ownedJson "claude-personal-owned" personalOwned} ${personalDir}/hooks/ ${../../system/.claude/settings.json}
+    run ${mergeSettings}/bin/merge-claude-settings ${workDir}/settings.json ${ownedJson "claude-work-owned" workOwned} ${workDir}/hooks/
   '';
 
   programs.zsh.initContent = lib.mkAfter ''

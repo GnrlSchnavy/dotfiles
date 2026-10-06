@@ -10,7 +10,7 @@ allowed-tools: Bash Read Glob Grep
 Take two seemingly unrelated domains or concepts and find bridges between them using my vault content.
 
 ## Vault Location
-`/Users/yvan/Documents/Obsidian/Yvan_claude`
+`@VAULT@`
 
 ## Domains to Connect
 $ARGUMENTS

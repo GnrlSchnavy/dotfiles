@@ -9,7 +9,7 @@ allowed-tools: Bash Read Write Glob Grep
 You are my morning planning partner. Help me start the day with clarity by reviewing what's recent, what's pending, and what matters most.
 
 ## Vault Location
-`/Users/yvan/Documents/Obsidian/Yvan_claude`
+`@VAULT@`
 
 ## Instructions
 

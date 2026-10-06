@@ -9,7 +9,7 @@ allowed-tools: Bash Read Glob Grep
 Run a comprehensive analysis of my entire Obsidian vault to generate actionable ideas across all domains of my life and work.
 
 ## Vault Location
-`/Users/yvan/Documents/Obsidian/Yvan_claude`
+`@VAULT@`
 
 ## Instructions
 

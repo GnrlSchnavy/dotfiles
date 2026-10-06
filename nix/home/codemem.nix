@@ -37,8 +37,8 @@ in
   # env var CODEMEM_ANTHROPIC_ENDPOINT is set (done by cc-work). So the TechNL
   # endpoint is supplied via that env var, NOT via observer_base_url here.
   # The api-key header (what the TechNL proxy expects) is supplied via
-  # observer_headers; the token resolves from ANTHROPIC_API_KEY (set by
-  # cc-work), with the pass-cli command as a fallback.
+  # observer_headers; the token comes from the pass-cli command below
+  # (observer_auth_source = "command"), cached for five minutes.
   xdg.configFile."codemem/work-ahold.json".text = builtins.toJSON {
     observer_runtime = "api_http";
     observer_provider = "anthropic";

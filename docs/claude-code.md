@@ -12,10 +12,6 @@ Declared in [`nix/home/files.nix`](../nix/home/files.nix) and
 [`nix/home/claude-lanes.nix`](../nix/home/claude-lanes.nix); applied on
 every rebuild:
 
-- `~/.claude/settings.local.json` ← `system/.claude/settings.local.json`
-  (active permission allowlist)
-- `~/.claude/settings.template.json` ← `system/.claude/settings.template.json`
-  (starter allowlist for new machines)
 - `~/.claude/README.md` ← `system/.claude/README.md`
 - `~/.claude/CLAUDE.md` ← `system/.claude/CLAUDE.md` (global baseline
   instructions, both lanes)
@@ -218,9 +214,12 @@ anything is sent — verified: a blocked prompt makes zero API calls.
 symlinks. Instead the `claudeLaneSettings` activation step merges **only
 the keys the module owns** into whatever is there:
 
-- `env` — the lane's env keys overwrite; other env keys are kept;
-- `hooks` — entries whose command lives under the lane's `hooks/` dir
-  are replaced; any other hooks (plugins, your own) are kept;
+- `env` — the lane's env keys overwrite; other env keys are kept, and
+  a key the lane stops owning is removed on the next rebuild (the last
+  owned set is in `.nix-owned.json` next to the settings file);
+- `hooks` — hook entries whose command lives under the lane's `hooks/`
+  dir are replaced; any other hooks (plugins, your own) are kept, even
+  in the same matcher group;
 - personal lane only: `permissions.deny` and the sandbox lists
   (`filesystem.denyRead`/`allowWrite`, `network.allowedDomains`) get the
   owned entries appended when missing — your own entries are kept;
@@ -232,7 +231,12 @@ the keys the module owns** into whatever is there:
   only when unset (so `/model` keeps working).
 
 It's idempotent and leaves plugins, your own permission rules and the
-rest of the file alone.
+rest of the file alone. A settings file that isn't valid JSON (say, a
+half-finished hand edit) is moved to `settings.json.invalid-<time>` and
+rebuilt from the snapshot, with a warning, instead of failing the
+rebuild. The merge is
+[`system/bin/merge-claude-settings.sh`](../system/bin/merge-claude-settings.sh);
+[`tests/merge.sh`](../tests/merge.sh) covers it.
 
 ### Instructions & agents per lane
 
@@ -336,6 +340,5 @@ Full reference: [Agent workflow](agent-workflow.md).
   Claude Code worktree state) — distinct from `system/.claude/`, which
   is versioned.
 - The global git ignores (per-host `git.nix`) exclude
-  `**/.claude/settings.local.json` and `**/CLAUDE.local.md` in *other*
-  repos; this repo's `system/.claude/settings.local.json` is tracked
-  because it's the source the symlink points to, not a local override.
+  `**/.claude/settings.local.json` and `**/CLAUDE.local.md` in every
+  repo: they hold per-machine approvals and notes.

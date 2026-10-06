@@ -35,10 +35,10 @@
       export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"
 
       # Quick note editing: open nvim in the notes directory straight
-      # into the fuzzy file finder. Uses the Obsidian vault when present,
-      # ~/notes otherwise. Override with NOTES_DIR.
+      # into the fuzzy file finder. Uses the Obsidian vault ($OBSIDIAN_VAULT,
+      # files.nix) when present, ~/notes otherwise. Override with NOTES_DIR.
       notes() {
-        local dir="''${NOTES_DIR:-$HOME/Documents/Obsidian/Yvan_claude}"
+        local dir="''${NOTES_DIR:-$OBSIDIAN_VAULT}"
         [ -d "$dir" ] || dir="$HOME/notes"
         mkdir -p "$dir"
         ( cd "$dir" && nvim "+Telescope find_files" )
@@ -47,7 +47,7 @@
       # Quick capture: `note` opens today's fleeting note
       # (05 - Fleeting/<date>.md), `note foo` opens/creates foo.md there.
       note() {
-        local dir="''${NOTES_DIR:-$HOME/Documents/Obsidian/Yvan_claude}"
+        local dir="''${NOTES_DIR:-$OBSIDIAN_VAULT}"
         [ -d "$dir" ] || dir="$HOME/notes"
         local fleeting="$dir/05 - Fleeting"
         [ -d "$fleeting" ] || fleeting="$dir"

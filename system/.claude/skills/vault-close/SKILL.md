@@ -9,7 +9,7 @@ allowed-tools: Bash Read Glob Grep
 You are helping me close out the day. Review what happened, extract what matters, and prepare for tomorrow.
 
 ## Vault Location
-`/Users/yvan/Documents/Obsidian/Yvan_claude`
+`@VAULT@`
 
 ## Instructions
 

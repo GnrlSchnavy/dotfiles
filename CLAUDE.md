@@ -87,7 +87,7 @@ Package source strategy (Nix vs Homebrew vs MAS):
 # On a non-darwin machine add --all-systems.
 cd ~/.dotfiles/nix && nix flake check --no-build
 
-# Lane-hook and cc-tooling tests (bash, jq, git — no Nix needed)
+# Lane-hook, cc-tooling and settings-merge tests (bash, jq, git — no Nix needed)
 ~/.dotfiles/tests/run.sh
 
 # Full apply

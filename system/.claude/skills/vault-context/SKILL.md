@@ -9,7 +9,7 @@ allowed-tools: Bash Read Glob Grep
 You are loading the full context of my Obsidian vault to understand who I am, what I'm working on, and where I currently am in life and work.
 
 ## Vault Location
-`/Users/yvan/Documents/Obsidian/Yvan_claude`
+`@VAULT@`
 
 ## Vault Structure
 ```

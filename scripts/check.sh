@@ -88,7 +88,7 @@ managed_files=(
     "$HOME/.config/git/config"
     "$HOME/.config/git/ignore"
     "$HOME/.ideavimrc"
-    "$HOME/.claude/settings.local.json"
+    "$HOME/.claude/README.md"
 )
 # Note: ~/.docker/config.json and ~/.claude/settings.json are
 # intentionally NOT home-manager-managed (apps rewrite them at runtime),

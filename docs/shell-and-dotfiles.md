@@ -34,8 +34,6 @@ repo files into `$HOME`:
 | Symlink | Source in repo |
 |---|---|
 | `~/.ideavimrc` | `editors/.ideavimrc` |
-| `~/.claude/settings.local.json` | `system/.claude/settings.local.json` |
-| `~/.claude/settings.template.json` | `system/.claude/settings.template.json` |
 | `~/.claude/README.md` | `system/.claude/README.md` |
 | `~/.claude/agents` (whole dir) | `system/.claude/agents/` |
 | `~/.claude/commands` (whole dir) | `system/.claude/commands/` |
