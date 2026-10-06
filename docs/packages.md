@@ -31,8 +31,8 @@ Rules of thumb:
 
 Java and Node come from **mise**, so each project can pin its own
 version. mise itself and its global config are declared in
-[`nix/home/mise.nix`](../nix/home/mise.nix) (global: Temurin 25, Node
-LTS); the runtimes are downloaded by mise into `~/.local/share/mise`,
+[`nix/home/mise.nix`](../nix/home/mise.nix) (global: Temurin 25 as the
+default and Temurin 21, Node LTS); the runtimes are downloaded by mise into `~/.local/share/mise`,
 by an activation step on every rebuild (a no-op once installed; offline
 it only warns).
 
@@ -41,9 +41,21 @@ it only warns).
   the project switches `java`/`node` and sets `JAVA_HOME`.
 - **Java vendor gotcha:** a bare `21` in `.java-version` means OpenJDK
   21; write `temurin-21` for Temurin.
-- **Changing the global versions**: edit `mise.nix` and rebuild —
-  `~/.config/mise/config.toml` is a read-only Nix symlink, so
+- **Changing the global versions**: edit the list in `mise.nix` and
+  rebuild — `~/.config/mise/config.toml` is a read-only Nix symlink, so
   `mise use -g` can't write it. `mise use` (per project) works as usual.
+  - *Add a JDK everywhere* (installed on every machine, in IntelliJ's
+    list): add it to `java = [ … ]`, e.g. `"temurin-17"`. The first
+    entry is the default `java`; the order of the rest doesn't matter.
+  - *A version for one project only*: put it in that project's
+    `.java-version` or `mise.toml`, run `mise install` there once, and
+    the next rebuild links it for IntelliJ.
+  - *Remove one*: drop it from the list. mise keeps the install until
+    `mise prune` (which deletes versions no config uses any more); the
+    next rebuild then unlinks it.
+  - *Patch updates*: `temurin-25` means "the newest 25.x when it was
+    installed"; mise doesn't move it on its own. `mise upgrade`
+    installs newer patch releases, and the next rebuild relinks them.
 - **macOS sees every JDK mise installed**: each rebuild links them into
   `~/Library/Java/JavaVirtualMachines/mise-<version>.jdk`, so
   `/usr/libexec/java_home -V`, IntelliJ's JDK list and Gradle toolchains

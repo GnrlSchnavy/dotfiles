@@ -12,7 +12,8 @@
 # directory switches java/node on PATH and sets JAVA_HOME.
 #
 # ~/.config/mise/config.toml is a read-only Nix symlink: change the global
-# versions here, not with `mise use -g`.
+# versions here, not with `mise use -g`. Every listed version is installed
+# (and linked for macOS below); the first is the default `java`/`node`.
 { config, lib, ... }:
 
 {
@@ -25,7 +26,10 @@
     enableZshIntegration = true;
     globalConfig = {
       tools = {
-        java = "temurin-25";
+        java = [
+          "temurin-25"
+          "temurin-21"
+        ];
         # codemem's hooks and MCP server need Node 24.15+.
         node = "lts";
       };
