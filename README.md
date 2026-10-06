@@ -125,7 +125,7 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 │   │   ├── ci/                ← CI runner descriptor (mirrors m5's per-host modules)
 │   │   └── template/          ← copy this when adding a new host
 │   ├── modules/               ← shared nix-darwin (system-level) modules
-│   │   ├── system.nix         ← macOS defaults (keyboard, finder, login window)
+│   │   ├── system.nix         ← macOS defaults (keyboard, finder, login window), Touch ID sudo
 │   │   ├── environment.nix    ← system-wide env vars and aliases
 │   │   ├── nix.nix            ← nix daemon config (gc, optimise, settings)
 │   │   └── homebrew-trust.nix ← brew trust for declared third-party taps

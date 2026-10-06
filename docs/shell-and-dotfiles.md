@@ -69,7 +69,12 @@ pattern instead.
 
 - **Neovim**: built per-host from `nix/nixvim/config/` — see
   [architecture.md](architecture.md#neovim-nixvim).
-- **IdeaVim**: `editors/.ideavimrc` → `~/.ideavimrc`.
+- **IdeaVim**: `editors/.ideavimrc` → `~/.ideavimrc`. Space is the
+  leader and the leader keys mirror NixVim's (`<leader>ff` find file,
+  `<leader>fg` find in files, `gd`/`gr`/`gi`, `<leader>rn`, `[d`/`]d`, …),
+  each mapped to the IntelliJ action that does the same job. Uses the
+  bundled surround, commentary and highlightedyank extensions; reload
+  with `:source ~/.ideavimrc` or restart the IDE after a rebuild.
 - **macOS defaults** (keyboard, dock behavior, finder, animations):
   `nix/modules/system.nix` (shared) and `nix/hosts/<name>/dock.nix`
   (per-host dock apps). Dock apps must exist in `/Applications` — i.e.

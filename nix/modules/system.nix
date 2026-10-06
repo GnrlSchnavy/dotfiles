@@ -1,6 +1,13 @@
 { ... }:
 
 {
+  # Touch ID for sudo (every rebuild needs it). reattach lets it work inside
+  # tmux too. Without a sensor, sudo just asks for the password.
+  security.pam.services.sudo_local = {
+    touchIdAuth = true;
+    reattach = true;
+  };
+
   # System keyboard configuration
   system.keyboard = {
     enableKeyMapping = true;

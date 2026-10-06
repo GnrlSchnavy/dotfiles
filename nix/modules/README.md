@@ -4,8 +4,9 @@ System-level (`nix-darwin`) modules **shared by every host** — imported
 by [`flake.nix`](../flake.nix) into every `darwinConfiguration` via
 `sharedModules`:
 
-- **`system.nix`** — macOS defaults: keyboard remap (caps→esc),
-  screensaver, login window, finder, global UI/keyboard/sound settings.
+- **`system.nix`** — Touch ID for sudo, and macOS defaults: keyboard
+  remap (caps→esc), screensaver, login window, finder, global
+  UI/keyboard/sound settings.
 - **`environment.nix`** — system-wide env vars (`EDITOR`, `VISUAL`)
   and kubectl shell aliases.
 - **`nix.nix`** — nix daemon settings, `allowUnfree`, weekly GC of
