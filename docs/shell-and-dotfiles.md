@@ -9,7 +9,9 @@ source in `~/.dotfiles/` and rebuild.
 
 | Where | Written to | Contains |
 |---|---|---|
-| `programs.zsh.profileExtra` | `~/.zprofile` (login shells) | Homebrew shellenv, autojump |
+| `programs.zsh.history`, `autosuggestion`, `syntaxHighlighting`, `shellAliases` | `~/.zshrc` | 100k shared history (no dups, leading-space commands unsaved), inline suggestions, highlighting, `j` → `z` |
+| `programs.fzf`, `programs.zoxide` | `~/.zshrc` | Ctrl-R fuzzy history, Ctrl-T files, Alt-C dirs; `z`/`j` directory jumping |
+| `programs.zsh.profileExtra` | `~/.zprofile` (login shells) | Homebrew shellenv |
 | `programs.zsh.initContent` | `~/.zshrc` (interactive shells) | kubectl completion cache, PATH additions, `notes`/`note`; `mise activate` (from [`nix/home/mise.nix`](../nix/home/mise.nix)) |
 | `home.sessionPath` (mise.nix) | hm session vars (all shells) | mise shims, for non-interactive callers |
 | `environment.shellAliases` (in [`nix/modules/environment.nix`](../nix/modules/environment.nix)) | `/etc/zshrc` (system-wide) | kubectl shortcuts: `k`, `kg`, `kgp`, `kgd`, `kgs`, `kga`, `kd`, `kaf`, `kdf` |

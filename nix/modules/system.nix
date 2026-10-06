@@ -18,8 +18,11 @@
   system.defaults = {
     # Screen saver settings
     screensaver = {
+      # Password as soon as the screen locks: this Mac holds client code.
+      # Recent macOS may ignore these keys; if Lock Screen settings still
+      # show a delay, run once: sysadminctl -screenLock immediate -password -
       askForPassword = true;
-      askForPasswordDelay = 300;
+      askForPasswordDelay = 0;
     };
     
     # Login window configuration

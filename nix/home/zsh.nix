@@ -1,33 +1,52 @@
 # Zsh configuration.
 #
-# Most of this is imperative shell code (conditional completions, shell
-# functions) that doesn't translate cleanly to home-manager's typed
-# options. Kept as raw strings in profileExtra (.zprofile) and
-# initContent (.zshrc).
+# Typed home-manager options where they exist (history, suggestions,
+# highlighting, fzf, zoxide); the imperative rest (conditional
+# completions, shell functions) stays as raw strings in profileExtra
+# (.zprofile) and initContent (.zshrc).
 { ... }:
 
 {
   programs.zsh = {
     enable = true;
 
+    # Same file as before (~/.zsh_history), bigger and shared live across
+    # open shells; a command typed with a leading space isn't saved.
+    history = {
+      size = 100000;
+      save = 100000;
+      share = true;
+      extended = true;
+      ignoreAllDups = true;
+      ignoreSpace = true;
+    };
+
+    # Grey inline suggestion from history (→ accepts); commands coloured
+    # as you type.
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
+
+    # zoxide replaced autojump; `j` keeps working.
+    shellAliases.j = "z";
+
     # Login shell init (was shell/.zprofile under Stow).
     profileExtra = ''
       # Homebrew environment setup
       eval "$(/opt/homebrew/bin/brew shellenv)"
-
-      # Autojump configuration for smart directory navigation
-      [ -f /opt/homebrew/etc/profile.d/autojump.sh ] && . /opt/homebrew/etc/profile.d/autojump.sh
     '';
 
     # Interactive shell init (was shell/.zshrc under Stow).
     # Imperative because completions need dynamic state. Java and Node come
     # from mise (mise.nix), which hooks itself into this file.
     initContent = ''
-      # Kubectl shell completion - cached for faster shell startup
-      if [[ ! -f ~/.zsh_kubectl_completion ]] || [[ $(date -r ~/.zsh_kubectl_completion +%s) -lt $(( $(date +%s) - 86400 )) ]]; then
-        kubectl completion zsh > ~/.zsh_kubectl_completion 2>/dev/null
+      # Kubectl shell completion, cached for a day for faster startup.
+      # Skipped without kubectl, so an empty cache can't stick around.
+      if (( $+commands[kubectl] )); then
+        if [[ ! -s ~/.zsh_kubectl_completion ]] || [[ $(date -r ~/.zsh_kubectl_completion +%s) -lt $(( $(date +%s) - 86400 )) ]]; then
+          kubectl completion zsh >| ~/.zsh_kubectl_completion 2>/dev/null
+        fi
+        [[ -s ~/.zsh_kubectl_completion ]] && source ~/.zsh_kubectl_completion
       fi
-      [ -f ~/.zsh_kubectl_completion ] && source ~/.zsh_kubectl_completion
 
       export PATH="$HOME/.local/bin:$PATH"
 
@@ -57,4 +76,11 @@
       }
     '';
   };
+
+  # Ctrl-R fuzzy history search, Ctrl-T files, Alt-C directories.
+  programs.fzf.enable = true;
+
+  # Frecency-ranked `cd`: `z proj` (and `j proj`). Import autojump's
+  # history once: zoxide import --from=autojump ~/Library/autojump/autojump.txt
+  programs.zoxide.enable = true;
 }

@@ -18,7 +18,7 @@ Rules of thumb:
 - **Nix packages** (`environment.systemPackages`): reproducible CLI
   tools — git, maven, jq, ripgrep, fd, bat, tree, curl, wget, htop…
 - **Homebrew brews**: CLI tools that need taps (`fluxcd/tap/flux`),
-  shell integration (autojump), or faster update cycles
+  or faster update cycles
   (gh, kubectl, helm).
 - **Homebrew casks**: all GUI apps (browsers, IDEs, Slack, Docker
   Desktop, …). JDKs are not casks — mise installs them.

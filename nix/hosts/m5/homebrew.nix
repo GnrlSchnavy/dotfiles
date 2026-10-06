@@ -87,8 +87,7 @@
       "kubectl"
       "kubeseal"
 
-      # Shell enhancements
-      "autojump"
+      # Shell enhancements (directory jumping is zoxide, from nixpkgs)
       "tmux"
 
       # Development utilities
