@@ -149,7 +149,9 @@ jobs:
           [ -L ~/.config/mise/config.toml ] || fail "~/.config/mise/config.toml is not a symlink"
           # ...and macOS finds the JDK it installed (mise.nix links it)
           jvms="$(/usr/libexec/java_home -V 2>&1 || true)"
-          grep -q '/mise-temurin-25' <<<"$jvms" || fail "java_home doesn't list mise's Temurin 25: $jvms"
+          for v in 25 21; do
+            grep -q "/mise-temurin-$v" <<<"$jvms" || fail "java_home doesn't list mise's Temurin $v: $jvms"
+          done
 
           # Brew bundle should have left every declared formula installed
           command -v brew >/dev/null || fail "brew not on PATH"

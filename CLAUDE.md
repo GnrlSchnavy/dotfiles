@@ -108,8 +108,8 @@ If you change m5's brews, check the hardcoded formula list in
 
 ## Development tools on these machines
 
-- **Java & Node**: mise (`nix/home/mise.nix`) — global Temurin 25 and
-  Node LTS; per project from `.java-version`/`.nvmrc`/`mise.toml`, with
+- **Java & Node**: mise (`nix/home/mise.nix`) — global Temurin 25
+  (default) and 21, and Node LTS; per project from `.java-version`/`.nvmrc`/`mise.toml`, with
   `JAVA_HOME` set on `cd`. A bare `21` in `.java-version` means OpenJDK,
   `temurin-21` means Temurin (see [docs/packages.md](docs/packages.md))
 - **Kubernetes**: kubectl, helm, flux, kubeseal, kdoctor; aliases `k`,
