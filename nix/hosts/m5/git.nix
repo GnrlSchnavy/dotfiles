@@ -21,6 +21,16 @@ let
   # username, so personal and work pushes don't overwrite each other's
   # saved login.
   personalGitHub.credential."https://github.com".username = "GnrlSchnavy";
+
+  # GitHub owners whose repos need the work SSH key. Plain github.com uses
+  # the personal key (Host github.com in ~/.ssh/config), and GitHub answers
+  # "Repository not found" when that account can't see a work repo. URLs
+  # under these owners are rewritten to the `ahold` SSH alias, which uses
+  # the work key, so existing remotes and new clones need no editing.
+  workGitHubOwners = [
+    "RoyalAholdDelhaize"
+    "yvanstemmerik-ah"
+  ];
 in
 {
   programs.git = {
@@ -74,7 +84,21 @@ in
 
       # Use SSH for GitHub instead of HTTPS. This avoids credential helper
       # prompts entirely. ssh://git@github.com is converted transparently.
-      url."ssh://git@github.com".insteadOf = "https://github.com";
+      # Work owners go to the `ahold` alias instead; git applies the
+      # longest matching insteadOf, so those win over the general rule.
+      url = {
+        "ssh://git@github.com".insteadOf = "https://github.com";
+      }
+      // builtins.listToAttrs (
+        map (owner: {
+          name = "git@ahold:${owner}/";
+          value.insteadOf = [
+            "ssh://git@github.com/${owner}/"
+            "git@github.com:${owner}/"
+            "https://github.com/${owner}/"
+          ];
+        }) workGitHubOwners
+      );
 
       init.defaultBranch = "main";
       pull.rebase = true;
