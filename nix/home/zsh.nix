@@ -34,6 +34,12 @@
     # zoxide replaced autojump; `j` keeps working.
     shellAliases.j = "z";
 
+    # Pick a Docker engine explicitly: `dw` is Docker Desktop (work lane,
+    # shell, IntelliJ), `dp` the personal lane's Colima VM (claude-lanes.nix).
+    # --context beats DOCKER_HOST, so each means the same engine in any shell.
+    shellAliases.dw = "docker --context desktop-linux";
+    shellAliases.dp = "docker --context colima-personal";
+
     # Login shell init (was shell/.zprofile under Stow).
     profileExtra = ''
       # Homebrew environment setup

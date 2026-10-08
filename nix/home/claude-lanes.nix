@@ -325,7 +325,7 @@ in
       # than relying on how Colima fills in keys a colima.yaml leaves out.
       settings = {
         cpu = 4;
-        memory = 8;
+        memory = 3;
         disk = 60;
         rootDisk = 20;
         arch = "host";

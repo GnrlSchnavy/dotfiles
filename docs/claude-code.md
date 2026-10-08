@@ -231,7 +231,7 @@ declared with home-manager's `services.colima` in `claude-lanes.nix`.
 How it fits together:
 
 - **The VM** — a launchd agent (`colima-personal`) starts it at login
-  with 4 CPUs, 8 GB RAM and a 60 GB disk (vz, virtiofs). Its only mount
+  with 4 CPUs, 3 GB RAM and a 60 GB disk (vz, virtiofs). Its only mount
   is `~/projects/personal`, writable; this replaces Colima's default
   mount of all of `$HOME`, so the work tree isn't in the VM at all.
   `colima.yaml` is a store symlink, which is safe here because the agent
@@ -254,9 +254,9 @@ Day to day:
 
 - Containers and images Claude creates live in Colima, not Docker
   Desktop: the Docker Desktop UI and your shell's `docker ps` don't show
-  them. To look at them, use
-  `docker -H unix://$HOME/.colima/personal/docker.sock ps`. Images are
-  pulled and stored once per engine.
+  them. To look at them, use `dp ps` (`dp` = `docker --context
+  colima-personal`; `dw` is the same for Docker Desktop, both from
+  `zsh.nix`). Images are pulled and stored once per engine.
 - Both engines publish on the same `localhost`. If a work stack and a
   personal stack publish the same port (e.g. Postgres on 5432), the
   second fails to start; stop one.
