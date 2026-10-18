@@ -14,8 +14,6 @@
 
       # Communication
       "discord"
-      "microsoft-outlook"
-      "microsoft-teams"
       "signal"
       "slack"
       "whatsapp"
@@ -48,7 +46,6 @@
       "protonvpn"
 
       # AI
-      "github-copilot-app"
       "handy"
       "wispr-flow"
 
