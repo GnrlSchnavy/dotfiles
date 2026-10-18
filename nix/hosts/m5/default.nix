@@ -1,21 +1,19 @@
-# Host-specific configuration for the "m5" Apple Silicon Mac.
+# Host descriptor: m5, the personal Apple Silicon Mac.
 #
-# Per-host modules (homebrew, packages, dock, git) live in THIS directory.
-# m5 is currently the only real host; nix/modules/ and nix/home/ hold
-# everything shared, and this directory holds what is machine-specific.
+# Role-level config (apps, git identity, Claude Code) comes from the
+# profiles listed below (nix/profiles/); this directory holds only what is
+# specific to this machine.
 {
   hostname = "m5";
   username = "yvan-sytac";
 
-  # nix-darwin modules unique to this host (live in this directory).
-  systemModules = [
-    ./homebrew.nix
-    ./packages.nix
-    ./dock.nix
+  profiles = [
+    "dev"
+    "personal"
   ];
 
-  # home-manager modules unique to this host (live in this directory).
-  homeModules = [ ./git.nix ];
+  # nix-darwin modules unique to this host (live in this directory).
+  systemModules = [ ./dock.nix ];
 
   # nix-darwin module applied only to this host.
   module = { ... }: {

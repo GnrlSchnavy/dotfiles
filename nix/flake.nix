@@ -48,15 +48,24 @@
       ...
     }:
     let
-      # Modules shared across every host. Per-host divergence (homebrew,
-      # packages, dock, git) lives in hosts/<name>/ and is pulled in via
-      # the host descriptor's systemModules / homeModules lists.
+      # Modules shared across every host. What differs per role (apps, git
+      # identity, Claude Code) lives in profiles/<name>/, picked by the host
+      # descriptor's `profiles` list; what differs per machine lives in
+      # hosts/<name>/ (systemModules / homeModules).
       sharedModules = [
         ./modules/nix.nix
         ./modules/system.nix
         ./modules/environment.nix
+        ./modules/homebrew.nix
         ./modules/homebrew-trust.nix
       ];
+
+      # A host's modules of one kind ("systemModules" or "homeModules"): its
+      # profiles' first, then its own. See profiles/README.md.
+      hostModules =
+        kind: host:
+        builtins.concatMap (p: (import ./profiles/${p}).${kind} or [ ]) (host.profiles or [ ])
+        ++ (host.${kind} or [ ]);
 
       # Build a per-host nvim. flakePath and darwinHost are derived from
       # the host descriptor so a different user/host doesn't require
@@ -75,15 +84,15 @@
       # Build a darwin configuration from a host descriptor.
       # See hosts/m5/default.nix for the expected shape.
       #
-      # systemModules / homeModules are the per-host module lists; they
-      # default to [ ] so a descriptor can omit either.
+      # profiles, systemModules and homeModules default to [ ] so a
+      # descriptor can omit any of them.
       mkDarwin =
         host:
         nix-darwin.lib.darwinSystem {
           specialArgs = { inherit inputs; };
           modules =
             sharedModules
-            ++ (host.systemModules or [ ])
+            ++ hostModules "systemModules" host
             ++ [
               host.module
               { system.configurationRevision = self.rev or self.dirtyRev or null; }
@@ -123,9 +132,10 @@
                   # original with the .hm-backup suffix.
                   backupFileExtension = "hm-backup";
                   extraSpecialArgs = { inherit inputs; };
-                  # Shared home config (./home) plus this host's homeModules.
+                  # Shared home config (./home) plus the profiles' and the
+                  # host's homeModules.
                   users.${host.username} = {
-                    imports = [ ./home ] ++ (host.homeModules or [ ]);
+                    imports = [ ./home ] ++ hostModules "homeModules" host;
                   };
                 };
               }
@@ -133,7 +143,10 @@
         };
 
       hosts = {
+        # Personal Mac.
         m5 = import ./hosts/m5;
+        # Client-issued work Mac.
+        work = import ./hosts/work;
         # CI fresh-install test target. Matches the GitHub Actions
         # xcode-27 (macOS 27) runner (user "runner", /Users/runner).
         # Not intended for use on a real machine.

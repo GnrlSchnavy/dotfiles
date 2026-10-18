@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Tests for system/bin/merge-claude-settings.sh (the activation-time merge of
-# each lane's owned keys into ~/.claude*/settings.json).
+# the owned keys into ~/.claude/settings.json).
 set -u
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"

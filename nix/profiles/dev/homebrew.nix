@@ -1,22 +1,14 @@
+# Development apps and CLI tools, on every machine. Use Homebrew when a tool
+# isn't in nixpkgs or needs a tap (docs/packages.md).
 { ... }:
 
 {
   homebrew = {
-    enable = true;
-
-    # GUI Applications (casks) - grouped alphabetically within categories
     casks = [
       # Browsers
       "brave-browser"
       "firefox"
       "google-chrome"
-      "tor-browser"
-
-      # Communication
-      "discord"
-      "signal"
-      "slack"
-      "whatsapp"
 
       # Productivity
       "alfred"
@@ -27,45 +19,12 @@
       "chromedriver"
       "claude"
       "claude-code"
-      "docker-desktop"
       "intellij-idea"
       "lens"
       "visual-studio-code"
       "warp"
-
-      # Media
-      "jellyfin-media-player"
-      "spotify"
-      "vlc"
-
-      # Networking & Security
-      "proton-drive"
-      "proton-mail"
-      "proton-mail-bridge"
-      "proton-pass"
-      "protonvpn"
-
-      # AI
-      "handy"
-      "wispr-flow"
-
-      #VPN
-      "tailscale-app"
-
-      #Games
-      "crossover"
-      "steam"
-
-      #Utilities
-      "balenaetcher"
-      "taskexplorer"
-      "knockknock"
-      "little-snitch"
-      "oversight"
-
     ];
 
-    # CLI Tools (brews) - use when not available in Nix or need Homebrew features
     brews = [
       # Programming languages
       "kotlin"
@@ -88,23 +47,10 @@
       "tmux"
 
       # Development utilities
-      "ansible"
       "gh"
       "opencode"
       "openspec"
       "pnpm"
-      "stripe-cli"
-
-      # Utilities
-      "clamav"
-      "nmap"
     ];
-
-    # Homebrew maintenance settings
-    onActivation = {
-      cleanup = "zap";
-      autoUpdate = true;
-      upgrade = true;
-    };
   };
 }

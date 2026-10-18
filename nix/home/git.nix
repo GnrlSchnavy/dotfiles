@@ -4,35 +4,45 @@
 # global ignore patterns. `core.excludesfile` is intentionally not set
 # — git reads ~/.config/git/ignore by default, so we don't need the
 # legacy ~/.gitignore_global path that the Stow-managed setup used.
-{ ... }:
+#
+# The personal identity is the default; the work profile overrides it
+# (nix/profiles/work/git.nix). The dotfiles themselves always commit as
+# personal, on every machine.
+{ lib, ... }:
 
+let
+  personal = {
+    user = {
+      name = "yvan";
+      email = "yvanstemmerik@gmail.com";
+    };
+    # The macOS keychain helper keeps one github.com login per username.
+    credential."https://github.com".username = "GnrlSchnavy";
+  };
+in
 {
   programs.git = {
     enable = true;
 
-    # The dotfiles' own pre-commit hook (.githooks/: lint + secrets scan), in
-    # both clones: ~/.dotfiles for rebuilds and ~/projects/personal/dotfiles
-    # for editing (docs/hosts.md). A relative hooksPath resolves from the repo
-    # root; the trailing slash makes `gitdir:` match recursively.
+    # Both dotfiles clones — ~/.dotfiles for rebuilds and
+    # ~/projects/personal/dotfiles for editing (docs/hosts.md) — commit as
+    # personal and run the repo's pre-commit hook (.githooks/: lint + secrets
+    # scan; a relative hooksPath resolves from the repo root). The trailing
+    # slash makes `gitdir:` match recursively.
     includes =
       map
         (dir: {
           condition = "gitdir:${dir}";
-          contents.core.hooksPath = ".githooks";
+          contents = personal // {
+            core.hooksPath = ".githooks";
+          };
         })
         [
           "~/.dotfiles/"
           "~/projects/personal/dotfiles/"
         ];
 
-    settings = {
-      user = {
-        name = "yvan";
-        email = "yvanstemmerik@gmail.com";
-      };
-      # The macOS keychain helper keeps one github.com login per username.
-      credential."https://github.com".username = "GnrlSchnavy";
-
+    settings = lib.mapAttrsRecursive (_: lib.mkDefault) personal // {
       # Use SSH for GitHub instead of HTTPS. This avoids credential helper
       # prompts entirely. ssh://git@github.com is converted transparently.
       url."ssh://git@github.com".insteadOf = "https://github.com";

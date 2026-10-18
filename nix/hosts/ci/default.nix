@@ -14,16 +14,15 @@
   # (homebrew.*) still runs against the existing install.
   manageHomebrew = false;
 
-  # CI mirrors m5's per-host modules so we exercise the real config
+  # CI mirrors m5 (its profiles and its dock) so we exercise the real config
   # end-to-end. Casks are force-dropped in `module` below; brews still run.
-  # (Was m4 until that host was decommissioned in August 2026; m5 is now
-  # the only real host, so CI and the machine no longer drift.)
-  systemModules = [
-    ../m5/homebrew.nix
-    ../m5/packages.nix
-    ../m5/dock.nix
+  # The work host is only evaluated (nix flake check), not installed: its
+  # Claude Code setup needs DevAI and a Proton Pass login.
+  profiles = [
+    "dev"
+    "personal"
   ];
-  homeModules = [ ../m5/git.nix ];
+  systemModules = [ ../m5/dock.nix ];
 
   module =
     { lib, ... }:

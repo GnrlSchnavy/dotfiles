@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SessionStart hook (work lane): Ahold repos keep their instructions in
+# SessionStart hook (work machine): Ahold repos keep their instructions in
 # AGENTS.md, which Claude Code does not auto-load. Print the repo-root file so
 # it is added to the session context.
 set -u

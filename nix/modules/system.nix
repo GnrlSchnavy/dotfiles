@@ -10,9 +10,9 @@
 
   # GitHub SSH key passphrase in the login Keychain: the first time the key is
   # used, ssh stores the passphrase and adds the key to the agent; at each
-  # login the claude-ssh-agent-relay agent (claude-lanes.nix) reloads it. So
-  # you type it once per machine, and sandboxed Claude sessions (which can't
-  # prompt) can push. Only github.com, not the ahold alias. Written to
+  # login the personal profile's claude-ssh-agent-relay agent reloads it
+  # (profiles/personal/ssh-agent-relay.nix). So you type it once per machine,
+  # and sandboxed Claude sessions (which can't prompt) can push. Written to
   # /etc/ssh/ssh_config.d/; ~/.ssh/config stays unmanaged.
   programs.ssh.extraConfig = ''
     Host github.com
@@ -31,7 +31,7 @@
   system.defaults = {
     # Screen saver settings
     screensaver = {
-      # Password as soon as the screen locks: this Mac holds client code.
+      # Password as soon as the screen locks.
       # Recent macOS may ignore these keys; if Lock Screen settings still
       # show a delay, run once: sysadminctl -screenLock immediate -password -
       askForPassword = true;

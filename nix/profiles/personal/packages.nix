@@ -1,3 +1,4 @@
+# Personal apps from nixpkgs or pinned downloads.
 { pkgs, ... }:
 
 let
@@ -21,22 +22,7 @@ let
 in
 {
   environment.systemPackages = [
-    pkgs.git
-    pkgs.maven
-    pkgs.tree
-    pkgs.jq
-    pkgs.curl
-    pkgs.wget
-    pkgs.ripgrep
-    pkgs.fd
-    pkgs.bat
-    pkgs.unzip
-    pkgs.p7zip
-    pkgs.mkalias
-    pkgs.htop
-    pkgs.fastfetch
-
-    # Music
+    # Music (Jellyfin/Navidrome client)
     feishin
   ];
 }

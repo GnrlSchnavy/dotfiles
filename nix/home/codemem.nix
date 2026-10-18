@@ -1,62 +1,77 @@
-# Two-lane codemem memory — shared across all hosts.
+# codemem memory — the shared plumbing, on every host.
 #
-# codemem gives Claude Code persistent memory. It runs in two isolated lanes
-# so client (Ahold) content is NEVER extracted via Anthropic directly — only
-# through the sanctioned TechNL proxy:
+# codemem gives Claude Code persistent memory. The host's profile names the
+# memory lane and its observer (the model call that extracts memories):
+# personal extracts via the local Claude (Max) sidecar, work via the TechNL
+# proxy so client content never reaches Anthropic directly. Without a lane,
+# codemem isn't set up.
 #
-#   personal → DB ~/.codemem/personal     → extract via local Claude (Max)
-#   work     → DB ~/.codemem/work-ahold   → extract via TechNL proxy
-#
-# This module owns the codemem side: the per-lane observer configs and runtime
-# folders. Which lane a session uses is decided by the Claude Code lane it runs
-# in (see claude-lanes.nix): each lane exports its own CODEMEM_DB /
-# CODEMEM_CONFIG / CODEMEM_VIEWER_PORT and hook spool/lock/context folders, and
-# the codemem plugin's hooks + MCP server (and the viewer the MCP server
-# auto-starts) inherit them.
-#
-# Isolation is by separate DB *folders* (the viewer lock is keyed on the DB's
-# directory), separate observer configs, and separate viewer ports.
-#
-# No secrets live in this file: the TechNL key AND the proxy URL are resolved at
-# runtime via pass-cli (Proton Pass) — the proxy hostname is intentionally kept
-# out of these public dotfiles.
-{ config, lib, ... }:
+# This module writes the observer config, creates the lane's folder, and
+# hands the plugin and its env to Claude Code's settings; the plugin's hooks
+# and MCP server (and the viewer the MCP server auto-starts) inherit the env.
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
-  home = config.home.homeDirectory;
+  cfg = config.dotfiles.codemem;
+  json = pkgs.formats.json { };
+  # toString: mkIf still evaluates the attribute names below when lane is null.
+  lane = toString cfg.lane;
+  dir = "${config.home.homeDirectory}/.codemem/${lane}";
 in
 {
-  # ── codemem observer configs (no secrets) ──
-  xdg.configFile."codemem/personal.json".text = builtins.toJSON {
-    observer_runtime = "claude_sidecar";
-    observer_model = "claude-haiku-4-5";
+  options.dotfiles.codemem = {
+    lane = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "personal";
+      description = "Memory lane: the folder under ~/.codemem and the observer config's name.";
+    };
+    observer = lib.mkOption {
+      inherit (json) type;
+      default = { };
+      description = "Observer config, written to ~/.config/codemem/<lane>.json. No secrets.";
+    };
   };
 
-  # NOTE: with observer_provider="anthropic", codemem's _callAnthropicDirect
-  # IGNORES observer_base_url — it uses a hardcoded api.anthropic.com unless the
-  # env var CODEMEM_ANTHROPIC_ENDPOINT is set (done by cc-work). So the TechNL
-  # endpoint is supplied via that env var, NOT via observer_base_url here.
-  # The api-key header (what the TechNL proxy expects) is supplied via
-  # observer_headers; the token comes from the pass-cli command below
-  # (observer_auth_source = "command"), cached for five minutes.
-  xdg.configFile."codemem/work-ahold.json".text = builtins.toJSON {
-    observer_runtime = "api_http";
-    observer_provider = "anthropic";
-    observer_model = "claude-haiku-4-5";
-    observer_auth_source = "command";
-    observer_auth_command = [
-      "pass-cli"
-      "item"
-      "view"
-      "pass://Ahold/TechNLGenAI/api_key"
-    ];
-    observer_auth_cache_ttl_s = 300;
-    # literal ${auth.token} — escaped so Nix doesn't interpolate it.
-    observer_headers."api-key" = "\${auth.token}";
-  };
+  config = lib.mkIf (cfg.lane != null) {
+    xdg.configFile."codemem/${lane}.json".source = json.generate "codemem-${lane}.json" cfg.observer;
 
-  # ── Per-lane runtime folders (separate dirs → separate viewer locks) ──
-  home.activation.codememDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    run mkdir -p ${home}/.codemem/personal ${home}/.codemem/work-ahold
-  '';
+    home.activation.codememDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      run mkdir -p ${dir}
+    '';
+
+    # Declared rather than installed by hand: the first interactive session
+    # adds the marketplace and fetches the plugin.
+    dotfiles.claude.settings = {
+      env = {
+        CODEMEM_DB = "${dir}/mem.sqlite";
+        CODEMEM_PLUGIN_LOG = "${dir}/plugin.log";
+        CODEMEM_CLAUDE_HOOK_SPOOL_DIR = "${dir}/claude-hook-spool";
+        CODEMEM_CLAUDE_HOOK_LOCK_DIR = "${dir}/claude-hook-ingest.lock";
+        CODEMEM_CLAUDE_HOOK_CONTEXT_DIR = "${dir}/claude-hook-context";
+        CODEMEM_CONFIG = "${config.xdg.configHome}/codemem/${lane}.json";
+      };
+      set = {
+        extraKnownMarketplaces.codemem-marketplace.source = {
+          source = "github";
+          repo = "kunickiaj/codemem";
+        };
+        enabledPlugins."codemem@codemem-marketplace" = true;
+      };
+    };
+
+    # Fallback only: installs the plugin right away (e.g. when only
+    # `claude -p` has run so far).
+    programs.zsh.initContent = lib.mkAfter ''
+      codemem-setup() {
+        claude plugin marketplace add kunickiaj/codemem &&
+          claude plugin install codemem@codemem-marketplace
+      }
+    '';
+  };
 }
