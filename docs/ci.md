@@ -5,11 +5,12 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
 
 1. **`checks`** (Linux, ~2 min) — `nix flake check --no-build
    --all-systems ./nix` evaluates every host (evaluation works
-   cross-platform), [`scripts/lint.sh`](../scripts/lint.sh) in the
+   cross-platform; that includes the `work` host, which is never
+   installed in CI), [`scripts/lint.sh`](../scripts/lint.sh) in the
    flake's dev shell (nixfmt, statix, deadnix, shellcheck, and a
    gitleaks scan of the tree, since the repo is public), and
-   [`tests/run.sh`](../tests/run.sh): the lane-hook fixtures, the
-   `cc-tooling` tests and the settings-merge tests.
+   [`tests/run.sh`](../tests/run.sh): the gateway-check fixtures, the
+   `agents-md.sh`, `cc-tooling` and settings-merge tests.
 2. **`fresh-install`** (macOS, needs `checks`) — runs `setup.sh`
    itself against the `ci` host descriptor on a
    GitHub-hosted `xcode-27` runner: macOS 27 on Apple Silicon, in
@@ -36,9 +37,9 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    asserts:
    - the home-manager symlinks exist (`~/.zshrc`, `~/.zprofile`,
      `~/.zshenv`, `~/.config/git/{config,ignore}`, `~/.ideavimrc`);
-   - both Claude Code lanes: `settings.json` is a regular file with the
-     lane's guard hook merged in and codemem declared, the hook is
-     executable, the codemem lane dirs exist, `cc-tooling` is on PATH, and the vault path was
+   - Claude Code (personal profile): `~/.claude/settings.json` is a
+     regular file with codemem declared and the sandbox enabled (the
+     merged keys), `~/.codemem/personal` exists, and the vault path was
      filled into the skills;
    - `darwin-rebuild`, `brew` and `mise` (with its config) are in
      place, macOS's `java_home` lists mise's Temurin 25 and 21, and the
@@ -59,8 +60,8 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
 
 ## The `ci` host (`nix/hosts/ci/default.nix`)
 
-Mirrors m5 by importing `../m5/{homebrew,packages,dock}.nix` and
-`../m5/git.nix`, then overrides for CI:
+Mirrors m5 — `profiles = [ "dev" "personal" ]` and `../m5/dock.nix` —
+then overrides for CI:
 
 - `homebrew.casks = lib.mkForce [ ]` — casks are multi-GB and a few
   have DSL incompatibilities with the runner's Homebrew; brews alone
@@ -83,18 +84,22 @@ Misses:
   major (now 27; moved off macOS 15 after a build that passed there
   failed on the Mac), but it's a fresh image: Keychain, existing
   Homebrew state and app security prompts only show up on the Mac.
-- Less than it used to: CI now mirrors `m5`, the only real host, so
-  the old gap where an m5-only typo passed CI is gone.
+- **The `work` profile's activation** — the `work` host is evaluated
+  but never installed (its Claude Code setup needs DevAI and a Proton
+  Pass login), so `cc-work`, the gateway hooks and the work casks only
+  get exercised on the work Mac. `tests/gateway-check.sh` covers the
+  hook's logic.
 
 ## Maintenance couplings
 
-- New guard behaviour or a new bypass found? Add a fixture to
-  [`tests/guard.sh`](../tests/guard.sh) — blocking cases and the
-  everyday work that must stay allowed.
-- The smoke check hardcodes formulas `kubectl helm`. If m5's
+- New gateway-check behaviour or a new bypass found? Add a fixture to
+  [`tests/gateway-check.sh`](../tests/gateway-check.sh) — blocking cases
+  and the sessions that must stay allowed.
+- The smoke check hardcodes formulas `kubectl helm`. If the `dev`
   brews change, update the workflow list.
-- The smoke check's symlink list must track `nix/home/files.nix` —
-  add a check when adding an important managed file.
+- The smoke check's symlink list must track `nix/home/files.nix` and
+  `nix/home/claude-code.nix` — add a check when adding an important
+  managed file.
 - The bootstrap is `setup.sh` itself, which runs `darwin-rebuild` via
   `--inputs-from`, i.e. from the nix-darwin revision in `flake.lock` —
   no separate pin to keep in sync. Steps that can't run on a runner

@@ -11,9 +11,9 @@ sudo darwin-rebuild switch --flake ~/.dotfiles/nix#<host> -v
 
 | Layer | Manages | Config lives in |
 |---|---|---|
-| **nix-darwin** | System: macOS defaults, dock, keyboard, launchd, system packages | `nix/modules/*.nix` (shared) + `nix/hosts/<name>/{packages,homebrew,dock}.nix` (per-host) |
-| **home-manager** | User: `~/.zshrc`, `~/.config/git/*`, `~/.ideavimrc`, `~/.claude/*` + `~/.claude-work/*` symlinks, Claude Code lane launchers | `nix/home/*.nix` (shared) + `nix/hosts/<name>/git.nix` (per-host) |
-| **nix-homebrew** | Homebrew itself + declared brews/casks/masApps | `nix/hosts/<name>/homebrew.nix` |
+| **nix-darwin** | System: macOS defaults, dock, keyboard, launchd, system packages | `nix/modules/*.nix` (shared) + `nix/profiles/<role>/{packages,homebrew}.nix` (per role) + `nix/hosts/<name>/dock.nix` (per machine) |
+| **home-manager** | User: `~/.zshrc`, `~/.config/git/*`, `~/.ideavimrc`, `~/.claude/*`, Colima, Claude Code launchers | `nix/home/*.nix` (shared) + `nix/profiles/<role>/*.nix` (per role) |
+| **nix-homebrew** | Homebrew itself + declared brews/casks/masApps | `nix/modules/homebrew.nix` (activation) + `nix/profiles/<role>/homebrew.nix` (lists) |
 
 home-manager runs as a nix-darwin module, so a single
 `darwin-rebuild switch` activates all three layers. All managed
@@ -40,20 +40,25 @@ The `outputs` section defines:
   [`modules/system.nix`](../nix/modules/system.nix) (macOS defaults,
   keyboard remap),
   [`modules/environment.nix`](../nix/modules/environment.nix)
-  (EDITOR/VISUAL, kubectl aliases), and
+  (EDITOR/VISUAL, kubectl aliases),
+  [`modules/homebrew.nix`](../nix/modules/homebrew.nix) (Homebrew on,
+  `cleanup = "zap"`, auto-update/upgrade), and
   [`modules/homebrew-trust.nix`](../nix/modules/homebrew-trust.nix)
   (`brew trust` for every third-party tap the host declares).
+- `hostModules kind host` — a host's `systemModules` or `homeModules`:
+  each listed profile's (`nix/profiles/<name>/default.nix`) first, then
+  the host's own.
 - `mkNvim pkgs host` — builds a per-host Neovim from
   `nix/nixvim/config/`, injecting `flakePath`
   (`/Users/<username>/.dotfiles/nix`) and `darwinHost` (the hostname)
   as `extraSpecialArgs`. These parameterize the `nixd` LSP so it can
   evaluate this flake's own options without hardcoded paths.
 - `mkDarwin host` — turns a host descriptor into a
-  `darwinConfiguration`: shared modules + the host's `systemModules` +
+  `darwinConfiguration`: shared modules + `hostModules "systemModules"` +
   the host's inline `module` + the nvim package + nix-homebrew setup +
-  home-manager (which imports `nix/home/` plus the host's
-  `homeModules`).
-- `hosts` attrset — registers `m5` and `ci`. Adding a host means
+  home-manager (which imports `nix/home/` plus
+  `hostModules "homeModules"`).
+- `hosts` attrset — registers `m5`, `work` and `ci`. Adding a host means
   adding an entry here (see [hosts.md](hosts.md)).
 - `checks` — every host's system, grouped by platform. `nix flake
   check` ignores `darwinConfigurations` on its own, so this output is
@@ -62,8 +67,8 @@ The `outputs` section defines:
   `devShells.default` (`nix develop ./nix`: nixfmt, statix, deadnix,
   shellcheck, gitleaks, jq — what `scripts/lint.sh` needs), for the Mac
   and for Linux CI. statix's config is `nix/statix.toml`. The tool list
-  lives in `nix/lint-tools.nix`, shared with the personal Claude lane,
-  whose Bash sandbox can't run `nix develop`.
+  lives in `nix/lint-tools.nix`, shared with the personal profile's
+  Claude Code, whose Bash sandbox can't run `nix develop`.
 
 Home-manager is configured with `useGlobalPkgs`, `useUserPackages`, and
 `backupFileExtension = "hm-backup"` — pre-existing files that would
@@ -78,6 +83,7 @@ Each `nix/hosts/<name>/default.nix` evaluates to a plain attrset:
 {
   hostname = "...";        # must match `scutil --get LocalHostName`
   username = "...";        # must match `whoami` on that machine
+  profiles = [ "dev" "personal" ]; # roles: "dev" + one of personal/work (optional, default [])
   systemModules = [ ... ]; # per-host nix-darwin modules (optional, default [])
   homeModules = [ ... ];   # per-host home-manager modules (optional, default [])
   module = { ... }: {      # inline nix-darwin module, must set:
@@ -93,52 +99,95 @@ Each `nix/hosts/<name>/default.nix` evaluates to a plain attrset:
 `home.homeDirectory` from it; omitting it fails the rebuild with a
 "not of type absolute path" error.
 
+## Profiles
+
+A profile is the config for one **role** a machine plays —
+[`nix/profiles/README.md`](../nix/profiles/README.md). Its
+`default.nix` returns `systemModules` / `homeModules` lists, like a host
+descriptor; the flake adds them ahead of the host's own.
+
+| Profile | Used by | Adds |
+|---|---|---|
+| `dev` | every host | dev casks/brews, nixpkgs CLI basics, the Colima Docker engine |
+| `personal` | `m5`, `ci` | personal apps; Claude Code on Max, sandboxed; ssh-agent relay; vault skills; codemem lane `personal` |
+| `work` | `work` | work apps; work git identity; Claude Code via DevAI only (`cc-work`), gateway check, Ahold overlay; codemem lane `work`; `cc-tooling` |
+
+A host takes `dev` plus **exactly one** of `personal` / `work`: they set
+the same options (codemem's lane, git identity), and client content must
+never reach the personal Max login. Shared modules declare the options
+(`dotfiles.claude.*` in `nix/home/claude-code.nix`,
+`dotfiles.codemem.*` in `nix/home/codemem.nix`); profiles only set them.
+
 ## Directory map
 
 ```
 nix/
-├── flake.nix            # inputs + mkDarwin/mkNvim + hosts attrset
-├── flake.lock           # pinned input versions
-├── lint-tools.nix       # scripts/lint.sh's tools (dev shell + Claude sandbox)
+├── flake.nix              # inputs + hostModules/mkDarwin/mkNvim + hosts attrset
+├── flake.lock             # pinned input versions
+├── lint-tools.nix         # scripts/lint.sh's tools (dev shell + personal Claude sandbox)
+├── statix.toml            # statix lint config
+├── profiles/              # one per role; see profiles/README.md
+│   ├── README.md
+│   ├── dev/               # every machine
+│   │   ├── default.nix    # module lists
+│   │   ├── homebrew.nix   # dev casks/brews (IDEs, browsers, Claude, k8s, pass-cli)
+│   │   ├── packages.nix   # nixpkgs CLI basics (git, maven, jq, ripgrep, …)
+│   │   └── docker.nix     # Colima default profile, DOCKER_HOST, docker CLI
+│   ├── personal/          # m5
+│   │   ├── default.nix
+│   │   ├── homebrew.nix   # personal apps (Proton, Signal, Slack, Steam, …)
+│   │   ├── packages.nix   # feishin (pinned dmg)
+│   │   ├── claude.nix     # Claude Max: sandbox, plugins, DOTFILES_LINT_PATH, codemem lane
+│   │   ├── ssh-agent-relay.nix # git push from the Bash sandbox
+│   │   └── vault.nix      # Obsidian vault skills, OBSIDIAN_VAULT
+│   └── work/              # the client-issued Mac
+│       ├── default.nix
+│       ├── homebrew.nix   # Outlook, Teams, Slack, GitHub Copilot
+│       ├── git.nix        # work git identity (default on that machine)
+│       └── claude.nix     # cc-work/cc-work-desktop, gateway check, overlay, model aliases, codemem lane, cc-tooling
 ├── hosts/
-│   ├── m5/              # descriptor + homebrew/packages/dock/git modules
-│   ├── ci/              # GitHub Actions runner; reuses ../m5/* modules with CI overrides
-│   └── template/        # copy to onboard a new Mac
-├── modules/             # shared nix-darwin modules (every host)
-│   ├── nix.nix          # nix daemon, gc (weekly, >30d), store optimise, allowUnfree
-│   ├── system.nix       # macOS defaults, caps-lock→escape, dark mode, finder
-│   ├── environment.nix  # EDITOR/VISUAL=nvim, kubectl aliases (k, kgp, kaf, …)
+│   ├── m5/                # default.nix (profiles dev + personal) + dock.nix
+│   ├── work/              # default.nix (profiles dev + work; placeholder username) + dock.nix
+│   ├── ci/                # GitHub Actions runner; m5's profiles and dock with CI overrides
+│   └── template/          # copy to onboard a new Mac
+├── modules/               # shared nix-darwin modules (every host)
+│   ├── README.md
+│   ├── nix.nix            # nix daemon, gc (weekly, >30d), store optimise, allowUnfree
+│   ├── system.nix         # macOS defaults, caps-lock→escape, dark mode, finder, github.com ssh
+│   ├── environment.nix    # EDITOR/VISUAL=nvim, kubectl aliases (k, kgp, kaf, …)
+│   ├── homebrew.nix       # homebrew.enable + onActivation (cleanup = "zap")
 │   └── homebrew-trust.nix # brew trust for the host's third-party taps
-├── home/                # shared home-manager modules (every host)
-│   ├── default.nix      # imports the modules below; home.stateVersion
-│   ├── zsh.nix          # .zprofile/.zshrc content, aliases, session vars
-│   ├── mise.nix         # Java/Node via mise: global versions, shell hook
-│   ├── files.nix        # file-pointer dotfiles (.ideavimrc, .claude/*)
-│   ├── secrets.nix      # pass-get / pass-render / pass-check (Proton Pass)
-│   ├── claude-lanes.nix # two Claude Code lanes (cc-personal/cc-work), hooks, settings merge, cc-tooling, personal Colima engine, git-over-SSH relay
-│   └── codemem.nix      # per-lane codemem observer configs + runtime dirs
-└── nixvim/config/       # Neovim module (NOT a flake) — LSP, Telescope, Treesitter
+├── home/                  # shared home-manager modules (every host)
+│   ├── default.nix        # imports the modules below; home.stateVersion
+│   ├── zsh.nix            # .zprofile/.zshrc content, aliases, session vars
+│   ├── mise.nix           # Java/Node via mise: global versions, shell hook
+│   ├── git.nix            # programs.git; personal identity as mkDefault; dotfiles clones
+│   ├── files.nix          # file-pointer dotfiles (.ideavimrc)
+│   ├── secrets.nix        # pass-get / pass-render / pass-check (Proton Pass)
+│   ├── claude-code.nix    # dotfiles.claude.{settings,instructions}; settings merge; agents/commands links
+│   └── codemem.nix        # dotfiles.codemem.{lane,observer}; observer config, lane dir, plugin
+└── nixvim/config/         # Neovim module (NOT a flake), built per host by mkNvim
+    ├── default.nix        # entry: imports the rest, Catppuccin
+    ├── lsp.nix            # language servers; nixd uses flakePath/darwinHost
+    └── options.nix keymaps.nix editing.nix ui.nix neo-tree.nix completion.nix
+        telescope.nix treesitter.nix markdown.nix
 ```
 
 Repo root also holds the symlink *sources*: `editors/.ideavimrc`,
-`system/.claude/` (personal lane), `system/.claude-work/` (work-lane
-hooks + Ahold overlay), `system/bin/`
-(`cc-tooling`), and the unmanaged Docker reference
-`development/.docker/config.json`.
+`system/.claude/` (settings snapshot, global `CLAUDE.md`, agents,
+commands, skills), `system/claude-work/` (work hooks + Ahold overlay),
+and `system/bin/` (settings merge, `claude-git-ssh`, `cc-tooling`).
 
-## Shared vs per-host: the decision rule
+## Shared vs profile vs host: the decision rule
 
-- Differs between machines (or plausibly will): **per-host** —
-  `nix/hosts/<name>/`. Examples: package lists, casks, dock apps, git
-  identity.
-- Identical on every machine by design: **shared** — `nix/modules/`
+- Same on every machine by design: **shared** — `nix/modules/`
   (system-level) or `nix/home/` (user-level). Examples: macOS
-  defaults, zsh setup, Claude config symlinks.
-
-`m5` is currently the only real host (m4 was sold in August 2026), so
-the per-host layer holds exactly one machine's worth of config. Keep
-the split anyway — it costs nothing and is what makes onboarding the
-next Mac a copy rather than a refactor.
+  defaults, zsh setup, Claude Code plumbing.
+- Same for every machine of one role: **profile** —
+  `nix/profiles/<role>/`. Examples: casks, package lists, git identity,
+  Claude Code backend.
+- Only this machine: **host** — `nix/hosts/<name>/`. Examples: dock,
+  hostname, username.
 
 ## Neovim (NixVim)
 

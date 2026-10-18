@@ -10,9 +10,14 @@ Built on three layers:
 
 | Layer | Manages | Mechanism |
 |---|---|---|
-| **nix-darwin** | macOS system: defaults, dock, launchd, fonts, packages | `nix/modules/*.nix` (shared) + `nix/hosts/<name>/*.nix` (per-host) |
-| **home-manager** | User-level dotfiles: `.zshrc`, `.gitconfig`, `.ideavimrc`, `.claude/*` | `nix/home/*.nix` (shared) + `nix/hosts/<name>/git.nix` |
-| **nix-homebrew** | GUI applications and a few CLI tools that aren't in nixpkgs | `nix/hosts/<name>/homebrew.nix` |
+| **nix-darwin** | macOS system: defaults, dock, launchd, fonts, packages | `nix/modules/*.nix` (shared) + `nix/profiles/<role>/*.nix` + `nix/hosts/<name>/*.nix` |
+| **home-manager** | User-level dotfiles: `.zshrc`, `.gitconfig`, `.ideavimrc`, `.claude/*` | `nix/home/*.nix` (shared) + `nix/profiles/<role>/*.nix` |
+| **nix-homebrew** | GUI applications and a few CLI tools that aren't in nixpkgs | `nix/profiles/<role>/homebrew.nix` |
+
+Each Mac plays one role. Its host descriptor lists **profiles**
+([`nix/profiles/`](nix/profiles/README.md)): `dev` everywhere (dev
+apps, CLI tools, Colima as the Docker engine) plus `personal` (`m5`) or
+`work` (the client-issued Mac).
 
 No Stow. No manual symlink dance. CI verifies a fresh-install scenario
 end-to-end on every push.
@@ -48,7 +53,9 @@ Mac is four steps:
 # 1. Copy the template (run inside the new Mac, after cloning)
 cp -r nix/hosts/template "nix/hosts/$(scutil --get LocalHostName)"
 
-# 2. Edit the new descriptor — replace the REPLACE_ME_* placeholders
+# 2. Edit the new descriptor — replace the REPLACE_ME_* placeholders and
+#    pick its profiles ("dev" plus one of "personal" / "work"); seed a
+#    dock with: cp nix/hosts/m5/dock.nix nix/hosts/<your-hostname>/
 $EDITOR "nix/hosts/$(scutil --get LocalHostName)/default.nix"
 
 # 3. Register it in nix/flake.nix's `hosts` attrset:
@@ -72,7 +79,7 @@ machine (`setup.sh` prints the same list):
 
 ```bash
 pass-cli login    # Proton Pass: the source of every runtime secret (docs/secrets.md)
-devai setup       # work lane: gateway sign-in, after installing the DevAI CLI (docs/claude-code.md)
+devai setup       # work machine only: gateway sign-in, after installing the DevAI CLI (docs/claude-code.md)
 ```
 
 The rebuild installs mise's Java/Node versions, and Claude Code fetches
@@ -98,15 +105,17 @@ sudo darwin-rebuild --rollback
 
 | What | Where |
 |---|---|
-| New CLI tool from nixpkgs | [`nix/hosts/<name>/packages.nix`](nix/hosts/m5/packages.nix) |
-| New GUI app (cask) or brew formula | [`nix/hosts/<name>/homebrew.nix`](nix/hosts/m5/homebrew.nix) |
+| New CLI tool from nixpkgs | [`nix/profiles/<role>/packages.nix`](nix/profiles/dev/packages.nix) |
+| New GUI app (cask) or brew formula | [`nix/profiles/<role>/homebrew.nix`](nix/profiles/dev/homebrew.nix) |
+| Docker engine (Colima) | [`nix/profiles/dev/docker.nix`](nix/profiles/dev/docker.nix) |
 | macOS system default (finder, keyboard, etc.) | [`nix/modules/system.nix`](nix/modules/system.nix) |
 | Dock layout / apps (per-host) | [`nix/hosts/<name>/dock.nix`](nix/hosts/m5/dock.nix) |
 | Shell config (zsh init, env vars) | [`nix/home/zsh.nix`](nix/home/zsh.nix) |
 | Java/Node versions (mise) | [`nix/home/mise.nix`](nix/home/mise.nix) |
-| Claude Code lanes (`cc-personal` / `cc-work` / `cc-work-desktop`), hooks, settings merge | [`nix/home/claude-lanes.nix`](nix/home/claude-lanes.nix) |
-| codemem memory (per-lane observer configs) | [`nix/home/codemem.nix`](nix/home/codemem.nix) |
-| Git config (per-host identity) | [`nix/hosts/<name>/git.nix`](nix/hosts/m5/git.nix) |
+| Claude Code settings merge, `CLAUDE.md`, agents/commands | [`nix/home/claude-code.nix`](nix/home/claude-code.nix) |
+| Claude Code, personal (Max, sandbox, plugins) / work (`cc-work`, gateway check) | [`nix/profiles/personal/claude.nix`](nix/profiles/personal/claude.nix) / [`nix/profiles/work/claude.nix`](nix/profiles/work/claude.nix) |
+| codemem memory | [`nix/home/codemem.nix`](nix/home/codemem.nix) |
+| Git config (personal identity by default; work in the `work` profile) | [`nix/home/git.nix`](nix/home/git.nix) |
 | New dotfile to symlink (e.g. `.foorc`) | [`nix/home/files.nix`](nix/home/files.nix) |
 | Neovim plugins / LSP / keymaps | [`nix/nixvim/config/`](nix/nixvim/config/) |
 | Garbage collection, nix daemon settings | [`nix/modules/nix.nix`](nix/modules/nix.nix) |
@@ -122,39 +131,43 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 ├── nix/
 │   ├── flake.nix              ← input plumbing + per-host wiring
 │   ├── flake.lock             ← pinned versions of all inputs
+│   ├── profiles/              ← one per role; a host lists the ones it gets
+│   │   ├── dev/               ← every machine: dev apps/CLI, Colima Docker engine
+│   │   ├── personal/          ← m5: personal apps, Claude Max + sandbox, vault skills
+│   │   └── work/              ← work Mac: work apps + git identity, Claude via DevAI
 │   ├── hosts/
-│   │   ├── m5/                ← "m5" Mac: descriptor + own homebrew/packages/dock/git
-│   │   ├── ci/                ← CI runner descriptor (mirrors m5's per-host modules)
+│   │   ├── m5/                ← personal Mac: descriptor (profiles) + dock
+│   │   ├── work/              ← client-issued Mac: descriptor (placeholders) + dock
+│   │   ├── ci/                ← CI runner descriptor (mirrors m5)
 │   │   └── template/          ← copy this when adding a new host
 │   ├── modules/               ← shared nix-darwin (system-level) modules
 │   │   ├── system.nix         ← macOS defaults (keyboard, finder, login window), Touch ID sudo
 │   │   ├── environment.nix    ← system-wide env vars and aliases
 │   │   ├── nix.nix            ← nix daemon config (gc, optimise, settings)
+│   │   ├── homebrew.nix       ← Homebrew on, onActivation (cleanup = "zap")
 │   │   └── homebrew-trust.nix ← brew trust for declared third-party taps
 │   ├── home/                  ← shared home-manager (user-level) modules
 │   │   ├── default.nix        ← entrypoint, imports submodules
 │   │   ├── zsh.nix            ← .zshrc / .zprofile / .zshenv content
 │   │   ├── mise.nix           ← Java/Node via mise (global versions)
-│   │   ├── files.nix          ← file-pointer dotfiles (.ideavimrc, .claude)
+│   │   ├── git.nix            ← git config, personal identity by default
+│   │   ├── files.nix          ← file-pointer dotfiles (.ideavimrc)
 │   │   ├── secrets.nix        ← Proton Pass helpers (pass-get, pass-render)
-│   │   ├── claude-lanes.nix   ← two Claude Code lanes (cc-personal / cc-work)
-│   │   └── codemem.nix        ← per-lane codemem memory configs
+│   │   ├── claude-code.nix    ← Claude Code plumbing: settings merge, CLAUDE.md, agents
+│   │   └── codemem.nix        ← codemem lane + observer config
 │   └── nixvim/                ← neovim configuration as a nix module
 │       └── config/            ← imported by flake.nix's per-host nvim build
 │
 ├── editors/.ideavimrc         ← IntelliJ Vim config (referenced by home/files.nix)
-├── development/.docker/       ← Docker config reference (NOT symlinked — Docker
-│                                 Desktop rewrites the file at runtime, breaks on
-│                                 a Nix-store symlink)
-├── system/.claude/            ← Claude Code personal lane: settings, CLAUDE.md, agents,
-│                                 commands, skills, hooks (home/files.nix + claude-lanes.nix)
-├── system/.claude-work/       ← work lane: hooks + Ahold CLAUDE.md overlay
-├── system/bin/                ← cc-tooling (per-client tooling helper)
+├── system/.claude/            ← Claude Code: settings snapshot, CLAUDE.md, agents,
+│                                 commands, skills (home/claude-code.nix + profiles)
+├── system/claude-work/        ← work profile: hooks + Ahold CLAUDE.md overlay
+├── system/bin/                ← settings merge, claude-git-ssh, cc-tooling
 │
 ├── .github/workflows/check.yml ← Linux eval + tests, then fresh-install CI
 ├── setup.sh                    ← bootstrap entry point
-├── scripts/                    ← maintenance helpers (check, update, backup)
-└── tests/                      ← lane-hook, cc-tooling and settings-merge tests (tests/run.sh)
+├── scripts/                    ← maintenance helpers (check, update, backup, lint)
+└── tests/                      ← gateway-check, agents-md, cc-tooling and settings-merge tests (tests/run.sh)
 ```
 
 ---
@@ -209,8 +222,8 @@ exactly what to do (it's [the new-host workflow](#setting-up-a-new-host)).
 **Brew bundle fails on a specific cask** — usually an upstream
 Homebrew issue (we've seen them on macOS 26). Check
 `brew install --cask <name>` manually for the real error. If it's
-truly broken upstream, comment the cask out of your host's
-`homebrew.nix` (`nix/hosts/<name>/homebrew.nix`) temporarily.
+truly broken upstream, comment the cask out of the profile's
+`homebrew.nix` (`nix/profiles/<role>/homebrew.nix`) temporarily.
 
 **Pre-existing `~/.zshrc` etc. blocking home-manager** — the flake
 sets `home-manager.backupFileExtension = "hm-backup"`, so your
@@ -223,8 +236,8 @@ new config.
 ## Requirements
 
 - macOS 15+ (developed on macOS 27)
-- Apple Silicon (Intel works for most of it; the `m5` host descriptor
-  declares `aarch64-darwin` — change to `x86_64-darwin` for Intel)
+- Apple Silicon (Intel works for most of it; the host descriptors
+  declare `aarch64-darwin` — change to `x86_64-darwin` for Intel)
 - Admin privileges (nix-darwin activation requires sudo)
 - An internet connection (initial run pulls a few GB through the cache)
 - ~10 GB free disk for the nix closure and homebrew downloads
@@ -235,13 +248,13 @@ new config.
 
 Canonical docs live in [`docs/`](docs/):
 
-- [`docs/architecture.md`](docs/architecture.md) — flake wiring, module layering, host descriptors
+- [`docs/architecture.md`](docs/architecture.md) — flake wiring, module layering, profiles, host descriptors
 - [`docs/hosts.md`](docs/hosts.md) — host inventory and new-host onboarding
 - [`docs/packages.md`](docs/packages.md) — Nix vs Homebrew vs MAS strategy, adding/removing packages
 - [`docs/shell-and-dotfiles.md`](docs/shell-and-dotfiles.md) — zsh setup, dotfile symlinking, files apps rewrite at runtime
-- [`docs/claude-code.md`](docs/claude-code.md) — Claude Code settings/agents/skills, the two lanes, codemem memory
+- [`docs/claude-code.md`](docs/claude-code.md) — Claude Code per profile (personal Max / work DevAI), Docker (Colima), codemem memory
 - [`docs/agent-workflow.md`](docs/agent-workflow.md) — the `/flow` multi-agent workflow
-- [`docs/client-tooling.md`](docs/client-tooling.md) — per-client tooling (`cc-tooling`) and onboarding a client lane
+- [`docs/client-tooling.md`](docs/client-tooling.md) — per-client tooling (`cc-tooling`) and onboarding a client
 - [`docs/secrets.md`](docs/secrets.md) — Proton Pass references and helpers
 - [`docs/operations.md`](docs/operations.md) — rebuilds, updates, maintenance scripts, troubleshooting
 - [`docs/ci.md`](docs/ci.md) — the fresh-install CI workflow
