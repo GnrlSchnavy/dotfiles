@@ -4,66 +4,17 @@
 # global ignore patterns. `core.excludesfile` is intentionally not set
 # — git reads ~/.config/git/ignore by default, so we don't need the
 # legacy ~/.gitignore_global path that the Stow-managed setup used.
-#
-# m5 is both the work and the personal machine (m4 was sold in August
-# 2026), so the identity is conditional: work by default, personal for
-# the paths listed in `includes` below.
 { ... }:
 
-let
-  personal = {
-    name = "yvan";
-    email = "yvanstemmerik@gmail.com";
-  };
-
-  # GitHub account per checkout. The macOS keychain helper keeps one
-  # github.com login per account and returns the one matching this
-  # username, so personal and work pushes don't overwrite each other's
-  # saved login.
-  personalGitHub.credential."https://github.com".username = "GnrlSchnavy";
-
-  # GitHub owners whose repos need the work SSH key. Plain github.com uses
-  # the personal key (Host github.com in ~/.ssh/config), and GitHub answers
-  # "Repository not found" when that account can't see a work repo. URLs
-  # under these owners are rewritten to the `ahold` SSH alias, which uses
-  # the work key, so existing remotes and new clones need no editing.
-  workGitHubOwners = [
-    "RoyalAholdDelhaize"
-    "yvanstemmerik-ah"
-  ];
-in
 {
   programs.git = {
     enable = true;
 
-    # Personal identity for personal checkouts. BOTH paths matter: this
-    # dotfiles repo is cloned twice — ~/projects/personal/dotfiles for
-    # editing and ~/.dotfiles for rebuilds (see docs/hosts.md) — and
-    # without the second entry, commits made from ~/.dotfiles would go
-    # out under the work identity.
-    #
-    # A trailing slash makes `gitdir:` match recursively, so every repo
-    # beneath the directory is covered. Git evaluates includes in order
-    # and last-wins, so these override the `user` block below.
-    includes = [
-      {
-        condition = "gitdir:~/projects/personal/";
-        contents = {
-          user = personal;
-        }
-        // personalGitHub;
-      }
-      {
-        condition = "gitdir:~/.dotfiles/";
-        contents = {
-          user = personal;
-        }
-        // personalGitHub;
-      }
-    ]
-    # The dotfiles' own pre-commit hook (.githooks/: lint + secrets scan),
-    # in both clones. A relative hooksPath resolves from the repo root.
-    ++
+    # The dotfiles' own pre-commit hook (.githooks/: lint + secrets scan), in
+    # both clones: ~/.dotfiles for rebuilds and ~/projects/personal/dotfiles
+    # for editing (docs/hosts.md). A relative hooksPath resolves from the repo
+    # root; the trailing slash makes `gitdir:` match recursively.
+    includes =
       map
         (dir: {
           condition = "gitdir:${dir}";
@@ -75,30 +26,16 @@ in
         ];
 
     settings = {
-      # Work identity — the default for anything not matched above.
       user = {
-        name = "yvanstemmerik-ah";
-        email = "yvan.stemmerik@ah.nl";
+        name = "yvan";
+        email = "yvanstemmerik@gmail.com";
       };
-      credential."https://github.com".username = "yvanstemmerik-ah";
+      # The macOS keychain helper keeps one github.com login per username.
+      credential."https://github.com".username = "GnrlSchnavy";
 
       # Use SSH for GitHub instead of HTTPS. This avoids credential helper
       # prompts entirely. ssh://git@github.com is converted transparently.
-      # Work owners go to the `ahold` alias instead; git applies the
-      # longest matching insteadOf, so those win over the general rule.
-      url = {
-        "ssh://git@github.com".insteadOf = "https://github.com";
-      }
-      // builtins.listToAttrs (
-        map (owner: {
-          name = "git@ahold:${owner}/";
-          value.insteadOf = [
-            "ssh://git@github.com/${owner}/"
-            "git@github.com:${owner}/"
-            "https://github.com/${owner}/"
-          ];
-        }) workGitHubOwners
-      );
+      url."ssh://git@github.com".insteadOf = "https://github.com";
 
       init.defaultBranch = "main";
       pull.rebase = true;
