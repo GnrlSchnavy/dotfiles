@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# claude-git-ssh — the SSH command git uses in the personal Claude Code lane
-# (set by the git() function in claude-lanes.nix), so Claude can push and pull.
+# claude-git-ssh — the SSH command git uses in Claude Code's Bash sandbox on a
+# personal machine (set by the git() function in
+# nix/profiles/personal/ssh-agent-relay.nix), so Claude can push and pull.
 #
 # Inside the Bash sandbox ($SANDBOX_RUNTIME set) ssh can't resolve or reach
 # github.com: the sandbox's own GIT_SSH_COMMAND uses its SOCKS port without

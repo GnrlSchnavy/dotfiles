@@ -132,8 +132,8 @@ pass-cli login
 Verify with `pass-cli info`. That single login is what replaces
 copy-pasting each individual secret onto each new machine.
 
-`pass-cli` itself is declared per host as
-`protonpass/tap/pass-cli` in `nix/hosts/<name>/homebrew.nix`
+`pass-cli` itself is declared for every machine as
+`protonpass/tap/pass-cli` in `nix/profiles/dev/homebrew.nix`
 (the official tap; Homebrew owns updates, and pass-cli's own
 `pass-cli update` is disabled under it).
 
@@ -145,9 +145,9 @@ reports a missing one.
 
 | Consumer | Reference | Defined in |
 |---|---|---|
-| `cc-work` (TechNL proxy URL for codemem; the gateway credential itself is held by DevAI CLI) | `pass://Ahold/TechNLGenAI/proxy_url` | [`nix/home/claude-lanes.nix`](../nix/home/claude-lanes.nix) |
-| codemem work-lane observer auth | `pass://Ahold/TechNLGenAI/api_key` | [`nix/home/codemem.nix`](../nix/home/codemem.nix) |
-| Per-client Claude Code lanes | `pass://<Client>/<Channel>/{api_key,proxy_url}` | [client-tooling.md](client-tooling.md) |
+| `cc-work` (TechNL proxy URL for codemem; the gateway credential itself is held by DevAI CLI) | `pass://Ahold/TechNLGenAI/proxy_url` | [`nix/profiles/work/claude.nix`](../nix/profiles/work/claude.nix) |
+| codemem work observer auth | `pass://Ahold/TechNLGenAI/api_key` | [`nix/profiles/work/claude.nix`](../nix/profiles/work/claude.nix) |
+| Per-client Claude Code profiles | `pass://<Client>/<Channel>/{api_key,proxy_url}` | [client-tooling.md](client-tooling.md) |
 
 The codemem observer entry is a raw `observer_auth_command` array
 rather than a `pass-get` call: codemem spawns that command itself and

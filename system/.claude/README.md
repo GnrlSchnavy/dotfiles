@@ -1,23 +1,29 @@
 # Claude Code Configuration
 
-Version-controlled Claude Code settings for the **personal lane**,
-symlinked into `~/.claude/` by home-manager (see
-[`nix/home/files.nix`](../../nix/home/files.nix) and
-[`nix/home/claude-lanes.nix`](../../nix/home/claude-lanes.nix)).
-The work lane (`cc-work`, `~/.claude-work/`) shares the agents and
-commands from here — see [below](#work-lane-claude-work).
+Version-controlled Claude Code settings, linked into `~/.claude/` by
+home-manager on every machine (see
+[`nix/home/claude-code.nix`](../../nix/home/claude-code.nix)). What the
+setup talks to — Claude Max on the personal Mac, the DevAI/TechNL
+gateway on the work Mac — comes from the host's profile
+([`nix/profiles/`](../../nix/profiles/README.md)).
 
 ## Contents
 
 | Path | Managed how | Purpose |
 |---|---|---|
 | `README.md` | symlink → `~/.claude/README.md` | This file |
-| `CLAUDE.md` | symlink → `~/.claude/CLAUDE.md` | Global baseline instructions (both lanes) |
-| `agents/` | symlink → `~/.claude/agents` (read-only dir) | Custom subagent definitions (both lanes) |
-| `commands/` | symlink → `~/.claude/commands` (read-only dir) | Custom slash commands, incl. `/flow*` (both lanes) |
-| `skills/` | symlink → `~/.claude/skills` (read-only dir) | Custom skills (vault-* etc.), personal lane only |
-| `hooks/` | symlink → `~/.claude/hooks` (read-only dir) | `work-lane-guard.sh` + `.jq` — blocks client work trees in the personal lane |
+| `CLAUDE.md` | → `~/.claude/CLAUDE.md`, with the profile's overlay appended | Global baseline instructions |
+| `agents/` | symlink → `~/.claude/agents` (read-only dir) | Custom subagent definitions |
+| `commands/` | symlink → `~/.claude/commands` (read-only dir) | Custom slash commands, incl. `/flow*` |
+| `skills/` | → `~/.claude/skills`, vault path filled in (personal profile only) | Custom skills (vault-* etc.) |
 | `settings.json` | **NOT symlinked** — reference snapshot | Creates `~/.claude/settings.json` when absent; owned keys merged on every rebuild |
+
+On the work Mac, `~/.claude/hooks` comes from
+[`../claude-work/hooks/`](../claude-work/hooks/) (`gateway-check.sh`,
+`agents-md.sh`) and the Ahold overlay
+([`../claude-work/ahold/`](../claude-work/ahold/)) is appended to
+`CLAUDE.md`. Full details:
+[`docs/claude-code.md`](../../docs/claude-code.md#work-profile).
 
 ## Why settings.json is not symlinked
 
@@ -26,25 +32,16 @@ toggles, effort level, survey state). A read-only Nix-store symlink
 breaks the app's atomic rename — the same failure mode as
 `~/.docker/config.json`. So the file is owned by the app.
 
-It is no longer *only* seeded, though: on every rebuild the
-`claudeLaneSettings` activation step in `claude-lanes.nix` merges the
-keys the lane module owns into it —
-
-- `env` — the lane's codemem env and `CC_WORK_ROOTS` (other env keys
-  kept; a key removed from the module is removed on the next rebuild);
-- `permissions.deny` — `Read`/`Edit` rules for each client work root
-  (added when missing; your own rules kept);
-- `sandbox` — the Bash sandbox, on, with each work root unreadable and no
-  unsandboxed retries; the build caches/registries it allows are appended
-  to your own lists;
-- `hooks` — hook entries whose command lives under `~/.claude/hooks/`
-  are replaced; plugin and hand-added hooks are kept;
-- `enabledPlugins` / `extraKnownMarketplaces` — the declared plugins (on
-  or off) and codemem's marketplace; plugins you add yourself are kept.
-
-The merge is idempotent and leaves plugins, your own permission rules and
-every other key alone. So: change owned keys in `claude-lanes.nix`, everything else
-in the app.
+On every rebuild the `claudeSettings` activation step in
+`claude-code.nix` merges the keys the profiles own
+(`dotfiles.claude.settings`) into it — `env` (overwritten; keys no
+longer owned are removed), `union` lists such as the sandbox paths
+(missing entries appended), `hooks` under `~/.claude/hooks/` (replaced),
+`default` (only where absent) and `set` (always written: plugins,
+sandbox flags). Plugins, your own permission rules and every other key
+are left alone. So: change owned keys in the profile's `claude.nix`,
+everything else in the app. Details:
+[`docs/claude-code.md`](../../docs/claude-code.md#settings-merge).
 
 To re-seed manually (then rebuild to re-merge the owned keys):
 
@@ -58,37 +55,19 @@ On a fresh machine the merge itself starts from this snapshot when
 Everything else under `~/.claude/` (transcripts, plugin caches,
 session state) is untouched by home-manager.
 
-## Work lane (`~/.claude-work`)
-
-The work lane is a separate config dir, used through `cc-work` (terminal)
-or `cc-work-desktop` (the desktop app in gateway mode) — Ahold, via the
-TechNL gateway; both wrap DevAI CLI (`devai-claude` /
-`devai-claude-desktop`).
-Declared in `claude-lanes.nix`:
-
-| Path | Source |
-|---|---|
-| `~/.claude-work/CLAUDE.md` | this `CLAUDE.md` + every `../.claude-work/ahold/*.md`, concatenated |
-| `~/.claude-work/agents`, `commands` | `agents/`, `commands/` here (shared) |
-| `~/.claude-work/hooks` | `../.claude-work/hooks/` (`lane-check.sh`, `agents-md.sh`) |
-| `~/.claude-work/settings.json` | app-owned; env, hooks, `skipWebFetchPreflight`, default model `opus` merged on rebuild |
-
-No `skills/` there — the vault-* skills read the personal Obsidian
-vault. Full details: [`docs/claude-code.md`](../../docs/claude-code.md#two-claude-code-lanes).
-
 ## Editing settings
 
-Settings you want on every machine and kept in sync go into the owned
-keys in `claude-lanes.nix`; anything else, set in the app (`/config`,
-`/permissions`), which writes `~/.claude/settings.json`. Claude Code
-never reads a `settings.local.json` in the user config dir — that name
-is only a project's `.claude/settings.local.json`, where "don't ask
-again" approvals land.
+Settings you want on every machine of a role and kept in sync go into
+the owned keys in `nix/profiles/<role>/claude.nix`; anything else, set
+in the app (`/config`, `/permissions`), which writes
+`~/.claude/settings.json`. Claude Code never reads a
+`settings.local.json` in the user config dir — that name is only a
+project's `.claude/settings.local.json`, where "don't ask again"
+approvals land.
 
-The `agents/`, `commands/`, `skills/` and `hooks/`
-directories are symlinked whole — add or edit a file here, `git add`,
-rebuild, and it appears under `~/.claude/` (and, for agents/commands,
-`~/.claude-work/`).
+The `agents/`, `commands/` and `skills/` directories are linked whole —
+add or edit a file here, `git add`, rebuild, and it appears under
+`~/.claude/`.
 
 ## New-machine setup
 
@@ -96,5 +75,5 @@ rebuild, and it appears under `~/.claude/` (and, for agents/commands,
 the settings file (from the snapshot, with the owned keys merged in).
 The plugins are among those owned keys (`enabledPlugins`,
 `extraKnownMarketplaces`), so the first interactive session fetches them,
-codemem included; `cc-lanes-setup` installs codemem right away if a lane
-has only run `claude -p` so far.
+codemem included; `codemem-setup` installs codemem right away if only
+`claude -p` has run so far.

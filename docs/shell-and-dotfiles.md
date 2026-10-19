@@ -14,6 +14,8 @@ source in `~/.dotfiles/` and rebuild.
 | `programs.zsh.profileExtra` | `~/.zprofile` (login shells) | Homebrew shellenv |
 | `programs.zsh.initContent` | `~/.zshrc` (interactive shells) | kubectl completion cache, PATH additions, `notes`/`note`; `mise activate` (from [`nix/home/mise.nix`](../nix/home/mise.nix)) |
 | `home.sessionPath` (mise.nix) | hm session vars (all shells) | mise shims, for non-interactive callers |
+| `home.sessionVariables` (profiles) | hm session vars (all shells) | `DOCKER_HOST`, `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE` ([`nix/profiles/dev/docker.nix`](../nix/profiles/dev/docker.nix)); `OBSIDIAN_VAULT` (personal) |
+| `programs.zsh.initContent` (profiles) | `~/.zshrc` | personal: the sandbox `git()` wrapper; work: `cc-work`, `cc-work-desktop` ([claude-code.md](claude-code.md)); every machine: `codemem-setup` |
 | `environment.shellAliases` (in [`nix/modules/environment.nix`](../nix/modules/environment.nix)) | `/etc/zshrc` (system-wide) | kubectl shortcuts: `k`, `kg`, `kgp`, `kgd`, `kgs`, `kga`, `kd`, `kaf`, `kdf` |
 
 Notable mechanics:
@@ -36,32 +38,33 @@ repo files into `$HOME`:
 | Symlink | Source in repo |
 |---|---|
 | `~/.ideavimrc` | `editors/.ideavimrc` |
-| `~/.claude/README.md` | `system/.claude/README.md` |
-| `~/.claude/agents` (whole dir) | `system/.claude/agents/` |
-| `~/.claude/commands` (whole dir) | `system/.claude/commands/` |
-| `~/.claude/skills` (whole dir) | `system/.claude/skills/` |
+
+Claude Code's files (`~/.claude/{CLAUDE.md,README.md,agents,commands}`,
+plus `skills` / `hooks` per profile) are linked by
+[`nix/home/claude-code.nix`](../nix/home/claude-code.nix) and the
+profiles — see [claude-code.md](claude-code.md#shared-plumbing).
 
 Adding a new dotfile: put the source somewhere sensible in the repo
 (`editors/`, `system/`, …), add a `home.file."<target>".source = ...;`
 entry, `git add`, rebuild.
 
-Git config is **not** here — it's the typed `programs.git` module,
-per-host in `nix/hosts/<name>/git.nix` (different identity per
-machine). It writes `~/.config/git/config` and `~/.config/git/ignore`
-(XDG paths — there is no `~/.gitconfig` / `~/.gitignore_global`).
+Git config is **not** here — it's the typed `programs.git` module in
+[`nix/home/git.nix`](../nix/home/git.nix): the personal identity as the
+default, overridden by the work profile (`nix/profiles/work/git.nix`);
+the dotfiles clones always commit as personal. It writes
+`~/.config/git/config` and `~/.config/git/ignore` (XDG paths — there is
+no `~/.gitconfig` / `~/.gitignore_global`).
 
 ## Files that must NOT be symlinked
 
 Some apps rewrite their config at runtime via atomic rename. A
 read-only Nix-store symlink breaks that (`cross-device link` /
-read-only errors). These files are therefore **owned by the app**, with
-a reference snapshot kept in the repo:
+read-only errors). These files are therefore **owned by the app**:
 
 | Runtime file | Repo reference | How it gets there |
 |---|---|---|
-| `~/.claude/settings.json` | `system/.claude/settings.json` | created from the snapshot when absent, then lane-owned keys merged on every rebuild by `claude-lanes.nix` |
-| `~/.claude-work/settings.json` | *(none)* | created and merged on every rebuild by `claude-lanes.nix` (owned keys only) |
-| `~/.docker/config.json` | `development/.docker/config.json` | never seeded — Docker Desktop owns it entirely |
+| `~/.claude/settings.json` | `system/.claude/settings.json` | created from the snapshot when absent, then the owned keys merged on every rebuild by `claude-code.nix` |
+| `~/.docker/config.json` | *(none)* | never seeded — Colima writes its current context (`colima`) there at start |
 
 Before adding any new symlink to `files.nix`, ask: *does the app ever
 write this file itself?* If yes, use the reference-snapshot + seed
@@ -80,4 +83,5 @@ pattern instead.
 - **macOS defaults** (keyboard, dock behavior, finder, animations):
   `nix/modules/system.nix` (shared) and `nix/hosts/<name>/dock.nix`
   (per-host dock apps). Dock apps must exist in `/Applications` — i.e.
-  be installed as casks — or the dock entry shows a question mark.
+  be installed as casks by one of the host's profiles — or the dock
+  entry shows a question mark.

@@ -1,468 +1,336 @@
 # Claude Code integration
 
-Claude Code configuration is version-controlled in `system/.claude/`
-(personal lane) and `system/.claude-work/` (work lane). It is wired
-into `~/.claude/` and `~/.claude-work/` three different ways,
-depending on whether the app rewrites the file at runtime: read-only
-symlinks, seeded snapshots, and an activation-time settings merge.
+Each Mac has **one** Claude Code setup, in plain `~/.claude`. What it
+talks to depends on the host's profile ([`nix/profiles/`](../nix/profiles/README.md)):
 
-## Managed via home-manager symlinks (static files)
+| Profile | Host | Inference | Start it with | codemem lane |
+|---|---|---|---|---|
+| `personal` | `m5` | Claude Max login | the desktop app, T3 Code, or plain `claude` | `~/.codemem/personal/` |
+| `work` | `work` | the TechNL gateway, via DevAI CLI | `cc-work` (terminal) or `cc-work-desktop` (desktop app in gateway mode) | `~/.codemem/work/` |
 
-Declared in [`nix/home/files.nix`](../nix/home/files.nix) and
-[`nix/home/claude-lanes.nix`](../nix/home/claude-lanes.nix); applied on
-every rebuild:
+Client (Ahold) work happens only on the client-issued `work` Mac, so
+client content never meets the personal Max login: the separation is the
+machine, not config on a shared one.
 
-- `~/.claude/README.md` ← `system/.claude/README.md`
-- `~/.claude/CLAUDE.md` ← `system/.claude/CLAUDE.md` (global baseline
-  instructions, both lanes)
-- `~/.claude/agents` ← `system/.claude/agents/` (custom subagents,
-  whole directory, read-only)
-- `~/.claude/commands` ← `system/.claude/commands/` (slash commands)
-- `~/.claude/skills` ← `system/.claude/skills/` (the `vault-*`
-  Obsidian skills, etc.)
-- `~/.claude/hooks` ← `system/.claude/hooks/` (personal-lane guard)
+## Shared plumbing
 
-The work-lane equivalents (`~/.claude-work/…`) are listed under
-[Two Claude Code lanes](#two-claude-code-lanes).
+[`nix/home/claude-code.nix`](../nix/home/claude-code.nix), on every
+host. It links the static files and declares two options the profiles
+set:
 
-To change any of these: edit the file under
-`~/.dotfiles/system/.claude/`, `git add`, rebuild. Files inside the
-symlinked directories are read-only at `~/.claude/` — they can only be
-changed through the repo.
+- `dotfiles.claude.settings` — keys Nix owns in
+  `~/.claude/settings.json`, grouped by how they merge (`env`, `union`,
+  `hooks`, `default`, `set`; see [Settings merge](#settings-merge)).
+- `dotfiles.claude.instructions` — files appended, in order, to the
+  global `~/.claude/CLAUDE.md`.
 
-## Reference snapshot (runtime-rewritten settings)
+Read-only symlinks, recreated on every rebuild:
+
+| Path | Source | Set by |
+|---|---|---|
+| `~/.claude/CLAUDE.md` | `system/.claude/CLAUDE.md` + `dotfiles.claude.instructions` | `claude-code.nix` |
+| `~/.claude/README.md` | `system/.claude/README.md` | `claude-code.nix` |
+| `~/.claude/agents`, `commands` | `system/.claude/{agents,commands}/` | `claude-code.nix` |
+| `~/.claude/skills` | `system/.claude/skills/`, vault path filled in | `profiles/personal/vault.nix` |
+| `~/.claude/hooks` | `system/claude-work/hooks/` | `profiles/work/claude.nix` |
+
+To change one: edit the source in the repo, `git add`, rebuild. Files
+inside the linked directories are read-only at `~/.claude/`.
+
+### Settings merge
 
 `~/.claude/settings.json` is rewritten by Claude Code at runtime (plugin
-toggles, effort level, etc.), so it **must not** be a Nix-store symlink.
+toggles, effort level, …), so it **must not** be a Nix-store symlink.
 The repo keeps a reference snapshot, `system/.claude/settings.json`, and
-every rebuild **merges** the keys the lane module owns into
-`~/.claude/settings.json` and `~/.claude-work/settings.json` (see
-[Settings merge](#settings-merge)). When `~/.claude/settings.json`
-doesn't exist yet the merge starts from the snapshot, so a fresh machine
-needs no manual step.
+the `claudeSettings` activation step merges **only the owned keys** into
+the live file:
 
-Manual re-seed (then rebuild so the lane's owned keys are merged back in):
+- `env` — owned keys overwrite; other env keys are kept, and a key Nix
+  stops owning is removed on the next rebuild (the last owned set is in
+  `.nix-owned.json` next to the settings file);
+- `union` — every owned list gets its missing entries appended (sandbox
+  paths, domains, sockets); your own entries are kept. Entries Nix stops
+  owning are **not** removed — delete them in `/sandbox` or the file;
+- `hooks` — hook entries whose command lives under `~/.claude/hooks/`
+  are replaced; other hooks (plugins, your own) are kept, even in the
+  same matcher group;
+- `default` — written only where absent (so `/model` etc. keep working);
+- `set` — always written (`enabledPlugins`, marketplaces, forced
+  sandbox flags).
+
+A missing file starts from the snapshot, so a fresh machine needs no
+manual step. A file that isn't valid JSON is moved to
+`settings.json.invalid-<time>` and rebuilt from the snapshot, with a
+warning, instead of failing the rebuild. The merge is
+[`system/bin/merge-claude-settings.sh`](../system/bin/merge-claude-settings.sh);
+[`tests/merge.sh`](../tests/merge.sh) covers it.
+
+Manual re-seed (then rebuild to merge the owned keys back in):
 
 ```bash
 cp ~/.dotfiles/system/.claude/settings.json ~/.claude/settings.json
 ```
 
-To refresh the snapshot after changing settings in the app: copy the
-runtime file back into the repo and commit (strip the keys owned by
-`claude-lanes.nix` — `env`, `hooks`, `permissions.deny`, `sandbox`).
+To refresh the snapshot after changing settings in the app, copy the
+runtime file back and strip the owned keys (`env`, `hooks`, `sandbox`,
+`enabledPlugins`, …). Everything else under `~/.claude/` (transcripts,
+session state, plugin caches) is deliberately unmanaged.
 
-Everything else under `~/.claude/` (transcripts, session state, plugin
-caches) is deliberately unmanaged.
+**Plugins** are declared in the profiles (`enabledPlugins`, plus
+codemem's marketplace from `codemem.nix`); Claude Code fetches any it
+doesn't have when an interactive session starts. `false` disables one;
+a `/plugin` toggle on a declared plugin lasts until the next rebuild.
+`codemem-setup` installs codemem right away, for a machine that has only
+run `claude -p`.
 
-## Two Claude Code lanes
+## Personal profile
 
-Declared in [`nix/home/claude-lanes.nix`](../nix/home/claude-lanes.nix)
-(a shared home-manager module, applied on every host). Claude Code runs
-in **two isolated lanes** so client (Ahold) content only ever goes
-through the sanctioned TechNL proxy — never to Anthropic directly, and
-never through the personal Max login:
+[`nix/profiles/personal/claude.nix`](../nix/profiles/personal/claude.nix):
+Claude Max, every Bash command sandboxed, the declared plugins, and
+codemem extracting via Max.
 
-| Lane | Config dir | Inference | Start it with | codemem DB | Viewer port |
-|---|---|---|---|---|---|
-| personal | `~/.claude` | Claude Max login | the Claude desktop app in its normal mode, T3 Code, plain `claude`, or `cc-personal` | `~/.codemem/personal/` | 4747 |
-| work (Ahold) | `~/.claude-work` | the TechNL gateway, via DevAI CLI | `cc-work` (terminal) or `cc-work-desktop` (the desktop app in gateway mode) | `~/.codemem/work-ahold/` | 4848 |
+### Bash sandbox
 
-Settings, plugins, transcripts, auto-memory and the Keychain credential
-are all per config dir, so the work lane never sees the personal Max
-login or personal plugins.
+macOS Seatbelt, forced on every rebuild: `sandbox.enabled` and
+`allowUnsandboxedCommands: false` (a failed command can't be retried
+outside the sandbox, so the boundary holds in auto mode too); toggling
+them off in `/sandbox` lasts until the next rebuild. Bash prompts stay
+as they were (`autoAllowBashIfSandboxed: false`, only written when
+unset).
 
-**Gateway vs isolation.** Ahold's DevAI CLI is the sanctioned way into
-the TechNL gateway: `devai setup` once (Entra ID keyless sign-in, or a
-static key), then `devai-claude` starts Claude Code through a temporary
-local compatibility proxy. DevAI owns auth, the proxy and model
-routing; `devai status` / `devai quota` show login state and budget. It
-does **not** separate Claude Code's config — run on its own it would
-load `~/.claude` (personal plugins, skills, and the personal codemem
-lane, whose observer extracts via Max). So `cc-work` wraps
-`devai-claude` with the isolation layer. Install DevAI CLI per its
-docs (`npm install -g @royalaholddelhaize/devai-cli`, needs a GitHub
-Packages token) before using `cc-work`.
+Sandboxed commands can write only to the project folder, `$TMPDIR`,
+`~/.m2`, `~/.gradle` and `~/.npm`, and reach without asking only Maven
+Central, Gradle, npm, the k3s API, the Cloudflare API and `github.com`
+(other hosts prompt per domain). Add more in `claude.nix`
+(`union.sandbox.filesystem.allowWrite`, `…network.allowedDomains`) or in
+`/sandbox` — your own entries survive rebuilds. The Docker socket
+([below](#docker-colima)) and the ssh-agent relay are the only unix
+sockets allowed; `network.allowLocalBinding: true` lets tests reach a
+container's published ports on `localhost` (otherwise Seatbelt only
+allows the sandbox proxy there). Known friction: Go CLIs such as `gh`
+don't work inside Seatbelt — run those yourself, or list them in
+`sandbox.excludedCommands` (fully unsandboxed).
 
-**The desktop app is one lane at a time.** It runs in one *deployment
-mode*: `1p` (your Claude account, app profile
-`~/Library/Application Support/Claude`) or `3p` (a gateway, separate
-profile `…/Claude-3p` with its own chats, login and settings).
-Switching relaunches the app. So it is either the personal lane or —
-through `cc-work-desktop` — the work lane, never both at once. While
-it's in work mode, use T3 Code (or `claude` / `cc-personal`) for
-personal projects; personal chat still works at claude.ai in a browser.
+Commits in this repo run the lint pre-commit hook, which normally gets
+its tools from `nix develop` — unreachable from the sandbox (no Nix
+daemon socket). So `claude.nix` sets `DOTFILES_LINT_PATH` to the same
+tools (`nix/lint-tools.nix`), and `.githooks/pre-commit` puts them on
+`PATH` when `$SANDBOX_RUNTIME` is set: Claude's commits get the full
+lint, gitleaks included, before anything is pushed to this public repo.
+Without the variable (a session older than the rebuild) the hook skips
+with a warning and CI lints after the push.
 
-Requires Claude Code CLI **>= 2.1.285** (the `claude-code` cask) —
-older builds (e.g. 2.1.274) reject `claude-opus-5-5` as
+### Git push/pull from the sandbox
+
+[`nix/profiles/personal/ssh-agent-relay.nix`](../nix/profiles/personal/ssh-agent-relay.nix)
+lets Claude `git push`, `pull` and `fetch` over SSH. Three things stop
+plain `ssh` in the sandbox:
+
+- **No route out.** Sandboxed commands have no DNS and only reach the
+  sandbox proxy. The sandbox sets its own `GIT_SSH_COMMAND` (`nc -X 5`
+  to its SOCKS port) without credentials, so the proxy refuses it, and
+  it overwrites any `GIT_SSH_COMMAND` from the settings env. So a
+  `git()` shell function (reaching Bash through the shell snapshot)
+  sets `GIT_SSH_COMMAND` per call to `claude-git-ssh`
+  ([`system/bin/claude-git-ssh.sh`](../system/bin/claude-git-ssh.sh))
+  when `$SANDBOX_RUNTIME` is set. That adds a `ProxyCommand` tunnelling
+  through the HTTP proxy with `ncat`, using the per-command credentials
+  in `$HTTP_PROXY` and `127.0.0.1` (the proxy refuses `localhost`).
+  Outside the sandbox `git` is untouched. Only `git` typed in Bash gets
+  this, not a git run from inside another program.
+- **No ssh-agent.** The launchd ssh-agent's socket path changes every
+  login and the sandbox blocks it. A launchd agent,
+  `claude-ssh-agent-relay`, runs `socat` to relay
+  `~/.ssh/claude-agent.sock` to the current `$SSH_AUTH_SOCK`; the
+  sandbox allows that one socket and `claude-git-ssh` points
+  `SSH_AUTH_SOCK` at it.
+- **No passphrase prompt.** `system.nix` declares, for `Host github.com`
+  only (in `/etc/ssh/ssh_config.d/`; `~/.ssh/config` stays unmanaged),
+  `UseKeychain yes` and `AddKeysToAgent yes`. The first time you use the
+  key in your own terminal, ssh asks for the passphrase once and stores
+  it in the login Keychain; the relay agent runs
+  `ssh-add --apple-load-keychain` at each login to reload it. To store it
+  right away: `/usr/bin/ssh-add --apple-use-keychain ~/.ssh/github_ed25519`.
+
+Check it from a session with
+`SSH_AUTH_SOCK=~/.ssh/claude-agent.sock ssh-add -l` ("The agent has no
+identities" means the passphrase step is missing) and
+`git ls-remote origin`. Not covered: `gh` (HTTPS API) and HTTPS remotes;
+`git.nix` rewrites `https://github.com` to SSH anyway.
+
+The trade-off: sandboxed commands can use **every key loaded in the
+agent** for any SSH host the allowlist lets through (today only
+`github.com`), and push to any repo those keys can write to.
+
+### Vault skills
+
+[`nix/profiles/personal/vault.nix`](../nix/profiles/personal/vault.nix)
+links `system/.claude/skills/` (the `vault-*` Obsidian skills) with the
+vault path substituted for `@VAULT@`, and sets `OBSIDIAN_VAULT` for the
+`notes`/`note` shell functions. Personal only.
+
+## Work profile
+
+[`nix/profiles/work/claude.nix`](../nix/profiles/work/claude.nix): Claude
+Code only through Ahold's TechNL gateway. DevAI CLI is the sanctioned
+way in: `devai setup` once (Entra ID keyless sign-in, or a static key),
+then `devai-claude` starts Claude Code through a temporary local
+compatibility proxy. DevAI owns auth, the proxy and model routing;
+`devai status` / `devai quota` show login state and budget. Install it
+per its docs (`npm install -g @royalaholddelhaize/devai-cli`, needs a
+GitHub Packages token). Requires Claude Code CLI **>= 2.1.285** (the
+`claude-code` cask) — older builds reject `claude-opus-5-5` as
 `unrecognized_model`.
 
 ### The launchers (zsh functions)
 
-- **`cc-personal`** — runs `claude` with every lane/gateway variable
-  stripped from the calling shell and the personal codemem env set.
-  Plain `claude` and the desktop app get the same env from
-  `~/.claude/settings.json`.
 - **`cc-work`** — refuses to start unless `devai-claude` is installed.
   It resolves the TechNL proxy URL from `pass-cli`
   (`pass://Ahold/TechNLGenAI/proxy_url`) for codemem's observer and
-  **fails closed** if that is missing or malformed — without it the
+  **fails closed** if it is missing or malformed — without it the
   observer would default to `api.anthropic.com`. It pins that endpoint
-  into `~/.claude-work/settings.json` (`env.CODEMEM_ANTHROPIC_ENDPOINT`,
-  a local file, never in the repo), then strips inherited lane and
-  gateway variables and runs `devai-claude` with:
-  - `CLAUDE_CONFIG_DIR=~/.claude-work`;
-  - `CODEMEM_ANTHROPIC_ENDPOINT` (codemem's observer endpoint);
-  - the work env, which is also in the work `settings.json` so every
-    work session gets it however it was launched: `CC_LANE=work`, the
-    per-lane codemem env (below), model aliases `opus` →
-    `claude-opus-5-5`, `sonnet` → `claude-sonnet-5-5`, `haiku` →
-    `claude-haiku-4-5` (`ANTHROPIC_DEFAULT_*_MODEL`; `/model` can still
-    pick any other id the gateway serves — `devai status` lists them),
-    and `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1` (no telemetry,
-    error reports, auto-updates or feature-flag calls to Anthropic).
-
-  The gateway variables (`ANTHROPIC_BASE_URL`, credentials) are left to
-  `devai-claude`. Its arguments are Claude Code's (`cc-work -p …`,
-  `cc-work --resume`) — it runs `devai-claude -- "$@"`; call
-  `devai-claude` directly for DevAI's own options (e.g. `-v`). It refuses
-  to start while anything listens on port
-  38888 (see the [codemem known issue](#codemem-memory)).
-
-  Verified: `devai-claude` keeps the `CLAUDE_CONFIG_DIR` and env it is
-  given, and sessions get `ANTHROPIC_BASE_URL` = DevAI's local proxy.
+  into `~/.claude/settings.json` (`env.CODEMEM_ANTHROPIC_ENDPOINT`, a
+  local file, never the repo) and runs `devai-claude -- "$@"`, so its
+  arguments are Claude Code's (`cc-work -p …`, `cc-work --resume`); call
+  `devai-claude` directly for DevAI's own options.
 - **`cc-work-desktop`** — the same preparation, then
   `devai-claude-desktop --detach`: DevAI starts its local proxy (kept
   running after the shell exits), switches the desktop app to its
-  gateway profile and **restarts the app** (it asks first; pass
-  `--kill-existing-desktop` to skip the prompt). Run it from a regular
-  terminal — the desktop app's own terminal pane closes with the app.
-  **One-time step in work mode:** the Code tab must use
-  `~/.claude-work`, or it falls back to `~/.claude` (personal plugins,
-  the personal memory lane, and the Ahold guard blocking every work
-  repo). In the work-mode app, open the environment selector → *Local*
-  → settings, and add `CLAUDE_CONFIG_DIR` = the **absolute** path
-  `/Users/<you>/.claude-work` (the app ignores `~` or relative paths).
-  That editor belongs to the work profile, so personal mode is not
-  affected. Check it with `echo $CLAUDE_CONFIG_DIR` in a work Code
-  session.
-  To go back to personal mode, switch the app back to your Claude
-  account (the gateway setting under Developer → Configure Third-Party
-  Inference); `devai status` shows the desktop state.
-- **Plugins** are declared per lane in `claude-lanes.nix`
-  (`enabledPlugins`, plus `extraKnownMarketplaces` for codemem's
-  marketplace) and merged into each lane's `settings.json`; Claude Code
-  fetches any it doesn't have when an interactive session starts.
-  `false` disables one; a `/plugin` toggle on a declared plugin lasts
-  until the next rebuild. `cc-lanes-setup` installs codemem in both
-  lanes right away, for a lane that has only run `claude -p`.
+  gateway profile (`Claude-3p`, its own chats, login and settings) and
+  **restarts the app**. Run it from a regular terminal — the app's own
+  terminal pane closes with it. Switch back under Developer → Configure
+  Third-Party Inference; `devai status` shows the desktop state.
 
-### Guards
+The rest of the work env lives in `settings.json`, so every session gets
+it however it was launched: `CODEMEM_PROJECT`, model aliases `opus` →
+`claude-opus-5-5`, `sonnet` → `claude-sonnet-5-5`, `haiku` →
+`claude-haiku-4-5` (`ANTHROPIC_DEFAULT_*_MODEL`; `/model` can still pick
+any other id the gateway serves — `devai status` lists them), and
+`CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1` (no telemetry, error
+reports, auto-updates or feature-flag calls to Anthropic). Also merged:
+`skipWebFetchPreflight: true` (the preflight sends the target hostname
+to `api.anthropic.com`) and `model: "opus"` as a default.
 
-Each lane has hooks that block a prompt or tool call (exit 2) before
-anything is sent — verified: a blocked prompt makes zero API calls.
+### Gateway check
 
-- **Work: `lane-check.sh`** (`UserPromptSubmit` + `PreToolUse`) — blocks
-  unless the session has a gateway URL (`ANTHROPIC_BASE_URL` or
-  `CLAUDE_CODE_API_BASE_URL`) that isn't `anthropic.com` and a
-  `CODEMEM_ANTHROPIC_ENDPOINT` that isn't `anthropic.com`. That covers
-  both launchers; a personal-mode desktop session using the work config
-  gets `ANTHROPIC_BASE_URL=https://api.anthropic.com` and plain `claude`
-  gets none, so both are blocked. Also blocks while port 38888 is
-  listening.
-- **Personal lane** — keeps client work trees (`workRoots` in
-  `claude-lanes.nix`, exported as `CC_WORK_ROOTS`) out of Max, in three
-  layers:
-  1. **Permission deny rules** — `Read(//<root>/**)` and
-     `Edit(//<root>/**)`, merged into `~/.claude/settings.json`. Claude
-     Code resolves these paths itself (relative, `~`, symlinks), and Read
-     rules also cover Grep, Glob and LSP. This is the boundary for the
-     file tools.
-  2. **Bash sandbox** (macOS Seatbelt) — `sandbox.enabled` with each root
-     in `sandbox.filesystem.denyRead`, so a shell command (and anything it
-     starts: scripts, interpreters) can't read the work tree, whatever
-     path it uses. `allowUnsandboxedCommands: false` removes the escape
-     hatch of retrying a failed command outside the sandbox. Both are
-     forced on every rebuild; toggling them off in `/sandbox` only lasts
-     until the next one.
-  3. **`work-lane-guard.sh`** (`UserPromptSubmit` + `PreToolUse`, logic in
-     `work-lane-guard.jq`) — what neither covers: prompts (including `@`
-     mentions), MCP tool arguments, and case-insensitive matching (APFS).
-     It also checks Bash and the file tools as defence in depth: it
-     expands `~`/`$HOME`, resolves relative paths against the session cwd
-     (following `cd`), and blocks searches that would descend into a root
-     from a parent folder (`rg`/`find`/`grep -r` in `~`, Grep/Glob from
-     `~/projects`). It fails closed: if jq or the `.jq` file is missing,
-     or the input can't be parsed, the request is blocked.
+[`gateway-check.sh`](../system/claude-work/hooks/gateway-check.sh)
+(`UserPromptSubmit` + `PreToolUse`) blocks (exit 2, before anything is
+sent — a blocked prompt makes zero API calls) unless the session has a
+gateway URL (`ANTHROPIC_BASE_URL` or `CLAUDE_CODE_API_BASE_URL`) that
+isn't `anthropic.com`, and a `CODEMEM_ANTHROPIC_ENDPOINT` that isn't
+either. Both launchers pass; plain `claude` (no gateway) and the
+desktop app in its normal mode (`ANTHROPIC_BASE_URL=https://api.anthropic.com`)
+are blocked. Fixtures: [`tests/gateway-check.sh`](../tests/gateway-check.sh).
 
-  What the sandbox changes for personal-lane Bash: commands can write
-  only to the project folder, `$TMPDIR`, `~/.m2`, `~/.gradle` and
-  `~/.npm`, and reach only Maven Central, Gradle and npm without asking
-  (other hosts prompt per domain). Add more in `claude-lanes.nix`
-  (`union.sandbox.filesystem.allowWrite`, `…network.allowedDomains`), or
-  in `/sandbox` — your own entries survive rebuilds. Docker works
-  through the lane's own engine ([below](#docker-in-the-personal-lane)),
-  and git push/pull over SSH through the sandbox proxy
-  ([below](#git-pushpull-in-the-personal-lane)). Known macOS friction:
-  Go CLIs such as `gh` don't work inside Seatbelt — run those yourself,
-  or list them in `sandbox.excludedCommands` (which runs them fully
-  unsandboxed). Bash prompts stay as they were
-  (`autoAllowBashIfSandboxed: false`, only written when unset).
+### Instructions
 
-  Practical effects: start personal sessions in a project folder, not in
-  `~` or `~/projects` (recursive searches from there are blocked), and a
-  command whose text literally contains a work-root path — e.g. grepping
-  these dotfiles for `~/projects/ahold` — is blocked too. Fixtures for
-  both hooks live in [`tests/guard.sh`](../tests/guard.sh).
-
-### Docker in the personal lane
-
-Personal sessions get their own Docker engine, so Claude can run
-`docker`, `docker compose` and Testcontainers tests itself without
-reaching client work or the work lane's containers. It's a
-[Colima](https://github.com/abiosoft/colima) VM, profile `personal`,
-declared with home-manager's `services.colima` in `claude-lanes.nix`.
-
-| | Personal Claude sessions | Your shell, IntelliJ, work lane |
-|---|---|---|
-| Engine | Colima `personal` | Docker Desktop (unchanged) |
-| Selected by | `DOCKER_HOST` in the lane env (`personalEnv`) | Docker Desktop's `desktop-linux` context |
-| Sees host files under | `~/projects/personal` only | whatever Docker Desktop shares |
-
-How it fits together:
-
-- **The VM** — a launchd agent (`colima-personal`) starts it at login
-  with 4 CPUs, 3 GB RAM and a 60 GB disk (vz, virtiofs). Its only mount
-  is `~/projects/personal`, writable; this replaces Colima's default
-  mount of all of `$HOME`, so the work tree isn't in the VM at all.
-  `colima.yaml` is a store symlink, which is safe here because the agent
-  starts Colima with `--save-config=false`. Colima isn't activated as
-  the docker context and doesn't set `DOCKER_HOST` in the shell
-  (`autoActivate = false`), and `sshConfig = false` keeps
-  `~/.ssh/config` untouched.
-- **The lane env** — `DOCKER_HOST=unix://~/.colima/personal/docker.sock`
-  and `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock` (the
-  socket path inside the VM, which Ryuk mounts). Both are in
-  `personalEnv`, so `cc-work` unsets them like the other lane vars.
-- **The sandbox** — `sandbox.network.allowUnixSockets` lists that one
-  socket (Docker Desktop's stays blocked), and
-  `sandbox.network.allowLocalBinding: true` lets sandboxed commands bind
-  and connect to `localhost`. Without the latter, tests can't reach a
-  container's published ports: Seatbelt otherwise only allows the
-  sandbox proxy on localhost.
-
-Day to day:
-
-- Containers and images Claude creates live in Colima, not Docker
-  Desktop: the Docker Desktop UI and your shell's `docker ps` don't show
-  them. To look at them, use `dp ps` (`dp` = `docker --context
-  colima-personal`; `dw` is the same for Docker Desktop, both from
-  `zsh.nix`). Images are pulled and stored once per engine.
-- Both engines publish on the same `localhost`. If a work stack and a
-  personal stack publish the same port (e.g. Postgres on 5432), the
-  second fails to start; stop one.
-- Bind mounts outside `~/projects/personal` (including `$TMPDIR`) come
-  up empty inside containers; keep personal projects in that folder.
-  Testcontainers copies files over the API, so `withCopyFileToContainer`
-  works from anywhere.
-- Status and recovery: `colima status -p personal`,
-  `colima stop -p personal` (frees the RAM; it comes back at next login,
-  or start it with `colima start -p personal`). Log:
-  `~/.local/state/colima/personal.log`. Colima runs on Lima, which can
-  break after a macOS or Colima update; a stop/start usually fixes it.
-  Removing the profile from Nix doesn't delete the VM — run
-  `colima delete -p personal` too.
-
-What it gives up, deliberately:
-
-- **Writes beyond the project.** Whoever can use the socket controls
-  the engine, so a container started from a personal session can write
-  anywhere under `~/projects/personal`, not just in the current project
-  — wider than the sandbox's own write rule.
-- **The network allowlist.** Container traffic, image pulls included,
-  leaves through the VM, not the sandbox proxy, so
-  `sandbox.network.allowedDomains` doesn't apply to it.
-- **Localhost is open.** With `allowLocalBinding`, sandboxed commands
-  can reach any service listening on localhost — for example the
-  codemem viewers, or DevAI's local gateway proxy while a work session
-  runs. That sends personal-lane traffic *to* work services; it doesn't
-  let work data into Max (the guards above still cover that).
-
-### Git push/pull in the personal lane
-
-Claude can `git push`, `pull` and `fetch` over SSH from a personal
-session. Two things stop plain `ssh` inside the sandbox, and
-`claude-lanes.nix` works around both:
-
-- **No route out.** Sandboxed commands have no DNS and can only reach the
-  sandbox's proxy. The sandbox sets its own `GIT_SSH_COMMAND`
-  (`nc -X 5` to its SOCKS port), but without credentials, so the proxy
-  refuses it ("This proxy requires authentication"). It also overwrites
-  any `GIT_SSH_COMMAND` from the settings env. So a `git()` shell
-  function (in `claude-lanes.nix`, reaching Bash through the shell
-  snapshot like the `kubectl`/`flux` ones in `zsh.nix`) sets
-  `GIT_SSH_COMMAND` per call to `claude-git-ssh`
-  ([`system/bin/claude-git-ssh.sh`](../system/bin/claude-git-ssh.sh))
-  when `$SANDBOX_RUNTIME` is set and the lane isn't work. That adds a
-  `ProxyCommand` tunnelling through the HTTP proxy with `ncat`, using
-  the per-command credentials in `$HTTP_PROXY` and `127.0.0.1` (the
-  proxy refuses `localhost`). Outside the sandbox `git` is untouched.
-  `github.com` is in `allowedDomains`; other SSH hosts would need adding
-  there too. Only `git` typed in Bash gets this, not a git run from
-  inside another program.
-- **No ssh-agent.** The personal GitHub key has a passphrase, so `ssh`
-  needs the launchd ssh-agent, whose socket path changes every login and
-  which the sandbox blocks. A launchd agent, `claude-ssh-agent-relay`,
-  runs `socat` to relay `~/.ssh/claude-agent.sock` to the current
-  `$SSH_AUTH_SOCK`. The sandbox allows that one socket
-  (`sandbox.network.allowUnixSockets`), and `claude-git-ssh` points
-  `SSH_AUTH_SOCK` at it.
-- **No passphrase prompt.** The sandbox can't ask for the passphrase, so
-  the key must already be in the agent. `system.nix` declares, for
-  `Host github.com` only (in `/etc/ssh/ssh_config.d/`, leaving
-  `~/.ssh/config` unmanaged), `UseKeychain yes` and
-  `AddKeysToAgent yes`. So the first time you use the key in your own
-  terminal (a `git pull`, say), ssh asks for the passphrase once, stores
-  it in the login Keychain and loads the key into the agent. After that,
-  the relay agent runs `ssh-add --apple-load-keychain` at each login to
-  reload it. You type the passphrase once per machine; it can't be
-  more declarative than that, since the passphrase is a secret and the
-  repo only versions the recipe ([docs/secrets.md](secrets.md)). To
-  store it right away instead:
-  `/usr/bin/ssh-add --apple-use-keychain ~/.ssh/github_ed25519`.
-
-Check it from a personal session with
-`SSH_AUTH_SOCK=~/.ssh/claude-agent.sock ssh-add -l` (lists the agent's
-keys through the relay; "The agent has no identities" means the step
-above is missing) and `git ls-remote origin`.
-
-Commits in this repo run the lint pre-commit hook, which normally gets
-its tools from `nix develop` — unreachable from the sandbox (no Nix
-daemon socket). So the lane env sets `DOTFILES_LINT_PATH` to the same
-tools (`nix/lint-tools.nix`), and `.githooks/pre-commit` puts them on
-`PATH` when `$SANDBOX_RUNTIME` is set: Claude's commits get the full
-lint, gitleaks included, before anything can be pushed to this public
-repo. If the variable is missing (a session older than the rebuild),
-the hook skips with a warning and CI lints after the push. Not covered: `gh` (HTTPS
-API) and HTTPS remotes; git.nix rewrites `https://github.com` to SSH
-anyway.
-
-The trade-off: sandboxed commands can use **every key loaded in the
-agent**, not just the GitHub one, for any SSH host the network allowlist
-lets through (today only `github.com`). They can also push to any repo
-those keys can write to.
-
-### Settings merge
-
-`~/.claude*/settings.json` are app-owned and mutable, so they can't be
-symlinks. Instead the `claudeLaneSettings` activation step merges **only
-the keys the module owns** into whatever is there:
-
-- `env` — the lane's env keys overwrite; other env keys are kept, and
-  a key the lane stops owning is removed on the next rebuild (the last
-  owned set is in `.nix-owned.json` next to the settings file);
-- `hooks` — hook entries whose command lives under the lane's `hooks/`
-  dir are replaced; any other hooks (plugins, your own) are kept, even
-  in the same matcher group;
-- personal lane only: `permissions.deny` and the sandbox lists
-  (`filesystem.denyRead`/`allowWrite`, `network.allowedDomains`) get the
-  owned entries appended when missing — your own entries are kept;
-  `sandbox.enabled` and `sandbox.allowUnsandboxedCommands: false` are
-  forced; `sandbox.autoAllowBashIfSandboxed: false` is written only when
-  unset;
-- both lanes: `enabledPlugins` and `extraKnownMarketplaces` for the
-  declared plugins (forced on or off; plugins you add yourself are
-  kept);
-- work lane only: `skipWebFetchPreflight: true` (the preflight sends the
-  target hostname to `api.anthropic.com`), and `model: "opus"` written
-  only when unset (so `/model` keeps working).
-
-It's idempotent and leaves plugins, your own permission rules and the
-rest of the file alone. A settings file that isn't valid JSON (say, a
-half-finished hand edit) is moved to `settings.json.invalid-<time>` and
-rebuilt from the snapshot, with a warning, instead of failing the
-rebuild. The merge is
-[`system/bin/merge-claude-settings.sh`](../system/bin/merge-claude-settings.sh);
-[`tests/merge.sh`](../tests/merge.sh) covers it.
-
-### Instructions & agents per lane
-
-| Path | personal (`~/.claude`) | work (`~/.claude-work`) |
-|---|---|---|
-| `CLAUDE.md` | `system/.claude/CLAUDE.md` | that baseline + every `system/.claude-work/ahold/*.md`, concatenated |
-| `agents/`, `commands/` | `system/.claude/{agents,commands}/` | same (shared) |
-| `skills/` | `system/.claude/skills/` | none — the `vault-*` skills read the personal Obsidian vault |
-| `hooks/` | `system/.claude/hooks/` | `system/.claude-work/hooks/` |
-| `settings.json` | app-owned, owned keys merged | app-owned, owned keys merged |
-
-- The Ahold overlay (`system/.claude-work/ahold/`) is **work lane only**.
-  Add files alongside the existing ones; every `*.md` there is appended
-  in name order.
+- The Ahold overlay — every `system/claude-work/ahold/*.md`, in name
+  order — is appended to the global `CLAUDE.md` via
+  `dotfiles.claude.instructions`. Add files alongside the existing ones;
+  client *name* only, no internals.
 - Ahold repos keep their instructions in `AGENTS.md`, which Claude Code
-  doesn't auto-load. The work lane's `agents-md.sh` `SessionStart` hook
-  injects the repo-root `AGENTS.md` (skipped if the repo's `CLAUDE.md`
-  already imports `@AGENTS.md`); the overlay tells Claude to read nested
+  doesn't auto-load. The `agents-md.sh` `SessionStart` hook injects the
+  repo-root `AGENTS.md` (skipped if the repo's `CLAUDE.md` already
+  imports `@AGENTS.md`); the overlay tells Claude to read nested
   `AGENTS.md` files before working in a subdirectory.
-- Agents set `model:` to an **alias** only (`opus` / `sonnet`), never a
-  full model id. The alias resolves per lane — the Max models in the
-  personal lane, the TechNL ids above in the work lane — so an agent
-  can't route client work out of the sanctioned channel.
+- `cc-tooling` (per-client agents and rules from a private repo) ships
+  with this profile — see [Client tooling](client-tooling.md).
 
-For **per-client custom agents and repo-specific rules** (kept out of
-these public dotfiles, in a private per-client repo), see
-[Client tooling](client-tooling.md).
+Agents set `model:` to an **alias** only (`opus` / `sonnet`), never a
+full id, so on the work Mac every tier resolves to a TechNL id and an
+agent can't route client work out of the gateway.
 
-### codemem memory
+## Docker (Colima)
+
+[`nix/profiles/dev/docker.nix`](../nix/profiles/dev/docker.nix), on
+every machine: a [Colima](https://github.com/abiosoft/colima) VM is
+**the** Docker engine — Docker Desktop is gone. The shell, IntelliJ,
+Testcontainers and Claude Code all use it.
+
+- **The VM** — Colima's `default` profile, started at login by a
+  launchd agent (`colima-default`): 4 CPUs, 3 GB RAM, 60 GB disk (vz,
+  virtiofs). Its only mount is `~/projects`, writable, replacing
+  Colima's default mount of all of `$HOME`. `colima.yaml` is a store
+  symlink, which is safe because the agent starts Colima with
+  `--save-config=false`; `sshConfig = false` keeps `~/.ssh/config`
+  untouched.
+- **Selection** — Colima makes `colima` the active docker context
+  (written to `~/.docker/config.json`, app-owned and never symlinked),
+  and `DOCKER_HOST=unix://~/.colima/default/docker.sock` plus
+  `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock` (the
+  socket path inside the VM, which Ryuk mounts) are set in the shell
+  and in Claude's `settings.json` env (desktop-app sessions don't
+  inherit the shell).
+- **The CLI** — `docker` from nixpkgs with the compose and buildx
+  plugins.
+- **Personal sandbox** — `claude.nix` allows the socket in
+  `sandbox.network.allowUnixSockets`, so sandboxed Claude can run
+  `docker`, `docker compose` and Testcontainers itself.
+
+Day to day: bind mounts outside `~/projects` (including `$TMPDIR`) come
+up empty inside containers; Testcontainers copies files over the API,
+so `withCopyFileToContainer` works from anywhere. Status and recovery:
+`colima status`, `colima stop` (frees the RAM; it comes back at next
+login, or `colima start`). Log: `~/.local/state/colima/default.log`.
+Colima runs on Lima, which can break after a macOS or Colima update; a
+stop/start usually fixes it.
+
+What the sandbox gives up by allowing the socket, deliberately: a
+container started from a sandboxed session can write anywhere under
+`~/projects`, not just the current project; container traffic (image
+pulls included) leaves through the VM, not the sandbox proxy, so
+`allowedDomains` doesn't apply to it; and with `allowLocalBinding`,
+sandboxed commands can reach any service listening on `localhost`.
+
+Left over from the old setup (Colima `personal` profile) after the
+first rebuild: `colima delete -p personal` removes its VM.
+
+## codemem memory
 
 [codemem](https://www.npmjs.com/package/codemem) gives Claude Code
-persistent memory, per lane. Its side lives in
-[`nix/home/codemem.nix`](../nix/home/codemem.nix): the per-lane observer
-configs (`~/.config/codemem/{personal,work-ahold}.json`) and runtime
-dirs. The lane module exports, per lane, `CODEMEM_DB`, `CODEMEM_CONFIG`,
-`CODEMEM_VIEWER_PORT`, `CODEMEM_PLUGIN_LOG` and
-`CODEMEM_CLAUDE_HOOK_{SPOOL,LOCK,CONTEXT}_DIR` — codemem's defaults for
-the latter are shared across lanes and would cross-contaminate.
+persistent memory. [`nix/home/codemem.nix`](../nix/home/codemem.nix)
+declares `dotfiles.codemem.lane` and `dotfiles.codemem.observer`; with a
+lane set it writes the observer config to
+`~/.config/codemem/<lane>.json`, creates `~/.codemem/<lane>/`, declares
+the plugin and its marketplace, and puts `CODEMEM_DB`, `CODEMEM_CONFIG`,
+`CODEMEM_PLUGIN_LOG` and `CODEMEM_CLAUDE_HOOK_{SPOOL,LOCK,CONTEXT}_DIR`
+in the settings env (the plugin's hooks, MCP server and viewer inherit
+them).
 
-| Lane | Observer | Extraction goes through |
-|---|---|---|
-| personal | `claude_sidecar`, `claude-haiku-4-5` | local Claude (Max) |
-| work | `api_http` / `anthropic`, `claude-haiku-4-5`, `api-key` header | the TechNL proxy (`CODEMEM_ANTHROPIC_ENDPOINT` set by `cc-work`) |
+| Profile | Lane | Observer | Extraction goes through |
+|---|---|---|---|
+| personal | `personal` | `claude_sidecar`, `claude-haiku-4-5` | local Claude (Max) |
+| work | `work` | `api_http` / `anthropic`, `claude-haiku-4-5`, `api-key` header | the TechNL proxy (`CODEMEM_ANTHROPIC_ENDPOINT`, pinned by `cc-work`) |
 
-The codemem plugin is declared in both lanes' settings (see above). Its MCP
-server auto-starts each lane's viewer on that lane's port, and the
-extraction sweep runs inside that viewer (~2 min after a session goes
-idle) — so work extraction stays in the TechNL channel.
+The work observer's key comes from a `pass-cli` command in its config
+(`pass://Ahold/TechNLGenAI/api_key`, cached five minutes). codemem's
+Anthropic observer ignores `observer_base_url` and calls
+`api.anthropic.com` unless `CODEMEM_ANTHROPIC_ENDPOINT` is set, which is
+why `cc-work` and the gateway check insist on it. The extraction sweep
+runs in the viewer the MCP server auto-starts (~2 min after a session
+goes idle), so work extraction stays in the TechNL channel.
 
-**Known issue:** codemem <= 0.36 hook ingest ignores
-`CODEMEM_VIEWER_PORT` and posts to `127.0.0.1:38888`. A fix is pending
-upstream; until it ships, `cc-work` refuses to start and `lane-check.sh`
-blocks while anything listens on 38888, so work events can't land in a
-stray viewer.
-
-**No secrets live in the repo.** The TechNL key *and* the proxy URL are
-resolved at runtime via `pass-cli` (Proton Pass), and paths use
-`config.home.homeDirectory` rather than a hardcoded `/Users/<name>`, so
-the modules survive a change of host or username. Prereqs on a host:
-`pass-cli` declared in that host's `homebrew.nix`, and Node 24.15+ (the
+**No secrets live in the repo.** The TechNL key and proxy URL are
+resolved at runtime via `pass-cli`, and paths use
+`config.home.homeDirectory`, so the modules survive a change of host or
+username. Prereqs: `pass-cli` (a `dev` brew) and Node 24.15+ (the
 plugin's hooks run `node`, its MCP server `npx`) — mise's global Node
-LTS, installed by the rebuild, covers it.
+LTS covers it.
 
-### Migrated from OpenCode
+## History
 
-These lanes replaced an earlier OpenCode setup, which is fully removed.
-Leftovers not managed by Nix can be deleted by hand:
-`~/.local/share/opencode`, `~/.cache/opencode`, and any
-`~/.config/opencode` remnants.
-
-### Removed: claude-mem
-
-codemem is the only memory system; claude-mem (personal lane only, one
-machine-wide worker, Sonnet extraction) was removed along with its `bun`
-and `uv` brews. On a machine that still has it, once:
-
-```bash
-npx claude-mem uninstall   # stops the worker, removes the plugin and its settings entries
-rm -rf ~/.claude-mem       # its memories, if you don't want to keep them
-```
+- **Two lanes on one Mac** (until October 2026): m5 ran a personal
+  `~/.claude` and a work `~/.claude-work` side by side, with a guard
+  hook keeping the client tree out of the personal lane, a Colima VM
+  only for personal sessions and Docker Desktop for everything else.
+  Replaced by one role per machine; see git history before `7714277`.
+  On m5, `~/.claude-work`, `~/.codemem/work-ahold` and
+  `~/.config/codemem/work-ahold.json` can be deleted by hand.
+- **OpenCode** was replaced by Claude Code and fully removed. Leftovers:
+  `~/.local/share/opencode`, `~/.cache/opencode`, `~/.config/opencode`.
+- **claude-mem** was replaced by codemem. On a machine that still has
+  it: `npx claude-mem uninstall`, then `rm -rf ~/.claude-mem` if you
+  don't want its memories.
 
 ## Agent workflow
 
@@ -472,8 +340,8 @@ dispatches role subagents (`planner` on Opus; `architect`/`developer`/
 `reviewer`/`closer` on Sonnet) and the specialists, and enforces an
 escalation ladder + review gates. `/flow-plan`, `/flow-review` and
 `/flow-close` run single steps. Roles live in `system/.claude/agents/`,
-commands in `system/.claude/commands/`; tiers are model aliases resolved
-per lane.
+commands in `system/.claude/commands/`; tiers are model aliases each
+machine maps to its own models.
 
 Full reference: [Agent workflow](agent-workflow.md).
 
@@ -485,6 +353,6 @@ Full reference: [Agent workflow](agent-workflow.md).
 - `.gitignore` excludes `/.claude/` at the repo root (machine-local
   Claude Code worktree state) — distinct from `system/.claude/`, which
   is versioned.
-- The global git ignores (per-host `git.nix`) exclude
+- The global git ignores (`nix/home/git.nix`) exclude
   `**/.claude/settings.local.json` and `**/CLAUDE.local.md` in every
   repo: they hold per-machine approvals and notes.

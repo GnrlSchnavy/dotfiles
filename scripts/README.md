@@ -53,7 +53,7 @@ Copies the state git can't regenerate into
 `~/.dotfiles-backups/<timestamp>/` (owner-only, since some of it can
 hold credentials):
 
-- both lanes' `settings.json` and `.claude.json` (app-owned)
+- Claude Code's `~/.claude/settings.json` and `~/.claude.json` (app-owned)
 - the codemem memory databases (`~/.codemem/*/mem.sqlite`, via
   `sqlite3 .backup` so a running observer doesn't corrupt the copy)
 - `~/.docker/config.json`

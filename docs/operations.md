@@ -24,7 +24,7 @@ sudo darwin-rebuild --rollback
 # Evaluate every host without building/applying (~1 min cold)
 cd ~/.dotfiles/nix && nix flake check --no-build
 
-# Lane-hook, cc-tooling and settings-merge tests
+# Gateway-check, subagent, cc-tooling, settings-merge and doc-drift tests
 ~/.dotfiles/tests/run.sh
 ```
 
@@ -44,8 +44,9 @@ Idempotent; safe to re-run. Steps, in order:
    to `*.before-nix-darwin` so nix-darwin can take them over.
 6. `sudo nix run --inputs-from ~/.dotfiles/nix nix-darwin#darwin-rebuild -- switch --flake ~/.dotfiles/nix#<host>`
    — `darwin-rebuild` comes from the nix-darwin revision locked in `flake.lock`.
-7. Prints the two once-per-machine sign-ins: `pass-cli login` and
-   `devai setup` (work lane). Nothing else is manual: the rebuild installs
+7. Prints the once-per-machine sign-ins: `pass-cli login` and, on the
+   work machine only, `devai setup` (then start Claude with `cc-work`).
+   Nothing else is manual: the rebuild installs
    mise's Java/Node versions and creates `~/.claude/settings.json` from
    the repo snapshot, and Claude Code fetches the declared plugins on its
    first session.
@@ -61,7 +62,7 @@ against the `ci` host.
 | `update.sh` | `git pull --ff-only` → `nix flake update` → `darwin-rebuild build` (restores the old lock if it fails) → `sudo darwin-rebuild switch` → commits `flake.lock` | when you want newer inputs before the weekly lock-update PR lands; push afterwards |
 | `check.sh` | Health check: repo clean, flake evaluates, host descriptor exists, every home-manager symlink resolves, tooling on PATH, mise's configured versions installed | after a rebuild or when something feels off |
 | `lint.sh` | nixfmt, statix, deadnix, shellcheck and a gitleaks scan; also the pre-commit hook and a CI step | runs on every commit; by hand after a big edit (`cd nix && nix fmt` fixes formatting) |
-| `backup.sh` | Copies the state git can't regenerate (Claude settings and `.claude.json` for both lanes, codemem DBs, Docker config) plus brew lists and versions into `~/.dotfiles-backups/<timestamp>/`, owner-only; keeps the newest 5 | before a big flake update or experiment |
+| `backup.sh` | Copies the state git can't regenerate (Claude `settings.json` and `.claude.json`, codemem DBs, Docker config) plus brew lists and versions into `~/.dotfiles-backups/<timestamp>/`, owner-only; keeps the newest 5 | before a big flake update or experiment |
 
 None are required — `darwin-rebuild` does the real work.
 
@@ -83,7 +84,7 @@ git-tracked. `git add` it and retry.
 descriptor is missing `users.users.<name>.home = "/Users/<name>";`.
 
 **A brew-installed tool keeps disappearing** — `cleanup = "zap"`
-removes anything not declared in the host's `homebrew.nix`. Declare it
+removes anything not declared in the host's profiles' `homebrew.nix`. Declare it
 (see [packages.md](packages.md#-cleanup--zap)).
 
 **"Refusing to load formula ... from untrusted tap"** — Homebrew

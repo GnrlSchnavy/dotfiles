@@ -6,19 +6,17 @@ work, dispatches role subagents and specialist agents, and enforces an
 escalation ladder plus review gates.
 
 It's modelled on a role→model + capped-loop orchestration schema, trimmed to
-**Sonnet + Opus only** (no codex tier, no heavy "wave" ceremony). It works in
-**both lanes** (personal `~/.claude` and work `cc-work`), with the model tiers
-resolved per lane so work stays inside the sanctioned TechNL channel.
+**Sonnet + Opus only** (no codex tier, no heavy "wave" ceremony). It works on
+**every machine** (personal: Claude Max; work: `cc-work`), with the model tiers
+resolved per machine so work stays inside the sanctioned TechNL channel.
 
-See also: [Two Claude Code lanes](claude-code.md#two-claude-code-lanes)
-(the lane setup this builds on) and
-[Client tooling](client-tooling.md) (per-client project agents).
+See also: [Claude Code integration](claude-code.md) (the per-profile setup this
+builds on) and [Client tooling](client-tooling.md) (per-client project agents).
 
 ## The roles
 
-Five subagents plus the lead, shared by both lanes: `system/.claude/agents/` is
-symlinked to `~/.claude/agents` ([`nix/home/files.nix`](../nix/home/files.nix))
-and `~/.claude-work/agents` ([`nix/home/claude-lanes.nix`](../nix/home/claude-lanes.nix)):
+Five subagents plus the lead, the same on every machine: `system/.claude/agents/`
+is symlinked to `~/.claude/agents` ([`nix/home/claude-code.nix`](../nix/home/claude-code.nix)):
 
 | Role | Runs as | Tier | What it does |
 |---|---|---|---|
@@ -43,7 +41,7 @@ expertise it dispatches a specialist (`typescript-pro`, `spring-boot-engineer`,
 1. **Role prompts** — `system/.claude/agents/{planner,architect,developer,reviewer,closer}.md`.
    Claude Code frontmatter: `name`, `description`, `tools`, and a `model:` set
    to an alias (`opus` / `sonnet`).
-2. **Slash commands** — `system/.claude/commands/flow*.md`, both lanes:
+2. **Slash commands** — `system/.claude/commands/flow*.md`:
    - `/flow <spec>` → the full lead flow, with the escalation ladder + caps.
    - `/flow-plan <spec>` → dispatches `planner`, returns the phased plan.
    - `/flow-review [target]` → dispatches the `reviewer` gate (defaults to the
@@ -55,24 +53,25 @@ expertise it dispatches a specialist (`typescript-pro`, `spring-boot-engineer`,
 ### Why tiers are aliases (isolation)
 
 This is **load-bearing for client isolation**. Agent files only ever name an
-alias, never a full provider model id. Each lane maps the aliases to its own
-endpoint:
+alias, never a full provider model id. Each machine maps the aliases to its
+own endpoint:
 
-- personal → Anthropic's Opus / Sonnet via the Max login.
+- personal (m5) → Anthropic's Opus / Sonnet via the Max login.
 - work (`cc-work` / `cc-work-desktop`) → `ANTHROPIC_DEFAULT_{OPUS,SONNET,HAIKU}_MODEL` =
   `claude-opus-5-5` / `claude-sonnet-5-5` / `claude-haiku-4-5`, all served by
-  the TechNL gateway (set in the work `settings.json` env, so CLI and desktop
-  work sessions both get them; `/model` can still pick other gateway ids).
+  the TechNL gateway (set in the `settings.json` env by
+  [`nix/profiles/work/claude.nix`](../nix/profiles/work/claude.nix), so CLI and
+  desktop sessions both get them; `/model` can still pick other gateway ids).
 
-Every request from the work lane — main session or subagent, whatever the
-tier — goes to the lane's `ANTHROPIC_BASE_URL`, so an alias can't route client
-work elsewhere. Hard-coding a full model id in an agent file would bypass the
-per-lane mapping — don't.
+Every request on the work Mac — main session or subagent, whatever the
+tier — goes to the session's `ANTHROPIC_BASE_URL`, so an alias can't route
+client work elsewhere. Hard-coding a full model id in an agent file would
+bypass the per-machine mapping — don't.
 
-> The work-lane Opus id (`claude-opus-5-5`) must match what TechNL serves, and
+> The work Opus id (`claude-opus-5-5`) must match what TechNL serves, and
 > needs Claude Code CLI >= 2.1.285 (older builds reject it as
-> `unrecognized_model`). Change the mapping in `claude-lanes.nix` if TechNL
-> exposes Opus under a different id.
+> `unrecognized_model`). Change the mapping in `profiles/work/claude.nix` if
+> TechNL exposes Opus under a different id.
 
 ## The escalation ladder + capped loops
 
@@ -99,8 +98,8 @@ not targets.
 
 ## How to use it
 
-1. Start your lane (desktop app / `claude` / `cc-personal`, or `cc-work`) in the
-   target repo.
+1. Start Claude Code in the target repo (desktop app / `claude` on the
+   personal Mac, `cc-work` on the work Mac).
 2. Run `/flow <feature or spec>`. For a substantial feature the lead will:
    1. **Plan** — dispatch `planner`, then plan-review with `reviewer`
       (fix-loop up to `plan_review_rounds`).
@@ -121,7 +120,7 @@ role directly ("use the reviewer subagent on …").
 ### A quick smoke test
 
 ```
-cc-work        # or the desktop app / cc-personal
+cc-work        # or the desktop app / claude on the personal Mac
 /flow build a tiny slugify() helper with a test
 # watch: developer edits + tests + commits → reviewer PASS/BLOCK
 ```
@@ -149,20 +148,19 @@ Don't infer a subagent's model from the session's own model. Check it:
 |---|---|
 | Role subagents | `system/.claude/agents/{planner,architect,developer,reviewer,closer}.md` |
 | Lead + step commands | `system/.claude/commands/{flow,flow-plan,flow-review,flow-close}.md` |
-| Deployment, personal | [`nix/home/files.nix`](../nix/home/files.nix) (`~/.claude/{agents,commands}`) |
-| Deployment, work | [`nix/home/claude-lanes.nix`](../nix/home/claude-lanes.nix) (`~/.claude-work/{agents,commands}`) |
-| Per-lane alias → model mapping | [`nix/home/claude-lanes.nix`](../nix/home/claude-lanes.nix) (`ANTHROPIC_DEFAULT_*_MODEL` in the work env) |
+| Deployment (every machine) | [`nix/home/claude-code.nix`](../nix/home/claude-code.nix) (`~/.claude/{agents,commands}`) |
+| Work alias → model mapping | [`nix/profiles/work/claude.nix`](../nix/profiles/work/claude.nix) (`ANTHROPIC_DEFAULT_*_MODEL` in the settings env) |
 
 ## Extending it
 
 - **Add a role:** drop `system/.claude/agents/<role>.md` (frontmatter `name`,
   `description`, `tools`, `model: sonnet` or `opus`), `git add`, rebuild. It
-  appears in both lanes. Mention it in `/flow` if the lead should dispatch it.
+  appears on every machine. Mention it in `/flow` if the lead should dispatch it.
 - **Change a role's tier:** edit its `model:` alias. Aliases only — never a full
   model id.
-- **New client lane:** a new lane (see
+- **New client machine:** a new client profile (see
   [client tooling → onboard](client-tooling.md#runbook--onboard-a-new-client))
-  gets these roles by linking the same `agents/` and `commands/` dirs. Give it
+  gets these roles from the shared `agents/` and `commands/` links. Give it
   its own `ANTHROPIC_DEFAULT_*_MODEL` mapping pointing at *its* channel's ids.
 - **Add a command:** drop `system/.claude/commands/<name>.md` (frontmatter:
   `description`, optional `argument-hint`; body is the prompt, `$ARGUMENTS` is
@@ -174,11 +172,11 @@ The current escalation enforcement is soft (the lead self-polices its caps). The
 deterministic version, not yet built:
 
 - **`flow-task`** — a headless runner (`claude -p --agent developer --model
-  <tier>` in the right lane) that *enforces* the retry caps and does the real
+  <tier>`) that *enforces* the retry caps and does the real
   per-attempt sonnet→opus swap, gating on build/test signal between attempts.
 - **`flow-commit`** — a focused commit helper (the schema's `sb-commit.sh`
   equivalent).
 
 Both would ship like [`cc-tooling`](client-tooling.md) — a
-`writeShellScriptBin` in `nix/home/claude-lanes.nix` from a script in
-`system/bin/`.
+`writeShellApplication` in a profile's `claude.nix` (or `nix/home/` for every
+machine) from a script in `system/bin/`.

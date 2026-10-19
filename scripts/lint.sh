@@ -30,7 +30,7 @@ step "deadnix"
 run deadnix --fail nix
 
 step "shellcheck"
-run shellcheck -s bash -S style system/.claude/hooks/*.sh system/.claude-work/hooks/*.sh \
+run shellcheck -s bash -S style system/claude-work/hooks/*.sh \
   system/bin/*.sh tests/*.sh scripts/lint.sh .githooks/pre-commit
 run shellcheck -s bash -S error setup.sh scripts/*.sh
 

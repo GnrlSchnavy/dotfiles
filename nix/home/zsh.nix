@@ -34,12 +34,6 @@
     # zoxide replaced autojump; `j` keeps working.
     shellAliases.j = "z";
 
-    # Pick a Docker engine explicitly: `dw` is Docker Desktop (work lane,
-    # shell, IntelliJ), `dp` the personal lane's Colima VM (claude-lanes.nix).
-    # --context beats DOCKER_HOST, so each means the same engine in any shell.
-    shellAliases.dw = "docker --context desktop-linux";
-    shellAliases.dp = "docker --context colima-personal";
-
     # Login shell init (was shell/.zprofile under Stow).
     profileExtra = ''
       # Homebrew environment setup
@@ -62,7 +56,7 @@
       # Inside Claude Code's sandbox, NO_PROXY (hardcoded there) sends the
       # private k3s API past the proxy, where the sandbox blocks it. Drop it
       # so kubectl/flux go through the proxy (the API is in allowedDomains,
-      # claude-lanes.nix). A no-op everywhere else.
+      # nix/profiles/personal/claude.nix). A no-op everywhere else.
       kubectl() {
         if [[ -n $SANDBOX_RUNTIME ]]; then env -u NO_PROXY -u no_proxy kubectl "$@"
         else command kubectl "$@"; fi
@@ -81,7 +75,8 @@
 
       # Quick note editing: open nvim in the notes directory straight
       # into the fuzzy file finder. Uses the Obsidian vault ($OBSIDIAN_VAULT,
-      # files.nix) when present, ~/notes otherwise. Override with NOTES_DIR.
+      # profiles/personal/vault.nix) when present, ~/notes otherwise.
+      # Override with NOTES_DIR.
       notes() {
         local dir="''${NOTES_DIR:-$OBSIDIAN_VAULT}"
         [ -d "$dir" ] || dir="$HOME/notes"

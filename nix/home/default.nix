@@ -9,15 +9,16 @@
 { ... }:
 
 {
-  # git.nix is intentionally NOT here — it's per-host (different identity
-  # per machine), pulled in via the descriptor's homeModules list.
+  # What differs per role (Claude Code's backend, git identity) comes from
+  # the host's profiles (nix/profiles/), which set the options these declare.
   imports = [
     ./files.nix
+    ./git.nix
     ./zsh.nix
     ./mise.nix
     ./secrets.nix
+    ./claude-code.nix
     ./codemem.nix
-    ./claude-lanes.nix
   ];
 
   # First state version we ship under home-manager. Don't change without

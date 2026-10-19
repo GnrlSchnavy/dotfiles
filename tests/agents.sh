@@ -3,8 +3,8 @@
 #   - `name` matches the file name and a description is present;
 #   - every `tools:` entry is a real Claude Code tool (an unknown name stops
 #     the subagent from launching at all);
-#   - `model:` is absent or an alias, never a full model id — aliases resolve
-#     per lane, so a full id would route client work out of its channel.
+#   - `model:` is absent or an alias, never a full model id — aliases follow
+#     model upgrades, a pinned id goes stale.
 set -u
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"

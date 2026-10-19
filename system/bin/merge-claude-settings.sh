@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # merge-claude-settings <settings.json> <owned.json> <managed hook prefix> [seed.json]
 #
-# Merges the keys a Claude Code lane owns (claude-lanes.nix) into a settings
+# Merges the keys Nix owns (nix/home/claude-code.nix) into a Claude Code settings
 # file the app also rewrites at runtime:
 #   env      owned keys overwrite; keys Nix owned last run but no longer does
 #            are removed (tracked in .nix-owned.json next to the file)

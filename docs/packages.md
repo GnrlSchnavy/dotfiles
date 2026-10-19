@@ -1,12 +1,13 @@
 # Package management
 
-Software comes from three sources, all declared **per-host** under
-`nix/hosts/<name>/`. This doc is the single source of truth for which
-source to use (it supersedes the old `nix/PACKAGE-STRATEGY.md`).
+Software comes from three sources, all declared **per profile** under
+`nix/profiles/<role>/` — `dev` for every machine, `personal` or `work`
+for one role ([nix/profiles/README.md](../nix/profiles/README.md)).
+This doc is the single source of truth for which source to use.
 
 ## Decision matrix
 
-| Tool type | Nix (`packages.nix`) | Homebrew (`homebrew.nix`) | Mac App Store (`masApps`) |
+| Tool type | Nix (`nix/profiles/<role>/packages.nix`) | Homebrew (`nix/profiles/<role>/homebrew.nix`) | Mac App Store (`masApps`) |
 |---|---|---|---|
 | CLI development tools | ✅ preferred | only if not in nixpkgs / needs a tap | never |
 | GUI applications | never | ✅ casks | only if App-Store-exclusive |
@@ -15,15 +16,23 @@ source to use (it supersedes the old `nix/PACKAGE-STRATEGY.md`).
 
 Rules of thumb:
 
-- **Nix packages** (`environment.systemPackages`): reproducible CLI
-  tools — git, maven, jq, ripgrep, fd, bat, tree, curl, wget, htop…
-- **Homebrew brews**: CLI tools that need taps (`fluxcd/tap/flux`),
-  or faster update cycles
-  (gh, kubectl, helm).
-- **Homebrew casks**: all GUI apps (browsers, IDEs, Slack, Docker
-  Desktop, …). JDKs are not casks — mise installs them.
+- **Nix packages** (`environment.systemPackages`): CLI tools by
+  default — git, jq, ripgrep, kubectl, helm, gh, tmux, gnupg, kotlin,
+  pnpm, ansible, nmap…
+- **Homebrew brews**: only with a reason, written next to the entry —
+  an official tap (`fluxcd/tap/flux`, which also tracks the cluster's
+  controller releases; `protonpass/tap/pass-cli`), a release cycle
+  stable nixpkgs can't keep up with (`opencode`, `openspec`), or a
+  build that doesn't fit Nix (`clamav`'s writable config and database).
+- **Homebrew casks**: all GUI apps (browsers, IDEs, Slack, …). JDKs are
+  not casks — mise installs them. Docker is not a cask either: the
+  engine is Colima and the `docker` CLI comes from nixpkgs
+  (`nix/profiles/dev/docker.nix`).
 - **masApps**: currently unused on every host; available if an app is
   App-Store-only.
+- **Which profile**: `dev` if every machine needs it, `personal` /
+  `work` if only that role does. An app both roles want but not every
+  dev machine would (Slack) is listed in each.
 - One tool, one source — never declare the same tool in both Nix and
   Homebrew.
 
@@ -71,11 +80,11 @@ mise hooks itself into the shell — see
 ## Adding / removing a package
 
 ```bash
-# CLI tool from nixpkgs — THIS machine's list
-$EDITOR nix/hosts/$(scutil --get LocalHostName)/packages.nix
+# CLI tool from nixpkgs — every machine (dev) or one role (personal)
+$EDITOR nix/profiles/dev/packages.nix
 
-# GUI app or brew formula
-$EDITOR nix/hosts/$(scutil --get LocalHostName)/homebrew.nix
+# GUI app or brew formula — dev, personal or work
+$EDITOR nix/profiles/dev/homebrew.nix
 
 # Stage (flakes only see git-tracked changes), then apply
 git add -A
@@ -88,7 +97,8 @@ new entries alphabetically within their group.
 
 ## ⚠️ cleanup = "zap"
 
-The host (`m5`) sets:
+[`nix/modules/homebrew.nix`](../nix/modules/homebrew.nix) sets, for
+every host:
 
 ```nix
 homebrew.onActivation = {
@@ -100,24 +110,27 @@ homebrew.onActivation = {
 
 Consequences:
 
-- Anything installed with plain `brew install` and not added to
-  `homebrew.nix` is **uninstalled on the next rebuild**.
+- Anything installed with plain `brew install` and not added to one of
+  the host's profiles' `homebrew.nix` is **uninstalled on the next
+  rebuild**.
 - Removing an entry from `homebrew.nix` actively zaps it (including
   preferences) at the next rebuild — that's the intended way to remove
-  software.
+  software. Moving one between profiles removes it from hosts without
+  the target profile.
 - The `ci` host force-overrides `cleanup = "none"` and
   `upgrade = false` so it doesn't fight the runner image.
 
 ## Gotchas
 
-- Cask name is `docker-desktop` (the old `docker` cask was renamed).
+- Docker Desktop was replaced by Colima (October 2026). After the first
+  rebuild without it, the cask is zapped; Colima's VM is separate.
 - `warp` is the **Warp terminal**; the Cloudflare VPN cask is
   `cloudflare-warp`. Don't confuse them.
 - nvim is not in any `packages.nix` — it's injected per-host by
   `mkNvim` in `nix/flake.nix`.
 - `nixpkgs.config.allowUnfree = true` is set once in
-  `nix/modules/nix.nix`; don't repeat it per host.
+  `nix/modules/nix.nix`; don't repeat it per profile.
 - The CI smoke check (`.github/workflows/check.yml`) asserts the
-  formulas `kubectl`, `helm` exist after activation. If you
-  remove one of those from **m5**'s brews, update the workflow too
-  (ci mirrors m5's modules).
+  formulas `flux`, `pass-cli` exist after activation and that
+  `kubectl`, `helm`, `gh` are on PATH. If you move or remove one of
+  those, update the workflow too (ci mirrors m5's profiles).

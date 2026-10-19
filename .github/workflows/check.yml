@@ -35,7 +35,7 @@ jobs:
   checks:
     # Fast gate on Linux (~2 min): evaluates every host — eval works
     # cross-platform, so a typo fails here before the macOS job starts — and
-    # runs the lane-hook and cc-tooling tests.
+    # runs the bash tests.
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -54,7 +54,7 @@ jobs:
       - name: Lint
         run: nix develop ./nix --command scripts/lint.sh
 
-      - name: Hook, cc-tooling and settings-merge tests
+      - name: Settings-merge and agent tests
         run: tests/run.sh
 
   fresh-install:
@@ -124,21 +124,13 @@ jobs:
           # home-manager file-pointer dotfiles
           [ -L ~/.ideavimrc ] || fail "~/.ideavimrc is not a symlink"
 
-          # Claude Code lanes: settings.json is a regular (app-owned) file
-          # with the lane's guard hook merged in, and the hook is executable.
-          for lane in .claude/work-lane-guard.sh .claude-work/lane-check.sh; do
-            dir="$HOME/${lane%%/*}" hook="$HOME/${lane%%/*}/hooks/${lane#*/}"
-            if [ ! -f "$dir/settings.json" ] || [ -L "$dir/settings.json" ]; then
-              fail "$dir/settings.json is not a regular file"
-            fi
-            jq -e --arg h "$hook" '[.hooks.PreToolUse[].hooks[].command] | index($h)' \
-              "$dir/settings.json" >/dev/null || fail "$dir/settings.json lacks $hook"
-            [ -x "$hook" ] || fail "$hook is not executable"
-            jq -e '.enabledPlugins["codemem@codemem-marketplace"] == true' \
-              "$dir/settings.json" >/dev/null || fail "$dir/settings.json doesn't declare codemem"
-          done
-          [ -d ~/.codemem/personal ] && [ -d ~/.codemem/work-ahold ] || fail "codemem lane dirs missing"
-          command -v cc-tooling >/dev/null || fail "cc-tooling not on PATH"
+          # Claude Code: settings.json is a regular (app-owned) file with the
+          # owned keys merged in.
+          s=~/.claude/settings.json
+          if [ ! -f "$s" ] || [ -L "$s" ]; then fail "$s is not a regular file"; fi
+          jq -e '.enabledPlugins["codemem@codemem-marketplace"] == true and .sandbox.enabled == true' \
+            "$s" >/dev/null || fail "$s lacks the merged plugins/sandbox keys"
+          [ -d ~/.codemem/personal ] || fail "codemem dir missing"
           if grep -rq '@VAULT@' ~/.claude/skills/; then fail "vault path not filled in the skills"; fi
 
           # darwin-rebuild ships in the system profile
@@ -153,10 +145,16 @@ jobs:
             grep -q "/mise-temurin-$v" <<<"$jvms" || fail "java_home doesn't list mise's Temurin $v: $jvms"
           done
 
-          # Brew bundle should have left every declared formula installed
+          # Brew bundle should have left the declared formulas installed —
+          # both from third-party taps, so this covers homebrew-trust.nix too
           command -v brew >/dev/null || fail "brew not on PATH"
-          for formula in kubectl helm; do
+          for formula in flux pass-cli; do
             brew list --formula "$formula" >/dev/null 2>&1 || fail "brew formula $formula missing after activation"
+          done
+
+          # CLI tools come from nixpkgs (profiles/dev/packages.nix)
+          for tool in kubectl helm gh; do
+            command -v "$tool" >/dev/null || fail "$tool not on PATH"
           done
 
           echo "All smoke checks passed."

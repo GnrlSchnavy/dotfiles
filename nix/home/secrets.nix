@@ -12,7 +12,7 @@
 #   - `darwin-rebuild` activation is non-interactive and runs partly as root,
 #     so pass-cli there would hang on a login prompt or fail outright.
 # "Declarative" here means the reference and the recipe are versioned; the
-# materialisation stays an explicit command you run (`pass-render`, `cc-work`).
+# materialisation stays an explicit command you run (`pass-render`).
 #
 # Do NOT call these helpers at shell startup — each one is a network round
 # trip and would add latency to every new terminal. Call them from functions
@@ -31,10 +31,10 @@
 { lib, ... }:
 
 {
-  # mkOrder 1400 places these BEFORE codemem.nix's mkAfter (1500) block, so
-  # the helpers are defined above their first consumer in ~/.zshrc. Function
-  # definition order doesn't strictly matter in zsh (bodies resolve at call
-  # time), but keeping the file readable top-to-bottom is worth the ordering.
+  # mkOrder 1400 places these before other modules' mkAfter (1500) blocks, so
+  # a function there that needs a secret reads top-to-bottom in ~/.zshrc.
+  # Function definition order doesn't strictly matter in zsh (bodies resolve
+  # at call time); this is for readability.
   programs.zsh.initContent = lib.mkOrder 1400 ''
     # ── Proton Pass secret helpers (see nix/home/secrets.nix) ──
 

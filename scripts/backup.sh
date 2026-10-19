@@ -48,8 +48,6 @@ mkdir -p "$BACKUP_DIR"
 declare -a STATE_FILES=(
     ".claude/settings.json"
     ".claude.json"
-    ".claude-work/settings.json"
-    ".claude-work/.claude.json"
     ".docker/config.json"
 )
 

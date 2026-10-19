@@ -2,8 +2,8 @@
 #
 # Onboard a new Mac:
 #   1. cp -r nix/hosts/template nix/hosts/<your-hostname>
-#   2. Seed the per-host modules from an existing host, then prune:
-#        cp nix/hosts/m5/{homebrew,packages,dock,git}.nix nix/hosts/<your-hostname>/
+#   2. Pick its profiles below (nix/profiles/README.md) and seed a dock:
+#        cp nix/hosts/m5/dock.nix nix/hosts/<your-hostname>/
 #   3. Edit the values below (hostname, username, arch if Intel).
 #   4. Register it in nix/flake.nix under the hosts attrset:
 #        hosts = {
@@ -18,15 +18,17 @@
   # Must match the macOS account name (whoami).
   username = "REPLACE_ME_USERNAME";
 
-  # nix-darwin modules unique to this host (live in this directory).
-  systemModules = [
-    ./homebrew.nix
-    ./packages.nix
-    ./dock.nix
+  # "dev" plus exactly one of "personal" / "work".
+  profiles = [
+    "dev"
+    "personal"
   ];
 
-  # home-manager modules unique to this host (live in this directory).
-  homeModules = [ ./git.nix ];
+  # nix-darwin modules unique to this machine (live in this directory).
+  systemModules = [ ./dock.nix ];
+
+  # home-manager modules unique to this machine, if any.
+  homeModules = [ ];
 
   # nix-darwin module applied only to this host.
   module = { ... }: {

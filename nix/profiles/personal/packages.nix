@@ -1,3 +1,4 @@
+# Personal CLI tools and apps from nixpkgs or pinned downloads.
 { pkgs, ... }:
 
 let
@@ -21,22 +22,13 @@ let
 in
 {
   environment.systemPackages = [
-    pkgs.git
-    pkgs.maven
-    pkgs.tree
-    pkgs.jq
-    pkgs.curl
-    pkgs.wget
-    pkgs.ripgrep
-    pkgs.fd
-    pkgs.bat
-    pkgs.unzip
-    pkgs.p7zip
-    pkgs.mkalias
-    pkgs.htop
-    pkgs.fastfetch
+    # Homelab and network tools
+    pkgs.ansible
+    pkgs.nmap
 
-    # Music
+    pkgs.stripe-cli
+
+    # Music (Jellyfin/Navidrome client)
     feishin
   ];
 }

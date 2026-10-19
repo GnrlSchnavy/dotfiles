@@ -50,3 +50,5 @@ result-*
 
 # OS generated files
 Icon?
+# Wrangler (Cloudflare CLI) cache: account id and login email
+.wrangler/

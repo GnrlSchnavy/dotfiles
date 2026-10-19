@@ -1,8 +1,7 @@
 # Global instructions (personal baseline)
 
-These rules apply to **every** Claude Code session in both lanes (personal:
-`~/.claude`, work: `~/.claude-work`). Project `CLAUDE.md` files and, in the work
-lane, the client overlay stack on top.
+These rules apply to **every** Claude Code session (`~/.claude`). Project
+`CLAUDE.md` files stack on top.
 
 ## Working style
 

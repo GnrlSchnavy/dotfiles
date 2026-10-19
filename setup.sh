@@ -189,11 +189,12 @@ fi
 echo
 print_success "🎉 Dotfiles setup complete!"
 echo
-echo "Next steps (once per machine; both are sign-ins, so they can't be declared):"
+echo "Next steps (once per machine; sign-ins can't be declared):"
 echo "1. Restart your terminal so PATH and home-manager-managed files take effect"
 echo "2. Sign in to Proton Pass, the source of every runtime secret (docs/secrets.md):"
 echo "     pass-cli login"
-echo "3. Work lane: install the DevAI CLI and sign in to the gateway (docs/claude-code.md):"
+echo "3. Work machine only: install the DevAI CLI and sign in to the gateway"
+echo "   (docs/claude-code.md), then start Claude with cc-work:"
 echo "     devai setup"
 echo
 echo "Java/Node (mise) were installed by the rebuild; Claude Code fetches its"
