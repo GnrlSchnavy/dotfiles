@@ -66,7 +66,7 @@ post-install step.
 
 | Change | File |
 |---|---|
-| Which profiles a host gets | `nix/hosts/<name>/default.nix` ([nix/profiles/README.md](nix/profiles/README.md)) |
+| Which profiles a host gets | `nix/hosts/<name>/default.nix` ([nix/profiles/README.md](nix/profiles/README.md)); what each profile installs and does: [docs/profiles.md](docs/profiles.md) — keep it in sync (`tests/docs.sh`) |
 | CLI tool (nixpkgs) | `nix/profiles/<role>/packages.nix` (`dev` = every machine) |
 | GUI app / brew formula | `nix/profiles/<role>/homebrew.nix` |
 | Docker engine (Colima), `DOCKER_HOST` | `nix/profiles/dev/docker.nix` ([docs/claude-code.md](docs/claude-code.md#docker-colima)) |

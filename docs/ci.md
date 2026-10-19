@@ -11,7 +11,8 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    gitleaks scan of the tree, since the repo is public), and
    [`tests/run.sh`](../tests/run.sh): the gateway-check fixtures, the
    subagent-definition check, the `cc-tooling` and settings-merge tests,
-   and the doc-drift check (the architecture map matches `nix/`).
+   and the doc-drift check (the architecture map matches `nix/`, and
+   `docs/profiles.md` names every app and brew the profiles declare).
 2. **`fresh-install`** (macOS, needs `checks`) — runs `setup.sh`
    itself against the `ci` host descriptor on a
    GitHub-hosted `xcode-27` runner: macOS 27 on Apple Silicon, in

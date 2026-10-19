@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Doc drift: the directory map in docs/architecture.md must match the nix/
 # tree, both ways — every module is in the map, every mapped path exists.
-# Also every profile is in nix/profiles/README.md's table.
+# Also every profile is in nix/profiles/README.md's table, and every cask
+# and brew a profile declares is named in docs/profiles.md.
 set -u
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
@@ -61,6 +62,16 @@ stale=""
 for p in "${mapped[@]}"; do [ -e "$p" ] || stale="$stale $p"; done
 if [ -z "$stale" ]; then pass "every mapped path exists"
 else fail "in the architecture map but not in the repo:$stale"; fi
+
+# Every cask and brew a profile declares is named in docs/profiles.md.
+missing=""
+for f in nix/profiles/*/homebrew.nix; do
+  while IFS= read -r name; do
+    grep -qF -- "\`$name\`" docs/profiles.md || missing="$missing $name"
+  done < <(grep -o '"[^"]*"' "$f" | tr -d '"')
+done
+if [ -z "$missing" ]; then pass "every profile app and brew is in docs/profiles.md"
+else fail "missing from docs/profiles.md:$missing"; fi
 
 # Every profile is in the profiles README table.
 missing=""

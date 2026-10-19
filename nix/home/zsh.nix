@@ -75,7 +75,8 @@
 
       # Quick note editing: open nvim in the notes directory straight
       # into the fuzzy file finder. Uses the Obsidian vault ($OBSIDIAN_VAULT,
-      # files.nix) when present, ~/notes otherwise. Override with NOTES_DIR.
+      # profiles/personal/vault.nix) when present, ~/notes otherwise.
+      # Override with NOTES_DIR.
       notes() {
         local dir="''${NOTES_DIR:-$OBSIDIAN_VAULT}"
         [ -d "$dir" ] || dir="$HOME/notes"

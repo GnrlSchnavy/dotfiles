@@ -7,6 +7,7 @@ precise enough for both humans and AI agents making changes.
 |---|---|
 | [architecture.md](architecture.md) | Understand the flake wiring, module layering, profiles, and the host-descriptor contract |
 | [hosts.md](hosts.md) | See what each host is, or onboard a new Mac |
+| [profiles.md](profiles.md) | See what each profile (`dev`, `personal`, `work`) puts on a machine: apps, CLI tools, git identity, Claude Code, Docker |
 | [packages.md](packages.md) | Add/remove software; decide Nix vs Homebrew vs Mac App Store |
 | [shell-and-dotfiles.md](shell-and-dotfiles.md) | Change zsh config, symlink a new dotfile, or understand which files must NOT be symlinked |
 | [secrets.md](secrets.md) | Reference a secret from Proton Pass (`pass-get`/`pass-render`), or onboard a machine to the vault |

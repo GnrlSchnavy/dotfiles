@@ -1,5 +1,10 @@
 # Profiles
 
+What each profile puts on a machine — apps, CLI tools, git identity,
+Claude Code, Docker — is described in
+[`docs/profiles.md`](../../docs/profiles.md). This file covers how
+profiles are wired.
+
 A profile is the config for one **role** a machine plays. Each host
 descriptor (`nix/hosts/<name>/default.nix`) lists its profiles; the flake
 adds each profile's modules ahead of the host's own.
