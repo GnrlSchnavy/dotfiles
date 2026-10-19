@@ -71,15 +71,15 @@ pass-cli vault create --name SSH-work
 # New keys, generated inside Proton Pass. No passphrase: the vault
 # already encrypts them.
 pass-cli item create ssh-key generate --vault-name SSH-personal \
-  --title "GitHub personal" --comment "GnrlSchnavy m5"
+  --title "GitHub personal"
 pass-cli item create ssh-key generate --vault-name SSH-personal \
-  --title "GitLab personal" --comment "yvanpersonal m5"
+  --title "GitLab personal"
 pass-cli item create ssh-key generate --vault-name SSH-personal \
-  --title "Homelab" --comment "homelab m5"
+  --title "Homelab"
 pass-cli item create ssh-key generate --vault-name SSH-work \
-  --title "GitHub work" --comment "yvanstemmerik-ah work-mac"
+  --title "GitHub work"
 pass-cli item create ssh-key generate --vault-name SSH-work \
-  --title "GitHub personal (work Mac)" --comment "GnrlSchnavy work-mac"
+  --title "GitHub personal (work Mac)"
 ```
 
 To bring an existing key along instead of generating a new one:
@@ -101,16 +101,16 @@ for v in SSH-personal SSH-work; do
 done
 ```
 
-Each line is `ssh-ed25519 AAAA… <comment>`. Save each to its file and
-commit (the comment tells them apart):
+Each line is `ssh-ed25519 AAAA… <item title>` (pass-cli uses the item
+title as the comment). Save each to its file and commit:
 
-| Comment | File |
+| Item title | File |
 |---|---|
-| `GnrlSchnavy m5` | `nix/profiles/personal/ssh/github.pub` |
-| `yvanpersonal m5` | `nix/profiles/personal/ssh/gitlab.pub` |
-| `homelab m5` | `nix/profiles/personal/ssh/homelab.pub` |
-| `yvanstemmerik-ah work-mac` | `nix/profiles/work/ssh/github-work.pub` |
-| `GnrlSchnavy work-mac` | `nix/profiles/work/ssh/github-personal.pub` |
+| `GitHub personal` | `nix/profiles/personal/ssh/github.pub` |
+| `GitLab personal` | `nix/profiles/personal/ssh/gitlab.pub` |
+| `Homelab` | `nix/profiles/personal/ssh/homelab.pub` |
+| `GitHub work` | `nix/profiles/work/ssh/github-work.pub` |
+| `GitHub personal (work Mac)` | `nix/profiles/work/ssh/github-personal.pub` |
 
 ## Registering the public keys
 
