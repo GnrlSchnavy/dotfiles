@@ -36,6 +36,9 @@
       "crossover"
       "steam"
 
+      # Development
+      "lens"
+
       # Utilities and security tools
       "balenaetcher"
       "knockknock"
