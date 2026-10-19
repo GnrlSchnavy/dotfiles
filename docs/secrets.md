@@ -69,8 +69,8 @@ values in them. Write a template with `{{ pass://Vault/Item/field }}`
 placeholders, commit it, and render it on demand:
 
 ```zsh
-pass-render ~/.dotfiles/development/kube/homelab.yaml.tmpl \
-            ~/.kube/config.d/homelab
+pass-render ~/.dotfiles/nix/profiles/personal/kube/homelab.yaml.tmpl \
+            ~/.kube/config
 ```
 
 The template syntax is `{{ pass://... }}`. Double angle brackets
@@ -147,6 +147,8 @@ reports a missing one.
 |---|---|---|
 | `cc-work` (TechNL proxy URL for codemem; the gateway credential itself is held by DevAI CLI) | `pass://Ahold/TechNLGenAI/proxy_url` | [`nix/profiles/work/claude.nix`](../nix/profiles/work/claude.nix) |
 | codemem work observer auth | `pass://Ahold/TechNLGenAI/api_key` | [`nix/profiles/work/claude.nix`](../nix/profiles/work/claude.nix) |
+| `kube-render` (homelab kubeconfig) | `pass://Infra/k3s/{ca_data,client_cert_data,client_key_data}` | [`nix/profiles/personal/kube.nix`](../nix/profiles/personal/kube.nix) |
+| `sealed-secrets-backup` / `sealed-secrets-keys` | `Infra` notes `Sealed Secrets key <name>` (by title, not `pass://`) | [`nix/profiles/personal/kube.nix`](../nix/profiles/personal/kube.nix) |
 | SSH keys (served by `pass-cli ssh-agent`, not read through `pass://`) | vaults `SSH-personal`, `SSH-work` | [`nix/home/ssh.nix`](../nix/home/ssh.nix), [docs/ssh.md](ssh.md) |
 | Per-client Claude Code profiles | `pass://<Client>/<Channel>/{api_key,proxy_url}` | [client-tooling.md](client-tooling.md) |
 
@@ -154,3 +156,96 @@ The codemem observer entry is a raw `observer_auth_command` array
 rather than a `pass-get` call: codemem spawns that command itself and
 cannot see zsh functions. Any consumer outside your shell has the same
 constraint — give it the bare `pass-cli` invocation.
+
+## Homelab kubeconfig
+
+On a personal Mac this takes care of itself. A launchd agent,
+`homelab-secrets` ([`kube.nix`](../nix/profiles/personal/kube.nix)), runs
+`kube-render` and then [`sealed-secrets-backup`](#sealed-secrets-keys) at
+login and once a day. It's a runtime job in your own session, not
+activation, so the rule above holds. Like the SSH agent, it needs
+`pass-cli login` and the Keychain fix ([ssh.md](ssh.md#prerequisites-once-per-mac));
+until then each run fails and the next one tries again. Log:
+`~/Library/Logs/homelab-secrets.log`. To run it now, e.g. right after
+`pass-cli login` on a new Mac:
+
+```bash
+launchctl kickstart gui/$(id -u)/org.nix-community.home.homelab-secrets
+tail ~/Library/Logs/homelab-secrets.log && kubectl get nodes
+```
+
+`kube-render` on its own does the same render by hand.
+
+`kube-render` renders
+[`nix/profiles/personal/kube/homelab.yaml.tmpl`](../nix/profiles/personal/kube/homelab.yaml.tmpl)
+into `~/.kube/config`. It overwrites that file, so keep other clusters
+in a second file and add it to `KUBECONFIG`. The template holds the
+structure and the API address. The three certificate blobs live in the
+custom item `Infra/k3s` as the fields `ca_data`, `client_cert_data` and
+`client_key_data`.
+
+**Creating `Infra/k3s`** (once, or after the cluster's certificates
+change) from a working kubeconfig, through a pipe so no value lands in
+argv or shell history. The source can be a file
+(`kubectl config view --raw -o json`) or the note it was saved in:
+
+```bash
+pass-cli item view --vault-name Infra --item-title "<kubeconfig note>" --field note \
+  | kubectl config view --raw -o json --kubeconfig /dev/stdin \
+  | jq -e '.clusters[0].cluster as $c | .users[0].user as $u
+      | if ($c["certificate-authority-data"] and $u["client-certificate-data"] and $u["client-key-data"])
+        then {title: "k3s", note: "Homelab kubeconfig credentials; template: nix/profiles/personal/kube/",
+              sections: [{section_name: "kubeconfig", fields: [
+                {field_name: "ca_data", field_type: "hidden", value: $c["certificate-authority-data"]},
+                {field_name: "client_cert_data", field_type: "hidden", value: $u["client-certificate-data"]},
+                {field_name: "client_key_data", field_type: "hidden", value: $u["client-key-data"]}]}]}
+        else error("not a client-certificate kubeconfig") end' \
+  | pass-cli item create custom --vault-name Infra --from-template -
+```
+
+Check that the old kubeconfig's `server:` matches the template
+(`192.168.1.106:6443`, also in Claude's sandbox allowlist in
+`nix/profiles/personal/claude.nix`). Then delete `~/.kube/config` and run
+`kube-render && kubectl get nodes`. Once that works, the note is no
+longer needed.
+
+## Sealed Secrets keys
+
+The Sealed Secrets controller (namespace `sealed-secrets`) holds the
+private keys that decrypt every `SealedSecret` in the homelab repo. Lose
+them with the cluster and every sealed secret has to be re-created. The
+controller adds a new key every 30 days and keeps the old ones, and each
+secret only opens with the key it was sealed with, so the backup needs
+**all** of them.
+
+They're kept as one `Infra` note per key, `Sealed Secrets key <name>`.
+Together they're about 130 KB, more than fits comfortably in one note.
+They go from `kubectl` straight into Proton Pass, never to disk.
+
+```bash
+sealed-secrets-backup     # saves the keys not in Infra yet
+```
+
+The `homelab-secrets` agent runs it daily (see
+[above](#homelab-kubeconfig)), so a new key is saved within a day of a
+rotation as long as the Mac is home. Each run logs
+`N new, M keys in the cluster`. A run away from home fails on `kubectl`
+and the next day's run catches up.
+
+**Checking the backup** without touching the cluster: decrypt one sealed
+secret with the keys from Proton Pass. This prints only the field names:
+
+```bash
+kubectl get sealedsecret -n <ns> <name> -o yaml \
+  | kubeseal --recovery-unseal -o json --recovery-private-key <(sealed-secrets-keys) \
+  | jq '.data | keys'
+```
+
+**Restoring** on a rebuilt cluster: put the keys back before the
+controller starts sealing with a fresh one, then restart it so it loads
+them:
+
+```bash
+sealed-secrets-keys | kubectl apply -f -
+kubectl -n sealed-secrets rollout restart deployment/sealed-secrets
+```

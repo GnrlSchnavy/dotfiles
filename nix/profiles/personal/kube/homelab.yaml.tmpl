@@ -1,0 +1,21 @@
+# Homelab k3s kubeconfig. Rendered by `kube-render` into ~/.kube/config;
+# the credentials come from the Proton Pass item Infra/k3s
+# (docs/secrets.md#homelab-kubeconfig). Edit here, not in ~/.kube/config.
+apiVersion: v1
+kind: Config
+clusters:
+  - name: homelab
+    cluster:
+      server: https://192.168.1.106:6443
+      certificate-authority-data: {{ pass://Infra/k3s/ca_data }}
+users:
+  - name: homelab
+    user:
+      client-certificate-data: {{ pass://Infra/k3s/client_cert_data }}
+      client-key-data: {{ pass://Infra/k3s/client_key_data }}
+contexts:
+  - name: homelab
+    context:
+      cluster: homelab
+      user: homelab
+current-context: homelab

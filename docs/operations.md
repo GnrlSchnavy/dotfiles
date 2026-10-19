@@ -71,7 +71,8 @@ erasing:
          "$(git -C "$d" remote | wc -l)"
      done
    ```
-2. **Secrets not yet in Proton Pass** (kubeconfig, files with passwords):
+2. **Secrets not yet in Proton Pass** (files with passwords; the homelab
+   kubeconfig already is, see [secrets.md](secrets.md#homelab-kubeconfig)):
    store them as notes, from stdin so they stay out of shell history:
    `jq -n --rawfile n <file> '{title: "<title>", note: $n}' | pass-cli item create note --vault-name <vault> --from-template -`.
 3. **Files:** `~/Documents`, `~/Downloads`, `~/Desktop`, app data you care
@@ -97,7 +98,11 @@ Then, in a new terminal: `pass-cli login`, the Keychain fix for
 `pass-cli` ([ssh.md](ssh.md#prerequisites-once-per-mac)), `launchctl
 kickstart -k gui/$(id -u)/org.nix-community.home.proton-pass-ssh-agent`,
 the SSH checks from [ssh.md](ssh.md#applying-and-checking), and (personal)
-open Alfred once, rebuild, restart Alfred for its Cmd-Space hotkey.
+open Alfred once, rebuild, restart Alfred for its Cmd-Space hotkey, and
+the `homelab-secrets` agent's first run for the kubeconfig and the
+Sealed Secrets backup (`launchctl kickstart
+gui/$(id -u)/org.nix-community.home.homelab-secrets`, see
+[secrets.md](secrets.md#homelab-kubeconfig)).
 
 ## Maintenance scripts (`scripts/`)
 

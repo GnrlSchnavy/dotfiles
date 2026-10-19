@@ -162,6 +162,16 @@ shared default, nothing to override.
 ([docs/ssh.md](ssh.md)) — GitHub (GnrlSchnavy), GitLab (yvanpersonal) and the homelab
 (`ssh nas-1`, `node-1` … `node-5`, `ha`). No key files on disk.
 
+### Homelab (k3s)
+
+`kube.nix`: `kube-render` writes `~/.kube/config` from a committed
+template and the Proton Pass item `Infra/k3s`
+([docs/secrets.md](secrets.md#homelab-kubeconfig));
+`sealed-secrets-backup` / `sealed-secrets-keys` keep the Sealed Secrets
+controller's keys in `Infra` ([docs/secrets.md](secrets.md#sealed-secrets-keys)).
+The launchd agent `homelab-secrets` runs the render and the backup at login
+and daily.
+
 ### Claude Code — Claude Max, sandboxed
 
 `claude.nix`. Sign in to your Claude Max account in the desktop app or

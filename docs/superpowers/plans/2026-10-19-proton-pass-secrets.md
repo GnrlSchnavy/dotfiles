@@ -71,18 +71,33 @@ working physical console on each box.
 
 - **Done when:** with the Proton agent stopped, `ssh -i /Volumes/<usb>/breakglass nas-1 true` works
 
-## 4. Sealed Secrets master key backup
+## 4. Sealed Secrets master key backup — done
 
-Controller key → `Infra` vault, straight from `kubectl` (never on disk).
+19 keys in namespace `sealed-secrets` (30-day rotation, all kept), ~130 KB
+together, so one `Infra` note per key: `sealed-secrets-backup` (adds the
+missing ones; re-run after rotations), `sealed-secrets-keys` (all as a
+kubectl List, for restore or `kubeseal --recovery-private-key`). In
+`nix/profiles/personal/kube.nix`; runbook `docs/secrets.md#sealed-secrets-keys`.
+The backup format was checked against the live cluster: it decrypts
+`familyhub-acc/family-hub-db-credentials`.
 
-- **Done when:** the item exists and a dry-run restore (`kubeseal --recovery-unseal`) decrypts a sealed secret with it
+- [x] Scripts, launchd agent `homelab-secrets` (login + daily: `kube-render`, `sealed-secrets-backup`), docs
+- [x] Agent's first run (2026-10-19): `19 new, 19 keys in the cluster`; the dry-run restore from Proton Pass decrypts `familyhub-acc/family-hub-db-credentials`
+- **Done when:** the notes exist and the dry-run restore in the runbook (`<(sealed-secrets-keys)`) decrypts a sealed secret
+- The agent reaches `192.168.1.106` fine (no Local Network privacy block)
 
-## 5. k3s kubeconfig as a template
+## 5. k3s kubeconfig as a template — done
 
-Template in the repo with `{{ pass://Infra/k3s/... }}` refs; a
-`kube-render` function writes `~/.kube/config` (0600).
+Template `nix/profiles/personal/kube/homelab.yaml.tmpl` (API address
+inline, it's already public in `claude.nix`), custom item `Infra/k3s`
+with `ca_data`, `client_cert_data`, `client_key_data`; `kube-render`
+(`nix/profiles/personal/kube.nix`). Runbook `docs/secrets.md#homelab-kubeconfig`.
+Done before item 4: `kubectl` needs it.
 
+- [x] Template, `kube-render` (also run by the `homelab-secrets` agent), docs (`secrets.md`, `operations.md`, `profiles.md`)
+- [x] `Infra/k3s` created; `kube-render && kubectl get nodes` works, also from the agent
 - **Done when:** after deleting `~/.kube/config`, `kube-render && kubectl get nodes` works
+- [ ] Delete the old `k3s kubeconfig` note (and the trashed backup) in Proton Pass
 
 ## 6. Ansible vault password
 

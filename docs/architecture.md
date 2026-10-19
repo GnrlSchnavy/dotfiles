@@ -143,6 +143,7 @@ nix/
 │   │   ├── claude.nix     # Claude Max: sandbox, plugins, DOTFILES_LINT_PATH, codemem lane
 │   │   ├── ssh.nix        # SSH vault SSH-personal: GitHub, GitLab, homelab (keys in ssh/*.pub)
 │   │   ├── sandbox-git.nix # git push from the Bash sandbox via the Proton Pass agent
+│   │   ├── kube.nix       # homelab: kube-render, sealed-secrets-backup/-keys; daily launchd agent
 │   │   └── vault.nix      # Obsidian vault skills, OBSIDIAN_VAULT
 │   └── work/              # the client-issued Mac
 │       ├── default.nix

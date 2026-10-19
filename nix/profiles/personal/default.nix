@@ -12,6 +12,7 @@
     ./claude.nix
     ./ssh.nix
     ./sandbox-git.nix
+    ./kube.nix
     ./vault.nix
   ];
 }
