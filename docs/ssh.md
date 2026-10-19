@@ -124,8 +124,10 @@ title as the comment). Save each to its file and commit:
   `personal/ssh/gitlab.pub`.
 - **Homelab boxes** (NAS, nodes): while your old access still works
   (password or old key), copy the key onto each box:
-  `ssh-copy-id -i ~/.dotfiles/nix/profiles/personal/ssh/homelab.pub <host>`.
-  `ssh-copy-id` only needs the public half.
+  `ssh-copy-id -f -i ~/.dotfiles/nix/profiles/personal/ssh/homelab.pub <user>@<host>`.
+  `-f` is needed because the private half isn't on disk (ssh-copy-id
+  otherwise refuses); it also skips the already-installed check, so run
+  it once per box.
 - **Home Assistant OS:** in the **Terminal & SSH** add-on → Configuration
   → `authorized_keys`, add the contents of `homelab.pub` and restart the
   add-on. (Home Assistant on a regular Linux: `ssh-copy-id` like the
