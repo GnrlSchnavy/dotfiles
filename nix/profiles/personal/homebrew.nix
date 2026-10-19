@@ -22,7 +22,6 @@
       "proton-drive"
       "proton-mail"
       "proton-mail-bridge"
-      "proton-pass"
 
       # Networking
       "protonvpn"
