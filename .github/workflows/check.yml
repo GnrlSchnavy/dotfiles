@@ -54,6 +54,11 @@ jobs:
       - name: Lint
         run: nix develop ./nix --command scripts/lint.sh
 
+      # The fresh install below drops casks, so a cask Homebrew has disabled
+      # would only fail on a real machine's first install.
+      - name: No disabled Homebrew casks or formulae
+        run: scripts/check-brew.sh m5 work
+
       - name: Settings-merge and agent tests
         run: tests/run.sh
 

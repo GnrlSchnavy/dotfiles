@@ -17,7 +17,6 @@
       "rectangle"
 
       # Development
-      "chromedriver"
       "claude"
       "claude-code"
       "intellij-idea"

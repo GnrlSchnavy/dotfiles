@@ -79,7 +79,7 @@ Not a profile: `nix/modules/` and `nix/home/` apply to every host.
 |---|---|
 | Browsers | `brave-browser`, `firefox`, `google-chrome` |
 | Productivity | `alfred`, `obsidian`, `rectangle` |
-| Development | `intellij-idea`, `visual-studio-code`, `warp`, `claude` (desktop app), `claude-code`, `chromedriver` |
+| Development | `intellij-idea`, `visual-studio-code`, `warp`, `claude` (desktop app), `claude-code` |
 
 ### CLI tools
 
