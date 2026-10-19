@@ -9,7 +9,8 @@ with the right key.
 | Vault | Used by (profile) | Key (item title) | For |
 |---|---|---|---|
 | `SSH-personal` | `personal` (m5) | `GitHub personal` | GitHub `GnrlSchnavy` |
-| | | `NAS` | the NAS (`ssh nas`) |
+| | | `GitLab personal` | GitLab `yvanpersonal` |
+| | | `Homelab` | the NAS, the k3s nodes, Home Assistant |
 | `SSH-work` | `work` (the client Mac) | `GitHub work` | GitHub `yvanstemmerik-ah` (`github.com`) |
 | | | `GitHub personal (work Mac)` | GitHub `GnrlSchnavy` (`github-personal`) |
 
@@ -21,6 +22,10 @@ Why it's split like this:
 - **One key per account per Mac:** the work Mac has its own key for your
   personal GitHub account, so you can revoke that Mac alone (GitHub →
   Settings → SSH keys) without touching m5.
+- **One key for the whole homelab:** a key identifies the *client* (this
+  Mac), not the server, and every homelab box is reached from the same
+  Mac through the same agent — separate keys per server would add work,
+  not protection.
 
 ## How it's wired
 
@@ -67,15 +72,18 @@ pass-cli vault create --name SSH-work
 # already encrypts them.
 pass-cli item create ssh-key generate --vault-name SSH-personal \
   --title "GitHub personal" --comment "GnrlSchnavy m5"
+pass-cli item create ssh-key generate --vault-name SSH-personal \
+  --title "GitLab personal" --comment "yvanpersonal m5"
+pass-cli item create ssh-key generate --vault-name SSH-personal \
+  --title "Homelab" --comment "homelab m5"
 pass-cli item create ssh-key generate --vault-name SSH-work \
   --title "GitHub work" --comment "yvanstemmerik-ah work-mac"
 pass-cli item create ssh-key generate --vault-name SSH-work \
   --title "GitHub personal (work Mac)" --comment "GnrlSchnavy work-mac"
-
-# The NAS key already works on the NAS — import it instead of generating.
-pass-cli item create ssh-key import --vault-name SSH-personal \
-  --title "NAS" --from-private-key ~/.ssh/nas_ed25519
 ```
+
+To bring an existing key along instead of generating a new one:
+`pass-cli item create ssh-key import --vault-name … --title … --from-private-key <file>`.
 
 ## Putting the public keys in the repo
 
@@ -99,7 +107,8 @@ commit (the comment tells them apart):
 | Comment | File |
 |---|---|
 | `GnrlSchnavy m5` | `nix/profiles/personal/ssh/github.pub` |
-| the imported NAS key | `nix/profiles/personal/ssh/nas.pub` |
+| `yvanpersonal m5` | `nix/profiles/personal/ssh/gitlab.pub` |
+| `homelab m5` | `nix/profiles/personal/ssh/homelab.pub` |
 | `yvanstemmerik-ah work-mac` | `nix/profiles/work/ssh/github-work.pub` |
 | `GnrlSchnavy work-mac` | `nix/profiles/work/ssh/github-personal.pub` |
 
@@ -111,9 +120,16 @@ commit (the comment tells them apart):
 - **GitHub `yvanstemmerik-ah`** → same place: `work/ssh/github-work.pub`,
   then **Configure SSO** next to it and authorize the client's
   organization.
-- **NAS:** nothing — the imported key is already in its
-  `authorized_keys`. (For a new NAS key: `ssh-copy-id -i
-  nix/profiles/personal/ssh/nas.pub nas`.)
+- **GitLab `yvanpersonal`** → Preferences → SSH Keys → Add new key:
+  `personal/ssh/gitlab.pub`.
+- **Homelab boxes** (NAS, nodes): while your old access still works
+  (password or old key), copy the key onto each box:
+  `ssh-copy-id -i ~/.dotfiles/nix/profiles/personal/ssh/homelab.pub <host>`.
+  `ssh-copy-id` only needs the public half.
+- **Home Assistant OS:** in the **Terminal & SSH** add-on → Configuration
+  → `authorized_keys`, add the contents of `homelab.pub` and restart the
+  add-on. (Home Assistant on a regular Linux: `ssh-copy-id` like the
+  nodes.)
 
 ## Applying and checking
 
@@ -128,7 +144,8 @@ Then:
 SSH_AUTH_SOCK=~/.ssh/proton-pass-agent.sock ssh-add -l   # the vault's keys
 ssh -T git@github.com              # m5: "Hi GnrlSchnavy!"   work Mac: "Hi yvanstemmerik-ah!"
 ssh -T git@github-personal         # work Mac only: "Hi GnrlSchnavy!"
-ssh nas true                       # m5 only
+ssh nas true                       # m5 only; likewise each node and Home Assistant
+ssh -T git@gitlab.com              # m5: "Welcome to GitLab, @yvanpersonal!"
 ```
 
 The first rebuild replaces a hand-written `~/.ssh/config` with the
@@ -143,7 +160,8 @@ Only after every check above passes:
 rm ~/.ssh/github_ed25519* ~/.ssh/github_ahold_ed25519* ~/.ssh/nas_ed25519* ~/.ssh/gitlab*
 ```
 
-and delete the old keys from the GitHub accounts' SSH key lists.
+and delete the old keys from the GitHub and GitLab SSH key lists and
+from the homelab boxes' `~/.ssh/authorized_keys`.
 
 ## A new Mac
 

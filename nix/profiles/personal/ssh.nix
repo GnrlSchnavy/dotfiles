@@ -8,11 +8,15 @@
     hosts = {
       # GnrlSchnavy
       "github.com".publicKey = ./ssh/github.pub;
-      # The NAS, on the LAN.
+      # yvanpersonal
+      "gitlab.com".publicKey = ./ssh/gitlab.pub;
+
+      # Homelab, on the LAN: one key for every box (it identifies this Mac,
+      # not the server).
       "nas 192.168.1.102" = {
         hostName = "192.168.1.102";
         user = "yvan";
-        publicKey = ./ssh/nas.pub;
+        publicKey = ./ssh/homelab.pub;
       };
     };
   };
