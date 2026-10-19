@@ -20,7 +20,6 @@
       "proton-pass"
 
       # Development
-      "chromedriver"
       "claude"
       "claude-code"
       "intellij-idea"
