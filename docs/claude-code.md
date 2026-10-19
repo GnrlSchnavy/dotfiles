@@ -104,7 +104,7 @@ Central, Gradle, npm, the k3s API, the Cloudflare API and `github.com`
 (other hosts prompt per domain). Add more in `claude.nix`
 (`union.sandbox.filesystem.allowWrite`, `…network.allowedDomains`) or in
 `/sandbox` — your own entries survive rebuilds. The Docker socket
-([below](#docker-colima)) and the ssh-agent relay are the only unix
+([below](#docker-colima)) and the Proton Pass SSH agent's are the only unix
 sockets allowed; `network.allowLocalBinding: true` lets tests reach a
 container's published ports on `localhost` (otherwise Seatbelt only
 allows the sandbox proxy there). Known friction: Go CLIs such as `gh`
@@ -122,8 +122,8 @@ with a warning and CI lints after the push.
 
 ### Git push/pull from the sandbox
 
-[`nix/profiles/personal/ssh-agent-relay.nix`](../nix/profiles/personal/ssh-agent-relay.nix)
-lets Claude `git push`, `pull` and `fetch` over SSH. Three things stop
+[`nix/profiles/personal/sandbox-git.nix`](../nix/profiles/personal/sandbox-git.nix)
+lets Claude `git push`, `pull` and `fetch` over SSH. Two things stop
 plain `ssh` in the sandbox:
 
 - **No route out.** Sandboxed commands have no DNS and only reach the
@@ -138,23 +138,14 @@ plain `ssh` in the sandbox:
   in `$HTTP_PROXY` and `127.0.0.1` (the proxy refuses `localhost`).
   Outside the sandbox `git` is untouched. Only `git` typed in Bash gets
   this, not a git run from inside another program.
-- **No ssh-agent.** The launchd ssh-agent's socket path changes every
-  login and the sandbox blocks it. A launchd agent,
-  `claude-ssh-agent-relay`, runs `socat` to relay
-  `~/.ssh/claude-agent.sock` to the current `$SSH_AUTH_SOCK`; the
-  sandbox allows that one socket and `claude-git-ssh` points
-  `SSH_AUTH_SOCK` at it.
-- **No passphrase prompt.** `system.nix` declares, for `Host github.com`
-  only (in `/etc/ssh/ssh_config.d/`; `~/.ssh/config` stays unmanaged),
-  `UseKeychain yes` and `AddKeysToAgent yes`. The first time you use the
-  key in your own terminal, ssh asks for the passphrase once and stores
-  it in the login Keychain; the relay agent runs
-  `ssh-add --apple-load-keychain` at each login to reload it. To store it
-  right away: `/usr/bin/ssh-add --apple-use-keychain ~/.ssh/github_ed25519`.
+- **Only fixed-path sockets.** The sandbox allows unix sockets by path.
+  The keys come from the Proton Pass SSH agent ([docs/ssh.md](ssh.md)),
+  whose socket is fixed (`~/.ssh/proton-pass-agent.sock`), so the
+  sandbox allows exactly that one and `~/.ssh/config` already points
+  `github.com` at it. No key files, no passphrases.
 
 Check it from a session with
-`SSH_AUTH_SOCK=~/.ssh/claude-agent.sock ssh-add -l` ("The agent has no
-identities" means the passphrase step is missing) and
+`SSH_AUTH_SOCK=~/.ssh/proton-pass-agent.sock ssh-add -l` and
 `git ls-remote origin`. Not covered: `gh` (HTTPS API) and HTTPS remotes;
 `git.nix` rewrites `https://github.com` to SSH anyway.
 

@@ -147,6 +147,7 @@ reports a missing one.
 |---|---|---|
 | `cc-work` (TechNL proxy URL for codemem; the gateway credential itself is held by DevAI CLI) | `pass://Ahold/TechNLGenAI/proxy_url` | [`nix/profiles/work/claude.nix`](../nix/profiles/work/claude.nix) |
 | codemem work observer auth | `pass://Ahold/TechNLGenAI/api_key` | [`nix/profiles/work/claude.nix`](../nix/profiles/work/claude.nix) |
+| SSH keys (served by `pass-cli ssh-agent`, not read through `pass://`) | vaults `SSH-personal`, `SSH-work` | [`nix/home/ssh.nix`](../nix/home/ssh.nix), [docs/ssh.md](ssh.md) |
 | Per-client Claude Code profiles | `pass://<Client>/<Channel>/{api_key,proxy_url}` | [client-tooling.md](client-tooling.md) |
 
 The codemem observer entry is a raw `observer_auth_command` array

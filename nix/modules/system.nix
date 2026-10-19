@@ -8,19 +8,6 @@
     reattach = true;
   };
 
-  # GitHub SSH key passphrase in the login Keychain: the first time the key is
-  # used, ssh stores the passphrase and adds the key to the agent; at each
-  # login the personal profile's claude-ssh-agent-relay agent reloads it
-  # (profiles/personal/ssh-agent-relay.nix). So you type it once per machine,
-  # and sandboxed Claude sessions (which can't prompt) can push. Written to
-  # /etc/ssh/ssh_config.d/; ~/.ssh/config stays unmanaged.
-  programs.ssh.extraConfig = ''
-    Host github.com
-      IgnoreUnknown UseKeychain
-      UseKeychain yes
-      AddKeysToAgent yes
-  '';
-
   # System keyboard configuration
   system.keyboard = {
     enableKeyMapping = true;

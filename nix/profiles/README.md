@@ -12,8 +12,8 @@ adds each profile's modules ahead of the host's own.
 | Profile | Used by | What it adds |
 |---|---|---|
 | [`dev`](dev/) | every machine | Dev apps and CLI tools (`homebrew.nix`, `packages.nix`), the Colima Docker engine (`docker.nix`) |
-| [`personal`](personal/) | `m5` | Personal apps; Claude Code on Claude Max, sandboxed (`claude.nix`), git push from the sandbox (`ssh-agent-relay.nix`), the Obsidian vault skills (`vault.nix`); codemem via Max |
-| [`work`](work/) | `work` | Work apps; work git identity; Claude Code only through the DevAI/TechNL gateway (`cc-work`), the gateway-check hook, the Ahold `CLAUDE.md` overlay, codemem via the gateway, `cc-tooling` |
+| [`personal`](personal/) | `m5` | Personal apps; Claude Code on Claude Max, sandboxed (`claude.nix`), SSH keys from the Proton Pass vault `SSH-personal` (`ssh.nix`), git push from the sandbox (`sandbox-git.nix`), the Obsidian vault skills (`vault.nix`); codemem via Max |
+| [`work`](work/) | `work` | Work apps; work git identity; SSH keys from the Proton Pass vault `SSH-work` (`ssh.nix`, plus the `github-personal` alias); Claude Code only through the DevAI/TechNL gateway (`cc-work`), the gateway-check hook, the Ahold `CLAUDE.md` overlay, codemem via the gateway, `cc-tooling` |
 
 A host takes `dev` plus **exactly one** of `personal` / `work`: they set the
 same options (codemem's lane, git identity) and the two Claude Code setups
