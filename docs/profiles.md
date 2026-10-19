@@ -79,6 +79,7 @@ Not a profile: `nix/modules/` and `nix/home/` apply to every host.
 |---|---|
 | Browsers | `brave-browser`, `firefox`, `google-chrome` |
 | Productivity | `alfred`, `obsidian`, `rectangle` |
+| Passwords | `proton-pass` (the app; `pass-cli` below reads the same vaults) |
 | Development | `intellij-idea`, `visual-studio-code`, `warp`, `claude` (desktop app), `claude-code`, `chromedriver` |
 
 ### CLI tools
@@ -95,6 +96,17 @@ From Homebrew, each for a stated reason (`homebrew.nix`):
 | `fluxcd/tap/flux` | official tap; tracks the cluster's controller releases |
 | `protonpass/tap/pass-cli` | official tap; brew owns its updates |
 | `opencode`, `openspec` | release about weekly; stable nixpkgs lags |
+
+### Alfred on Cmd-Space
+
+`alfred.nix`, on every rebuild:
+
+- turns off Spotlight's Cmd-Space ("Show Spotlight search"; Finder's
+  Opt-Cmd-Space search window is left alone) and applies it without
+  logging out;
+- sets Alfred's hotkey to Cmd-Space. Alfred keeps it per machine in a
+  folder it creates on its **first launch**, so on a new Mac: open Alfred
+  once, rebuild, then restart Alfred.
 
 ### Docker (Colima)
 
@@ -122,7 +134,7 @@ only Docker engine — there is no Docker Desktop.
 |---|---|
 | Communication | `discord`, `signal`, `slack`, `whatsapp` |
 | Media | `spotify`, `vlc`, `jellyfin-media-player`, Feishin (music; pinned dmg via Nix) |
-| Proton | `proton-drive`, `proton-mail`, `proton-mail-bridge`, `proton-pass`, `protonvpn` |
+| Proton | `proton-drive`, `proton-mail`, `proton-mail-bridge`, `protonvpn` (Proton Pass is in `dev`) |
 | Networking | `tailscale-app` (homelab) |
 | Kubernetes | `lens` (homelab k3s; not on the work Mac) |
 | Browsers | `tor-browser` |
