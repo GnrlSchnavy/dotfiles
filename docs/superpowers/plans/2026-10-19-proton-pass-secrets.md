@@ -108,3 +108,13 @@ Wrappers that pass `CLOUDFLARE_API_TOKEN` / `STRIPE_API_KEY` from `Dev`
 per call; their stored logins removed.
 
 - **Done when:** `wrangler whoami` and `stripe config --list` work after `wrangler logout` / removing Stripe's stored key
+
+## 11. Maven `settings.xml` as a template per profile
+
+`settings.xml` holds one `<server>` per registry. A template per profile,
+rendered with `pass-render`: work → the client's GitHub Packages token
+(client vault; today a verbatim backup, `Maven settings.xml (backup)`);
+personal → its own entries from `Dev`; a new client → its own vault and
+entry. m5 doesn't get the client token back after its reset.
+
+- **Done when:** on the work Mac, removing `~/.m2/settings.xml`, rendering it, and resolving a client project's dependencies works
