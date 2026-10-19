@@ -10,7 +10,7 @@ with the right key.
 |---|---|---|---|
 | `SSH-personal` | `personal` (m5) | `GitHub personal` | GitHub `GnrlSchnavy` |
 | | | `GitLab personal` | GitLab `yvanpersonal` |
-| | | `Homelab` | the NAS, the k3s nodes, Home Assistant |
+| | | `Homelab` | `nas-1`, `node-1` … `node-5`, `ha` (Home Assistant) |
 | `SSH-work` | `work` (the client Mac) | `GitHub work` | GitHub `yvanstemmerik-ah` (`github.com`) |
 | | | `GitHub personal (work Mac)` | GitHub `GnrlSchnavy` (`github-personal`) |
 
@@ -144,7 +144,7 @@ Then:
 SSH_AUTH_SOCK=~/.ssh/proton-pass-agent.sock ssh-add -l   # the vault's keys
 ssh -T git@github.com              # m5: "Hi GnrlSchnavy!"   work Mac: "Hi yvanstemmerik-ah!"
 ssh -T git@github-personal         # work Mac only: "Hi GnrlSchnavy!"
-ssh nas true                       # m5 only; likewise each node and Home Assistant
+ssh nas-1 true                     # m5 only; likewise node-1 … node-5 and ha
 ssh -T git@gitlab.com              # m5: "Welcome to GitLab, @yvanpersonal!"
 ```
 

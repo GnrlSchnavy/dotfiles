@@ -159,7 +159,7 @@ shared default, nothing to override.
 
 `ssh.nix`: keys from the Proton Pass vault `SSH-personal`
 ([docs/ssh.md](ssh.md)) — GitHub (GnrlSchnavy), GitLab (yvanpersonal) and the homelab
-(`ssh nas`). No key files on disk.
+(`ssh nas-1`, `node-1` … `node-5`, `ha`). No key files on disk.
 
 ### Claude Code — Claude Max, sandboxed
 
