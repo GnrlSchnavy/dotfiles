@@ -124,12 +124,10 @@ Project `.env` files hold `pass://Dev/...` refs; run with
 
 - **Done when:** one project starts with a refs-only `.env`
 
-## 10. Cloudflare / wrangler and Stripe CLI
+## 10. Cloudflare / wrangler and Stripe CLI — dropped
 
-Wrappers that pass `CLOUDFLARE_API_TOKEN` / `STRIPE_API_KEY` from `Dev`
-per call; their stored logins removed.
-
-- **Done when:** `wrangler whoami` and `stripe config --list` work after `wrangler logout` / removing Stripe's stored key
+Dropped 2026-10-19: not worth it. wrangler and the Stripe CLI keep their
+own logins.
 
 ## 11. Maven `settings.xml` as a template per profile
 
