@@ -34,6 +34,7 @@
       "steam"
 
       # Development
+      "t3-code"
       "lens"
 
       # Utilities and security tools

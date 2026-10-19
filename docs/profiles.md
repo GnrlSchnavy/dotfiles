@@ -138,6 +138,7 @@ only Docker engine — there is no Docker Desktop.
 | Media | `vlc`, `jellyfin-media-player`, Feishin (music; pinned dmg via Nix); Spotify is in `dev` |
 | Proton | `proton-drive`, `proton-mail`, `proton-mail-bridge`, `protonvpn` (Proton Pass is in `dev`) |
 | Networking | `tailscale-app` (homelab) |
+| Development | `t3-code` (T3 Code, a front end for Claude Code) |
 | Kubernetes | `lens` (homelab k3s; not on the work Mac) |
 | Browsers | `tor-browser` |
 | Dictation | `handy` (local; Wispr Flow is in `dev`) |

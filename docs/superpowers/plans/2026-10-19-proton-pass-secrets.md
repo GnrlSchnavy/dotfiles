@@ -41,7 +41,9 @@ Merged (PR #14, `4bb8d50`); runbook `docs/ssh.md`.
 - [x] Keys: GitHub personal, GitLab personal, Homelab, GitHub work, GitHub personal (work Mac)
 - [x] Public keys committed; merged
 - [x] Registered: GitHub ×2 accounts, GitLab, `ssh-copy-id -f` to nas-1 and node-1…5, HA add-on `authorized_keys`
-- [ ] m5: factory reset → `DOTFILES_HOST=m5 ./setup.sh` → `pass-cli login`, Keychain fix, agent kickstart (`docs/operations.md`, "Reinstalling a Mac")
+- [x] m5: factory reset → `DOTFILES_HOST=m5 ./setup.sh` → `pass-cli login`, Keychain fix, agent kickstart (`docs/operations.md`, "Reinstalling a Mac")
+- [x] m5 checks: GitHub, GitLab, nas-1, node-1…5 and the sandbox `git push` work
+- [ ] m5 → `ha` (192.168.20.18): no route yet — it's on the other network (`192.168.20.x`), not reachable from the main LAN; sort out the routing/firewall between the two, then `ssh ha true`
 - [ ] work Mac: `pass-cli login`, Keychain fix, `GIT_CONFIG_GLOBAL=/dev/null git pull`, rebuild `#work`
 - **Done when:** `ssh -T git@github.com` / `git@gitlab.com` / `git@github-personal` greet the right accounts, `ssh <box> true` works for all seven boxes, and Claude's sandbox can `git push`
 - [ ] Old key files deleted, old keys removed from GitHub/GitLab/boxes

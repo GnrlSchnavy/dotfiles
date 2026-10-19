@@ -15,7 +15,7 @@ into the Nix store, recreated on every rebuild. No Stow.
 Each Mac plays one role, picked by the **profiles** its host descriptor
 lists ([`nix/profiles/`](nix/profiles/README.md)): `dev` on every
 machine plus exactly one of `personal` / `work`. Hosts: `m5` (user
-`yvan-sytac`) is the personal Mac and does no client work; `work` is the
+`yvan`) is the personal Mac and does no client work; `work` is the
 client-issued Mac (user `pnl1ln25`, selected with `DOTFILES_HOST=work`); `ci` mirrors
 m5 for the fresh-install CI test. See [docs/hosts.md](docs/hosts.md).
 

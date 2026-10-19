@@ -11,7 +11,7 @@ descriptor lists (see [nix/profiles/README.md](../nix/profiles/README.md)):
 
 | Host | Machine | User | Profiles | Notes |
 |---|---|---|---|---|
-| `m5` | Apple Silicon Mac, personal | `yvan-sytac` | `dev`, `personal` | No client work. Claude Code on Claude Max |
+| `m5` | Apple Silicon Mac, personal | `yvan` | `dev`, `personal` | No client work. Claude Code on Claude Max |
 | `work` | Client-issued Mac (Ahold), managed by the client's device management | `pnl1ln25` | `dev`, `work` | Its LocalHostName is a client asset tag, so it's selected with `DOTFILES_HOST=work` (see below). Claude Code only through DevAI/TechNL |
 | `ci` | GitHub Actions `xcode-27` (macOS 27) runner | `runner` | `dev`, `personal` | Fresh-install test target only. Mirrors m5 (its profiles and `../m5/dock.nix`) with CI overrides (casks forced to `[]`, cleanup `none`, no upgrade). Never use on a real machine |
 | `template` | — | — | `dev`, `personal` | Copy source for onboarding; placeholders `REPLACE_ME_*` |

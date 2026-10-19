@@ -5,7 +5,7 @@
 # specific to this machine.
 {
   hostname = "m5";
-  username = "yvan-sytac";
+  username = "yvan";
 
   profiles = [
     "dev"
@@ -19,9 +19,9 @@
   module = { ... }: {
     nixpkgs.hostPlatform = "aarch64-darwin";
     system.stateVersion = 5;
-    system.primaryUser = "yvan-sytac";
+    system.primaryUser = "yvan";
 
-    # Declare the user so home-manager can read users.users.yvan-sytac.home.
-    users.users.yvan-sytac.home = "/Users/yvan-sytac";
+    # Declare the user so home-manager can read users.users.yvan.home.
+    users.users.yvan.home = "/Users/yvan";
   };
 }
