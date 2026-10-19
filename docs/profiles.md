@@ -79,7 +79,7 @@ Not a profile: `nix/modules/` and `nix/home/` apply to every host.
 |---|---|
 | Browsers | `brave-browser`, `firefox`, `google-chrome` |
 | Productivity | `alfred`, `obsidian`, `rectangle` |
-| Development | `intellij-idea`, `visual-studio-code`, `warp`, `lens`, `claude` (desktop app), `claude-code`, `chromedriver` |
+| Development | `intellij-idea`, `visual-studio-code`, `warp`, `claude` (desktop app), `claude-code`, `chromedriver` |
 
 ### CLI tools
 
@@ -124,6 +124,7 @@ only Docker engine — there is no Docker Desktop.
 | Media | `spotify`, `vlc`, `jellyfin-media-player`, Feishin (music; pinned dmg via Nix) |
 | Proton | `proton-drive`, `proton-mail`, `proton-mail-bridge`, `proton-pass`, `protonvpn` |
 | Networking | `tailscale-app` (homelab) |
+| Kubernetes | `lens` (homelab k3s; not on the work Mac) |
 | Browsers | `tor-browser` |
 | Dictation | `handy`, `wispr-flow` |
 | Games | `steam`, `crossover` |
