@@ -35,6 +35,7 @@ Why it's split like this:
 | Vault, hosts and public keys, per profile | `nix/profiles/{personal,work}/ssh.nix` and `…/ssh/*.pub` |
 | Claude Code's sandbox pushing through the same agent | [`nix/profiles/personal/sandbox-git.nix`](../nix/profiles/personal/sandbox-git.nix) |
 | Work Mac: every `GnrlSchnavy` repo (these dotfiles too) goes via `github-personal` | [`nix/profiles/work/ssh.nix`](../nix/profiles/work/ssh.nix) |
+| Commit signing with the same keys | [`nix/home/git.nix`](../nix/home/git.nix) ([below](#commit-signing)) |
 
 The repo holds only **public** keys: ssh needs the public half to pick
 the matching private key from the agent (`IdentitiesOnly yes`, so it
@@ -181,6 +182,50 @@ already right.
 4. Rotating: then delete the old item in Proton Pass and the old public
    key from the service.
 
+## Commit signing
+
+Git signs every commit and annotated tag with an SSH key from the same
+agent. There's no extra key to create: each identity signs with its own
+GitHub key on that Mac.
+
+| Mac | Identity | Signs with | Registered as a signing key on |
+|---|---|---|---|
+| m5 | personal (everything) | `personal/ssh/github.pub` | GitHub `GnrlSchnavy`, GitLab |
+| work Mac | work (the default) | `work/ssh/github-work.pub` | GitHub `yvanstemmerik-ah` |
+| work Mac | personal (the dotfiles clones) | `work/ssh/github-personal.pub` | GitHub `GnrlSchnavy` |
+
+Wiring: [`nix/home/git.nix`](../nix/home/git.nix) turns signing on once
+the profile sets `dotfiles.git.personalSigningKey`. The work profile
+also sets the work key ([`nix/profiles/work/git.nix`](../nix/profiles/work/git.nix)).
+Git runs `ssh-keygen` through a small wrapper that points it at the
+Proton Pass agent: `SSH_AUTH_SOCK` itself stays on macOS's agent, in the
+shell and in apps like IntelliJ. `~/.config/git/allowed_signers` lists
+this Mac's keys, so signatures also verify locally.
+
+**Register each key a second time, as a signing key.** An SSH key only
+counts for signatures once it's added with that type. That holds even
+when the same key is already there for authentication:
+
+- **GitHub** (each account) → Settings → SSH and GPG keys → New SSH key
+  → Key type **Signing Key**, the same `.pub` file as in the table.
+- **GitLab** → Preferences → SSH Keys → Add new key: the contents of
+  `personal/ssh/github.pub`, Usage type **Signing**. GitLab commits from
+  m5 are signed with the GitHub key, so there's one signing key to manage.
+
+GitHub and GitLab only show **Verified** when the commit email is a
+verified address on that account (`yvanstemmerik@gmail.com` on the
+personal accounts, the client address on `yvanstemmerik-ah`).
+
+Check, after a rebuild:
+
+```bash
+git commit --allow-empty -m "signing test" && git log --show-signature -1
+# Good "git" signature for yvanstemmerik@gmail.com with ED25519 key SHA256:…
+```
+
+Push it to a scratch branch and check for **Verified** on the commit, then
+delete the branch.
+
 ## Troubleshooting
 
 | Symptom | Check |
@@ -190,3 +235,5 @@ already right.
 | It broke right after a rebuild | A `pass-cli` upgrade hit the Keychain prompt: redo prerequisite 3 |
 | The agent lists no keys | Wrong vault name, or a key Proton can't use: `pass-cli ssh-agent debug --vault-name SSH-personal` |
 | GitHub greets the wrong account | The host's public key file doesn't match the key in the vault |
+| `git commit` fails: `Couldn't sign` / `agent refused operation` | The agent is down or doesn't hold the signing key: check it as above. To commit anyway, once: `git -c commit.gpgsign=false commit …` |
+| GitHub shows **Unverified** | The key isn't added as a *Signing Key*, or the commit email isn't verified on that account |

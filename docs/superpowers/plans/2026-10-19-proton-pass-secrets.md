@@ -49,12 +49,17 @@ Merged (PR #14, `4bb8d50`); runbook `docs/ssh.md`.
 - [ ] Old key files deleted, old keys removed from GitHub/GitLab/boxes
 - Later: the nodes still accept password logins — switch that off once item 3 (break-glass) works
 
-## 2. Git commit signing (SSH)
+## 2. Git commit signing (SSH) — in progress
 
-Reuses each account's SSH key (GitHub/GitLab accept one key for both).
-`git.nix`: `gpg.format = ssh`, `commit.gpgsign`, `user.signingkey` per
-identity (dotfiles clones → personal key), `gpg.ssh.allowedSignersFile`.
+Each identity signs with its GitHub key on that Mac; on m5 the same key is
+also GitLab's signing key, so no per-remote key choice. `nix/home/git.nix`
+(`dotfiles.git.personalSigningKey`, an `ssh-keygen` wrapper pointed at the
+Proton agent, `allowed_signers`); runbook `docs/ssh.md#commit-signing`.
 
+- [x] Config: personal profile → `github.pub`; work → `github-work.pub`, dotfiles clones `github-personal.pub`
+- [x] Proton agent signs (`ssh-keygen -Y sign`), also from Claude's sandbox
+- [ ] m5: rebuild; add `github.pub` as **Signing Key** on GitHub `GnrlSchnavy` and as **Signing** on GitLab
+- [ ] work Mac: rebuild `#work`; add `github-work.pub` / `github-personal.pub` as Signing Keys on their accounts
 - **Done when:** `git log --show-signature -1` verifies locally and GitHub/GitLab show **Verified**, on both Macs
 
 ## 3. Break-glass access to the homelab

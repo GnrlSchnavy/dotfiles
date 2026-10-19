@@ -56,4 +56,8 @@ in
       }
     ) homelab;
   };
+
+  # The GitHub key signs your commits too (nix/home/git.nix): registered on
+  # GitHub and, as a signing key, on GitLab (docs/ssh.md#commit-signing).
+  dotfiles.git.personalSigningKey = ./ssh/github.pub;
 }
