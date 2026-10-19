@@ -155,6 +155,12 @@ build doesn't).
 The personal identity (`yvan`, gmail, GitHub user `GnrlSchnavy`) — the
 shared default, nothing to override.
 
+### SSH
+
+`ssh.nix`: keys from the Proton Pass vault `SSH-personal`
+([docs/ssh.md](ssh.md)) — `github.com` (GnrlSchnavy) and the NAS
+(`ssh nas`). No key files on disk.
+
 ### Claude Code — Claude Max, sandboxed
 
 `claude.nix`. Sign in to your Claude Max account in the desktop app or
@@ -166,11 +172,9 @@ shared default, nothing to override.
   Gradle, npm, the k3s API, Cloudflare's API (wrangler) and GitHub
   (SSH); the Colima socket (so Claude can run `docker` and
   Testcontainers); localhost binding (tests reaching published ports).
-- **Git push and pull from the sandbox** (`ssh-agent-relay.nix`): a
-  launchd agent relays a fixed socket to your ssh-agent and loads the
-  GitHub key's passphrase from the Keychain, and a `git()` wrapper sends
-  sandboxed git over SSH through the sandbox proxy. Store the passphrase
-  once per machine: `ssh-add --apple-use-keychain ~/.ssh/github_ed25519`.
+- **Git push and pull from the sandbox** (`sandbox-git.nix`): the sandbox
+  may use the Proton Pass SSH agent's socket, and a `git()` wrapper sends
+  sandboxed git over SSH through the sandbox proxy.
 - **Plugins**: codemem, superpowers, frontend-design, context7,
   code-review, code-simplifier, skill-creator, playwright, feature-dev,
   kotlin-lsp (clangd-lsp and swift-lsp off). Fetched by the first
@@ -188,8 +192,9 @@ so `notes`/`note` open the vault.
 
 ### After a fresh install
 
-`pass-cli login`, restore `~/.ssh`, store the GitHub key passphrase
-(above).
+`pass-cli login` and the Keychain fix for `pass-cli`
+([docs/ssh.md](ssh.md#prerequisites-once-per-mac)); SSH keys then come
+from Proton Pass.
 
 ## `work` — the client Mac
 
@@ -210,8 +215,14 @@ of the profiles for that machine.
 
 `git.nix`: work identity by default (`yvanstemmerik-ah`,
 `yvan.stemmerik@ah.nl`, GitHub user `yvanstemmerik-ah`). The dotfiles
-clones still commit as personal. Which SSH key `github.com` uses is set
-in `~/.ssh/config` on that Mac (not managed).
+clones still commit as personal.
+
+### SSH
+
+`ssh.nix`: keys from the Proton Pass vault `SSH-work`
+([docs/ssh.md](ssh.md)). `github.com` is the work account;
+`github-personal` is your personal account with its own key, and git
+sends every `GnrlSchnavy` repo there (these dotfiles included).
 
 ### Claude Code — only through the gateway
 
@@ -258,7 +269,8 @@ proxy and model routing.
    `pass://Ahold/TechNLGenAI/{api_key,proxy_url}`.
 2. Install the DevAI CLI (a global npm package from the client's
    registry — not managed by Nix), then `devai setup`.
-3. Create a work GitHub SSH key and point `Host github.com` at it.
+3. The Keychain fix for `pass-cli` ([docs/ssh.md](ssh.md#prerequisites-once-per-mac));
+   SSH keys then come from Proton Pass.
 4. Check: `cc-work` starts and a prompt goes through; `git config
    user.email` shows the work address; `docker ps` works.
 

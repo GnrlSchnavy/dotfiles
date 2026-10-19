@@ -109,7 +109,7 @@ descriptor; the flake adds them ahead of the host's own.
 | Profile | Used by | Adds |
 |---|---|---|
 | `dev` | every host | dev casks/brews, nixpkgs CLI basics, the Colima Docker engine |
-| `personal` | `m5`, `ci` | personal apps; Claude Code on Max, sandboxed; ssh-agent relay; vault skills; codemem lane `personal` |
+| `personal` | `m5`, `ci` | personal apps; SSH keys from Proton Pass (`SSH-personal`); Claude Code on Max, sandboxed, pushing through that agent; vault skills; codemem lane `personal` |
 | `work` | `work` | work apps; work git identity; Claude Code via DevAI only (`cc-work`), gateway check, Ahold overlay; codemem lane `work`; `cc-tooling` |
 
 A host takes `dev` plus **exactly one** of `personal` / `work`: they set
@@ -141,12 +141,14 @@ nix/
 │   │   ├── homebrew.nix   # personal apps (Proton, Signal, Slack, Steam, …)
 │   │   ├── packages.nix   # ansible, nmap, stripe-cli, feishin (pinned dmg)
 │   │   ├── claude.nix     # Claude Max: sandbox, plugins, DOTFILES_LINT_PATH, codemem lane
-│   │   ├── ssh-agent-relay.nix # git push from the Bash sandbox
+│   │   ├── ssh.nix        # SSH vault SSH-personal: github.com, the NAS (keys in ssh/*.pub)
+│   │   ├── sandbox-git.nix # git push from the Bash sandbox via the Proton Pass agent
 │   │   └── vault.nix      # Obsidian vault skills, OBSIDIAN_VAULT
 │   └── work/              # the client-issued Mac
 │       ├── default.nix
 │       ├── homebrew.nix   # Slack, GitHub Copilot (Microsoft apps come preinstalled)
 │       ├── git.nix        # work git identity (default on that machine)
+│       ├── ssh.nix        # SSH vault SSH-work: github.com (work), github-personal (keys in ssh/*.pub)
 │       └── claude.nix     # cc-work/cc-work-desktop, gateway check, overlay, model aliases, codemem lane, cc-tooling
 ├── hosts/
 │   ├── m5/                # default.nix (profiles dev + personal) + dock.nix
@@ -156,7 +158,7 @@ nix/
 ├── modules/               # shared nix-darwin modules (every host)
 │   ├── README.md
 │   ├── nix.nix            # nix daemon, gc (weekly, >30d), store optimise, allowUnfree
-│   ├── system.nix         # macOS defaults, caps-lock→escape, dark mode, finder, github.com ssh
+│   ├── system.nix         # macOS defaults, caps-lock→escape, dark mode, finder
 │   ├── environment.nix    # EDITOR/VISUAL=nvim, kubectl aliases (k, kgp, kaf, …)
 │   ├── homebrew.nix       # homebrew.enable + onActivation (cleanup = "zap")
 │   └── homebrew-trust.nix # brew trust for the host's third-party taps
@@ -167,6 +169,7 @@ nix/
 │   ├── git.nix            # programs.git; personal identity as mkDefault; dotfiles clones
 │   ├── files.nix          # file-pointer dotfiles (.ideavimrc)
 │   ├── secrets.nix        # pass-get / pass-render / pass-check (Proton Pass)
+│   ├── ssh.nix            # dotfiles.ssh.{vault,hosts}; Proton Pass SSH agent, ~/.ssh/config
 │   ├── claude-code.nix    # dotfiles.claude.{settings,instructions}; settings merge; agents/commands links
 │   └── codemem.nix        # dotfiles.codemem.{lane,observer}; observer config, lane dir, plugin
 └── nixvim/config/         # Neovim module (NOT a flake), built per host by mkNvim

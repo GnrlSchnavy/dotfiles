@@ -60,11 +60,13 @@ the flake host stays `work` and is selected with `DOTFILES_HOST`.
    ```
    After the first rebuild the flake sets `DOTFILES_HOST=work` in every
    shell, so later rebuilds (`update.sh`, the usual command) find it.
-3. Sign in, once: `pass-cli login` (Proton Pass, for the TechNL refs),
-   then install the DevAI CLI and run `devai setup`
+3. Sign in, once: `pass-cli login` (Proton Pass: the TechNL refs and the
+   SSH keys), the Keychain fix for `pass-cli`
+   ([docs/ssh.md](ssh.md#prerequisites-once-per-mac)), then install the
+   DevAI CLI and run `devai setup`
    ([docs/claude-code.md](claude-code.md#work-profile)).
-4. Start Claude Code with `cc-work`. The SSH key for the work GitHub
-   account goes in `~/.ssh/config` on the machine (unmanaged).
+4. Check SSH (`ssh -T git@github.com`, `ssh -T git@github-personal`) and
+   start Claude Code with `cc-work`.
 
 ### Zscaler on the work Mac
 

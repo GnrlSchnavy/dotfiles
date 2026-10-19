@@ -10,6 +10,7 @@ precise enough for both humans and AI agents making changes.
 | [profiles.md](profiles.md) | See what each profile (`dev`, `personal`, `work`) puts on a machine: apps, CLI tools, git identity, Claude Code, Docker |
 | [packages.md](packages.md) | Add/remove software; decide Nix vs Homebrew vs Mac App Store |
 | [shell-and-dotfiles.md](shell-and-dotfiles.md) | Change zsh config, symlink a new dotfile, or understand which files must NOT be symlinked |
+| [ssh.md](ssh.md) | Set up or rotate SSH keys (they live in Proton Pass; one vault per profile), onboard a Mac's SSH |
 | [secrets.md](secrets.md) | Reference a secret from Proton Pass (`pass-get`/`pass-render`), or onboard a machine to the vault |
 | [claude-code.md](claude-code.md) | Manage Claude Code settings, agents, commands, skills; the personal (Max, sandbox) and work (`cc-work`, gateway check) setups; Docker (Colima); codemem memory |
 | [agent-workflow.md](agent-workflow.md) | Use or extend the multi-agent workflow (`/flow`, planner/…), model tiers |

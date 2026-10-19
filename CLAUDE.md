@@ -79,7 +79,8 @@ post-install step.
 | New dotfile symlink | `nix/home/files.nix` |
 | Secrets (Proton Pass refs, `pass-get`/`pass-render`) | `nix/home/secrets.nix` ([docs/secrets.md](docs/secrets.md)) |
 | Claude Code plumbing: settings merge (`dotfiles.claude.settings`), `CLAUDE.md` overlays, agents/commands links | `nix/home/claude-code.nix` ([docs/claude-code.md](docs/claude-code.md#shared-plumbing)) |
-| Claude Code, personal: Max, Bash sandbox, plugins; git push from the sandbox; vault skills | `nix/profiles/personal/{claude,ssh-agent-relay,vault}.nix` ([docs/claude-code.md](docs/claude-code.md#personal-profile)) |
+| SSH keys (Proton Pass agent, `~/.ssh/config`; vault + hosts + public keys per profile) | `nix/home/ssh.nix`, `nix/profiles/*/ssh.nix` + `ssh/*.pub` ([docs/ssh.md](docs/ssh.md)) |
+| Claude Code, personal: Max, Bash sandbox, plugins; git push from the sandbox; vault skills | `nix/profiles/personal/{claude,sandbox-git,vault}.nix` ([docs/claude-code.md](docs/claude-code.md#personal-profile)) |
 | Claude Code, work: `cc-work`/`cc-work-desktop` (DevAI), gateway check, model aliases, `cc-tooling` | `nix/profiles/work/claude.nix` ([docs/claude-code.md](docs/claude-code.md#work-profile)) |
 | codemem memory (`dotfiles.codemem.lane`/`.observer`, set by the profiles) | `nix/home/codemem.nix` ([docs/claude-code.md](docs/claude-code.md#codemem-memory)) |
 | Claude Code settings snapshot, agents/commands/skills, global `CLAUDE.md` | `system/.claude/` ([docs/claude-code.md](docs/claude-code.md)) |

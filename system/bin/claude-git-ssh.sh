@@ -2,16 +2,15 @@
 #
 # claude-git-ssh — the SSH command git uses in Claude Code's Bash sandbox on a
 # personal machine (set by the git() function in
-# nix/profiles/personal/ssh-agent-relay.nix), so Claude can push and pull.
+# nix/profiles/personal/sandbox-git.nix), so Claude can push and pull.
 #
 # Inside the Bash sandbox ($SANDBOX_RUNTIME set) ssh can't resolve or reach
 # github.com: the sandbox's own GIT_SSH_COMMAND uses its SOCKS port without
-# credentials, which the proxy refuses, and the launchd ssh-agent socket is
-# blocked. There, this routes
-# ssh through the sandbox's HTTP proxy with ncat (127.0.0.1, not localhost:
-# the proxy refuses that) and points it at the agent relay socket the sandbox
-# allows ($CLAUDE_SSH_AGENT_RELAY, from the claude-ssh-agent-relay launchd
-# agent). Anywhere else it is plain ssh.
+# credentials, which the proxy refuses. There, this routes ssh through the
+# sandbox's HTTP proxy with ncat (127.0.0.1, not localhost: the proxy refuses
+# that) and points it at the Proton Pass SSH agent's socket, which the sandbox
+# allows ($CLAUDE_SSH_AGENT_SOCK; ~/.ssh/config names it too). Anywhere else
+# it is plain ssh.
 set -euo pipefail
 
 if [ -z "${SANDBOX_RUNTIME:-}" ] || [ -z "${HTTP_PROXY:-}" ]; then
@@ -27,6 +26,6 @@ if [[ "$proxy" == *@* ]]; then
   auth=(--proxy-auth "${proxy%@*}")
 fi
 
-export SSH_AUTH_SOCK="$CLAUDE_SSH_AGENT_RELAY"
+export SSH_AUTH_SOCK="$CLAUDE_SSH_AGENT_SOCK"
 # ssh runs ProxyCommand through a shell, so quote every word.
 exec ssh -o "ProxyCommand=$(printf '%q ' ncat --proxy "127.0.0.1:$port" --proxy-type http "${auth[@]}") %h %p" "$@"
