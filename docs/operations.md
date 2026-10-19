@@ -55,6 +55,50 @@ Idempotent; safe to re-run. Steps, in order:
 the host descriptor; CI uses them to run this script on its checkout
 against the `ci` host.
 
+## Reinstalling a Mac (factory reset)
+
+Nix recreates the configuration; it does not recreate **data**. Before
+erasing:
+
+1. **Code:** no repo may have unpushed commits, stashes, uncommitted work
+   or a missing remote. Check every repo:
+   ```bash
+   find ~/projects/personal -maxdepth 3 -name .git -type d -prune | sed 's|/.git$||' |
+     while read -r d; do
+       printf '%-40s changed:%s unpushed:%s remotes:%s\n' "${d##*/}" \
+         "$(git -C "$d" status --porcelain | wc -l)" \
+         "$(git -C "$d" log --branches --not --remotes --oneline | wc -l)" \
+         "$(git -C "$d" remote | wc -l)"
+     done
+   ```
+2. **Secrets not yet in Proton Pass** (kubeconfig, files with passwords):
+   store them as notes, from stdin so they stay out of shell history:
+   `jq -n --rawfile n <file> '{title: "<title>", note: $n}' | pass-cli item create note --vault-name <vault> --from-template -`.
+3. **Files:** `~/Documents`, `~/Downloads`, `~/Desktop`, app data you care
+   about (Alfred preferences, Claude Code memories in
+   `~/.claude/projects/*/memory`, `~/.codemem/<lane>`) → NAS or Proton
+   Drive. SSH keys need nothing: they live in Proton Pass ([ssh.md](ssh.md)).
+4. **Ready to sign back in:** your Proton account (password and 2FA) — it's
+   the root of trust for everything else — and your Apple ID.
+
+Erase: System Settings → General → Transfer or Reset → **Erase All
+Content and Settings**. In Setup Assistant, name the Mac after its host
+(`m5`), or select the host later with `DOTFILES_HOST=<host> ./setup.sh`.
+
+Afterwards:
+
+```bash
+xcode-select --install
+git clone https://github.com/GnrlSchnavy/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles && DOTFILES_HOST=<host> ./setup.sh
+```
+
+Then, in a new terminal: `pass-cli login`, the Keychain fix for
+`pass-cli` ([ssh.md](ssh.md#prerequisites-once-per-mac)), `launchctl
+kickstart -k gui/$(id -u)/org.nix-community.home.proton-pass-ssh-agent`,
+the SSH checks from [ssh.md](ssh.md#applying-and-checking), and (personal)
+open Alfred once, rebuild, restart Alfred for its Cmd-Space hotkey.
+
 ## Maintenance scripts (`scripts/`)
 
 | Script | What it does | When |
