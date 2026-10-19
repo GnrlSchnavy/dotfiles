@@ -144,7 +144,7 @@ nix/
 │   │   └── vault.nix      # Obsidian vault skills, OBSIDIAN_VAULT
 │   └── work/              # the client-issued Mac
 │       ├── default.nix
-│       ├── homebrew.nix   # Outlook, Teams, Slack, GitHub Copilot
+│       ├── homebrew.nix   # Slack, GitHub Copilot (Microsoft apps come preinstalled)
 │       ├── git.nix        # work git identity (default on that machine)
 │       └── claude.nix     # cc-work/cc-work-desktop, gateway check, overlay, model aliases, codemem lane, cc-tooling
 ├── hosts/
