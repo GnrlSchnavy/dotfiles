@@ -1,4 +1,4 @@
-# Personal apps from nixpkgs or pinned downloads.
+# Personal CLI tools and apps from nixpkgs or pinned downloads.
 { pkgs, ... }:
 
 let
@@ -22,6 +22,12 @@ let
 in
 {
   environment.systemPackages = [
+    # Homelab and network tools
+    pkgs.ansible
+    pkgs.nmap
+
+    pkgs.stripe-cli
+
     # Music (Jellyfin/Navidrome client)
     feishin
   ];

@@ -145,10 +145,16 @@ jobs:
             grep -q "/mise-temurin-$v" <<<"$jvms" || fail "java_home doesn't list mise's Temurin $v: $jvms"
           done
 
-          # Brew bundle should have left every declared formula installed
+          # Brew bundle should have left the declared formulas installed —
+          # both from third-party taps, so this covers homebrew-trust.nix too
           command -v brew >/dev/null || fail "brew not on PATH"
-          for formula in kubectl helm; do
+          for formula in flux pass-cli; do
             brew list --formula "$formula" >/dev/null 2>&1 || fail "brew formula $formula missing after activation"
+          done
+
+          # CLI tools come from nixpkgs (profiles/dev/packages.nix)
+          for tool in kubectl helm gh; do
+            command -v "$tool" >/dev/null || fail "$tool not on PATH"
           done
 
           echo "All smoke checks passed."

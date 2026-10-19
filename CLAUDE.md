@@ -124,7 +124,7 @@ hardcoded formula list in
   (default) and 21, and Node LTS; per project from `.java-version`/`.nvmrc`/`mise.toml`, with
   `JAVA_HOME` set on `cd`. A bare `21` in `.java-version` means OpenJDK,
   `temurin-21` means Temurin (see [docs/packages.md](docs/packages.md))
-- **Kubernetes**: kubectl, helm, flux, kubeseal, kdoctor; aliases `k`,
+- **Kubernetes**: kubectl, helm, flux, kubeseal; aliases `k`,
   `kgp`, `kaf`, … from `nix/modules/environment.nix`
 - **Editors**: NixVim (Catppuccin, LSP, Telescope, Treesitter),
   IntelliJ + IdeaVim, VSCode

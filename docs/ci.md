@@ -42,8 +42,9 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
      merged keys), `~/.codemem/personal` exists, and the vault path was
      filled into the skills;
    - `darwin-rebuild`, `brew` and `mise` (with its config) are in
-     place, macOS's `java_home` lists mise's Temurin 25 and 21, and the
-     formulas `kubectl`, `helm` are installed.
+     place, macOS's `java_home` lists mise's Temurin 25 and 21, the
+     tapped formulas `flux` and `pass-cli` are installed, and nixpkgs'
+     `kubectl`, `helm` and `gh` are on PATH.
 
 ## Scheduled jobs
 
@@ -95,8 +96,9 @@ Misses:
 - New gateway-check behaviour or a new bypass found? Add a fixture to
   [`tests/gateway-check.sh`](../tests/gateway-check.sh) — blocking cases
   and the sessions that must stay allowed.
-- The smoke check hardcodes formulas `kubectl helm`. If the `dev`
-  brews change, update the workflow list.
+- The smoke check hardcodes formulas `flux pass-cli` and tools
+  `kubectl helm gh`. If the `dev` brews or packages change, update the
+  workflow lists.
 - The smoke check's symlink list must track `nix/home/files.nix` and
   `nix/home/claude-code.nix` — add a check when adding an important
   managed file.

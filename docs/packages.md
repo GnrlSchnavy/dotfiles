@@ -16,11 +16,14 @@ This doc is the single source of truth for which source to use.
 
 Rules of thumb:
 
-- **Nix packages** (`environment.systemPackages`): reproducible CLI
-  tools — git, maven, jq, ripgrep, fd, bat, tree, curl, wget, htop…
-- **Homebrew brews**: CLI tools that need taps (`fluxcd/tap/flux`),
-  or faster update cycles
-  (gh, kubectl, helm).
+- **Nix packages** (`environment.systemPackages`): CLI tools by
+  default — git, jq, ripgrep, kubectl, helm, gh, tmux, gnupg, kotlin,
+  pnpm, ansible, nmap…
+- **Homebrew brews**: only with a reason, written next to the entry —
+  an official tap (`fluxcd/tap/flux`, which also tracks the cluster's
+  controller releases; `protonpass/tap/pass-cli`), a release cycle
+  stable nixpkgs can't keep up with (`opencode`, `openspec`), or a
+  build that doesn't fit Nix (`clamav`'s writable config and database).
 - **Homebrew casks**: all GUI apps (browsers, IDEs, Slack, …). JDKs are
   not casks — mise installs them. Docker is not a cask either: the
   engine is Colima and the `docker` CLI comes from nixpkgs
@@ -128,6 +131,6 @@ Consequences:
 - `nixpkgs.config.allowUnfree = true` is set once in
   `nix/modules/nix.nix`; don't repeat it per profile.
 - The CI smoke check (`.github/workflows/check.yml`) asserts the
-  formulas `kubectl`, `helm` exist after activation. If you
-  remove one of those from the `dev` brews, update the workflow too
-  (ci mirrors m5's profiles).
+  formulas `flux`, `pass-cli` exist after activation and that
+  `kubectl`, `helm`, `gh` are on PATH. If you move or remove one of
+  those, update the workflow too (ci mirrors m5's profiles).
