@@ -105,11 +105,15 @@ Done before item 4: `kubectl` needs it.
 
 - **Done when:** `ansible-vault view <file>` works with no password file on disk
 
-## 7. Tailscale auth keys, Flux/GitHub deploy tokens
+## 7. Tailscale auth keys, Flux/GitHub deploy tokens — done (nothing to move)
 
-Stored as items in `Infra`; referenced from wherever they're used.
-
-- **Done when:** each is in Proton Pass and removed from shell history / loose files
+Checked 2026-10-19: Flux's deploy key (`flux-system/flux-system`),
+`flux-system/gitlab-preview-readonly`, and Headscale's
+`tailscale-authkey-routers` and `headscale-oidc-client` are all
+SealedSecrets in `GnrlSchnavy/template-flux`, so the repo plus item 4's
+key backup restores them. The factory reset cleared shell history and
+loose files. Re-bootstrapping Flux creates a new deploy key from a
+one-off GitHub token, so there's nothing to store ahead of time.
 
 ## 8. Home Assistant long-lived token
 
