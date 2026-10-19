@@ -19,6 +19,9 @@
       # Passwords (pass-cli, below, reads the same vaults)
       "proton-pass"
 
+      # Music
+      "spotify"
+
       # Development
       "claude"
       "claude-code"

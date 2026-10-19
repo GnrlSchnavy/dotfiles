@@ -18,7 +18,7 @@ an app or brew in a profile's `homebrew.nix` isn't named here.
 
 | | m5 (`personal`) | work (`work`) |
 |---|---|---|
-| Extra apps | Proton suite, Signal, WhatsApp, Discord, Slack, Spotify, Steam, … | Slack, GitHub Copilot (Outlook, Teams etc. preinstalled by the client) |
+| Extra apps | Proton suite, Signal, WhatsApp, Discord, Slack, Steam, … | Slack, GitHub Copilot (Outlook, Teams etc. preinstalled by the client) |
 | Git identity | personal (`yvan`, gmail) | work (`yvanstemmerik-ah`, ah.nl); the dotfiles repo still commits as personal |
 | Claude Code backend | Claude Max login | TechNL GenAI gateway via DevAI CLI only |
 | Start Claude with | `claude` or the desktop app | `cc-work` or `cc-work-desktop` |
@@ -80,6 +80,7 @@ Not a profile: `nix/modules/` and `nix/home/` apply to every host.
 | Browsers | `brave-browser`, `firefox`, `google-chrome` |
 | Productivity | `alfred`, `obsidian`, `rectangle` |
 | Passwords | `proton-pass` (the app; `pass-cli` below reads the same vaults) |
+| Music | `spotify` |
 | Development | `intellij-idea`, `visual-studio-code`, `warp`, `claude` (desktop app), `claude-code` |
 
 ### CLI tools
@@ -133,7 +134,7 @@ only Docker engine — there is no Docker Desktop.
 | Group | Apps |
 |---|---|
 | Communication | `discord`, `signal`, `slack`, `whatsapp` |
-| Media | `spotify`, `vlc`, `jellyfin-media-player`, Feishin (music; pinned dmg via Nix) |
+| Media | `vlc`, `jellyfin-media-player`, Feishin (music; pinned dmg via Nix); Spotify is in `dev` |
 | Proton | `proton-drive`, `proton-mail`, `proton-mail-bridge`, `protonvpn` (Proton Pass is in `dev`) |
 | Networking | `tailscale-app` (homelab) |
 | Kubernetes | `lens` (homelab k3s; not on the work Mac) |

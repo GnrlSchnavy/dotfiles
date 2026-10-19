@@ -15,7 +15,6 @@
 
       # Media
       "jellyfin-media-player"
-      "spotify"
       "vlc"
 
       # Proton
