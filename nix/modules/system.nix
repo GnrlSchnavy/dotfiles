@@ -40,7 +40,9 @@
 
     # Login window configuration
     loginwindow = {
-      LoginwindowText = "Yvan Stemmerik +31610042024";
+      # Lost-device contact. This repo is public, so no phone number here;
+      # the address is already public as the git identity.
+      LoginwindowText = "Yvan Stemmerik · yvanstemmerik@gmail.com";
       GuestEnabled = false;
     };
 
