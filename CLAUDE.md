@@ -16,14 +16,14 @@ Each Mac plays one role, picked by the **profiles** its host descriptor
 lists ([`nix/profiles/`](nix/profiles/README.md)): `dev` on every
 machine plus exactly one of `personal` / `work`. Hosts: `m5` (user
 `yvan-sytac`) is the personal Mac and does no client work; `work` is the
-client-issued Mac (username/hostname still placeholders); `ci` mirrors
+client-issued Mac (user `pnl1ln25`, selected with `DOTFILES_HOST=work`); `ci` mirrors
 m5 for the fresh-install CI test. See [docs/hosts.md](docs/hosts.md).
 
 ## The one command
 
 ```bash
 # Applies system + user + homebrew config in one shot. sudo required.
-sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
+sudo darwin-rebuild switch --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)} -v
 ```
 
 Fresh machine bootstrap: `./setup.sh`
@@ -110,7 +110,7 @@ cd ~/.dotfiles/nix && nix flake check --no-build
 ~/.dotfiles/scripts/lint.sh
 
 # Full apply
-sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
+sudo darwin-rebuild switch --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)} -v
 ```
 
 CI runs both checks on Linux, then a fresh-install test on macOS, on

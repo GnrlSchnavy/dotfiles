@@ -19,7 +19,7 @@ echo
 
 cd ~/.dotfiles || { print_error "Could not find ~/.dotfiles"; exit 1; }
 
-HOSTNAME=$(scutil --get LocalHostName)
+HOSTNAME="${DOTFILES_HOST:-$(scutil --get LocalHostName)}"
 FLAKE="$HOME/.dotfiles/nix#$HOSTNAME"
 
 if ! git diff --quiet -- nix/flake.lock; then

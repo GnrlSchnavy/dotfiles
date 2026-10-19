@@ -12,7 +12,8 @@
 #        };
 #   5. git add nix/hosts/<your-hostname>/  (flakes only read git-tracked files)
 {
-  # Must match `scutil --get LocalHostName` on the target machine.
+  # The flake host name. Use `scutil --get LocalHostName`, or install with
+  # DOTFILES_HOST=<name> ./setup.sh when the hostname is managed.
   hostname = "REPLACE_ME_HOSTNAME";
 
   # Must match the macOS account name (whoami).

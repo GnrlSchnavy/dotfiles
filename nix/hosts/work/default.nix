@@ -1,13 +1,12 @@
 # Host descriptor: the client-issued work Mac.
 #
-# TODO when the machine arrives: replace `changeme` (three places) with
-# `whoami`. setup.sh and darwin-rebuild pick the config by
-# `scutil --get LocalHostName`, so either set that to `work`
-# (sudo scutil --set LocalHostName work) or rename this directory, the
-# hostname below and the `work` entry in nix/flake.nix to match it.
+# Its LocalHostName (an asset tag) is set by the client's device management,
+# so the flake host keeps the name `work` instead of matching it. Select it
+# explicitly on the first install — DOTFILES_HOST=work ./setup.sh — after
+# which the flake sets DOTFILES_HOST=work and rebuilds find it on their own.
 {
   hostname = "work";
-  username = "changeme";
+  username = "pnl1ln25";
 
   profiles = [
     "dev"
@@ -21,9 +20,9 @@
   module = { ... }: {
     nixpkgs.hostPlatform = "aarch64-darwin";
     system.stateVersion = 5;
-    system.primaryUser = "changeme";
+    system.primaryUser = "pnl1ln25";
 
     # Declare the user so home-manager can read users.users.<name>.home.
-    users.users.changeme.home = "/Users/changeme";
+    users.users.pnl1ln25.home = "/Users/pnl1ln25";
   };
 }

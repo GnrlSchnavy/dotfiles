@@ -81,7 +81,7 @@ Each `nix/hosts/<name>/default.nix` evaluates to a plain attrset:
 
 ```nix
 {
-  hostname = "...";        # must match `scutil --get LocalHostName`
+  hostname = "...";        # flake host; = LocalHostName unless set via DOTFILES_HOST
   username = "...";        # must match `whoami` on that machine
   profiles = [ "dev" "personal" ]; # roles: "dev" + one of personal/work (optional, default [])
   systemModules = [ ... ]; # per-host nix-darwin modules (optional, default [])
@@ -149,7 +149,7 @@ nix/
 │       └── claude.nix     # cc-work/cc-work-desktop, gateway check, overlay, model aliases, codemem lane, cc-tooling
 ├── hosts/
 │   ├── m5/                # default.nix (profiles dev + personal) + dock.nix
-│   ├── work/              # default.nix (profiles dev + work; placeholder username) + dock.nix
+│   ├── work/              # default.nix (profiles dev + work; DOTFILES_HOST=work) + dock.nix
 │   ├── ci/                # GitHub Actions runner; m5's profiles and dock with CI overrides
 │   └── template/          # copy to onboard a new Mac
 ├── modules/               # shared nix-darwin modules (every host)

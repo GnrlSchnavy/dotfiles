@@ -88,7 +88,7 @@ $EDITOR nix/profiles/dev/homebrew.nix
 
 # Stage (flakes only see git-tracked changes), then apply
 git add -A
-sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
+sudo darwin-rebuild switch --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)} -v
 ```
 
 Keep the existing comment-grouped categories in `homebrew.nix`

@@ -12,12 +12,12 @@ descriptor lists (see [nix/profiles/README.md](../nix/profiles/README.md)):
 | Host | Machine | User | Profiles | Notes |
 |---|---|---|---|---|
 | `m5` | Apple Silicon Mac, personal | `yvan-sytac` | `dev`, `personal` | No client work. Claude Code on Claude Max |
-| `work` | Client-issued Mac (Ahold) | `changeme` (placeholder) | `dev`, `work` | Not set up yet: username and hostname are placeholders (TODO in `nix/hosts/work/default.nix`). Claude Code only through DevAI/TechNL |
+| `work` | Client-issued Mac (Ahold), managed by the client's device management | `pnl1ln25` | `dev`, `work` | Its LocalHostName is a client asset tag, so it's selected with `DOTFILES_HOST=work` (see below). Claude Code only through DevAI/TechNL |
 | `ci` | GitHub Actions `xcode-27` (macOS 27) runner | `runner` | `dev`, `personal` | Fresh-install test target only. Mirrors m5 (its profiles and `../m5/dock.nix`) with CI overrides (casks forced to `[]`, cleanup `none`, no upgrade). Never use on a real machine |
 | `template` | — | — | `dev`, `personal` | Copy source for onboarding; placeholders `REPLACE_ME_*` |
 
-The `work` host is only evaluated in CI (`nix flake check`), not
-installed: its Claude Code setup needs DevAI and a Proton Pass login.
+CI only evaluates the `work` host (`nix flake check`); it never installs
+it, since its Claude Code setup needs DevAI and a Proton Pass login.
 
 ### Decommissioned
 
@@ -48,21 +48,40 @@ With a single clone, keep it at `~/.dotfiles`.
 
 ## Onboarding the work Mac
 
-The descriptor already exists; it only needs the machine's names.
+The descriptor is filled in (`nix/hosts/work/default.nix`). The Mac's
+hostname is set by the client's device management, so don't rename it:
+the flake host stays `work` and is selected with `DOTFILES_HOST`.
 
-1. On the work Mac, read `whoami` and decide the hostname: either
-   `sudo scutil --set LocalHostName work`, or rename
-   `nix/hosts/work/`, its `hostname` and the `work` entry in
-   `nix/flake.nix` to the Mac's existing `LocalHostName`.
-2. In `nix/hosts/work/default.nix`, replace `changeme` (three places)
-   with the username. Adjust `dock.nix` if you like. Commit and push
-   (from any machine — **flakes only read git-tracked files**).
-3. On the work Mac: clone to `~/.dotfiles` and run `./setup.sh`.
-4. Sign in, once: `pass-cli login` (Proton Pass, for the TechNL refs),
+1. Check whether Zscaler inspects TLS ([Zscaler](#zscaler-on-the-work-mac)).
+2. `xcode-select --install`, then:
+   ```bash
+   git clone https://github.com/GnrlSchnavy/dotfiles.git ~/.dotfiles
+   cd ~/.dotfiles && DOTFILES_HOST=work ./setup.sh
+   ```
+   After the first rebuild the flake sets `DOTFILES_HOST=work` in every
+   shell, so later rebuilds (`update.sh`, the usual command) find it.
+3. Sign in, once: `pass-cli login` (Proton Pass, for the TechNL refs),
    then install the DevAI CLI and run `devai setup`
    ([docs/claude-code.md](claude-code.md#work-profile)).
-5. Start Claude Code with `cc-work`. The SSH key for the work GitHub
+4. Start Claude Code with `cc-work`. The SSH key for the work GitHub
    account goes in `~/.ssh/config` on the machine (unmanaged).
+
+### Zscaler on the work Mac
+
+Zscaler may intercept HTTPS and re-sign it with the client's root
+certificate. macOS apps trust it (device management installs it), but
+Nix, nixpkgs' git and curl, Node and the JDKs carry their own CA bundles
+and would reject it. Check before installing:
+
+```bash
+for h in cache.nixos.org github.com repo.maven.apache.org registry.npmjs.org; do
+  printf '%s: ' "$h"
+  openssl s_client -connect "$h:443" -servername "$h" </dev/null 2>/dev/null |
+    openssl x509 -noout -issuer
+done
+```
+
+An issuer naming Zscaler means that host is intercepted.
 
 ## Onboarding a new Mac
 
@@ -93,9 +112,11 @@ The descriptor already exists; it only needs the machine's names.
 
 ## Descriptor gotchas
 
-- `hostname` must exactly match `scutil --get LocalHostName`;
-  `setup.sh`, `update.sh` and `check.sh` all resolve the flake target
-  from it.
+- `hostname` is the flake host name. `setup.sh`, `update.sh`,
+  `check.sh` and the rebuild command use `$DOTFILES_HOST` when set (the
+  flake sets it on every machine after the first rebuild), else
+  `scutil --get LocalHostName` — so name a new host after its
+  LocalHostName, or install it with `DOTFILES_HOST=<host> ./setup.sh`.
 - `username` must match `whoami`; it feeds `system.primaryUser`,
   nix-homebrew's `user`, the home-manager user, and the nvim
   `flakePath` (`/Users/<username>/.dotfiles/nix`).

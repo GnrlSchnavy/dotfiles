@@ -7,7 +7,7 @@
 # 2. Stage it — flakes only see git-tracked files
 git add -A
 # 3. Apply (system + user + homebrew in one shot; sudo is required)
-sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
+sudo darwin-rebuild switch --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)} -v
 ```
 
 Other common operations:
@@ -15,7 +15,7 @@ Other common operations:
 ```bash
 # Update all flake inputs, then rebuild
 nix flake update --flake ~/.dotfiles/nix
-sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
+sudo darwin-rebuild switch --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)} -v
 # (commit the resulting flake.lock change)
 
 # Roll back the last rebuild
@@ -35,7 +35,7 @@ Idempotent; safe to re-run. Steps, in order:
 1. Rosetta 2 (Apple Silicon) and Xcode CLT (exits and asks for a
    re-run if CLT was just triggered).
 2. Clones the repo to `~/.dotfiles` (skips if present).
-3. Verifies `nix/hosts/$(scutil --get LocalHostName)/default.nix`
+3. Verifies `nix/hosts/${DOTFILES_HOST:-$(scutil --get LocalHostName)}/default.nix`
    exists — if not, prints the new-host onboarding steps and exits
    (see [hosts.md](hosts.md)).
 4. Installs Homebrew (nix-homebrew patches it later but needs the

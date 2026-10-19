@@ -91,11 +91,11 @@ the declared plugins (codemem included) when a session first starts.
 
 ```bash
 # Apply a config change (works for system, user, or homebrew changes)
-sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
+sudo darwin-rebuild switch --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)} -v
 
 # Update all flake inputs (nixpkgs, nix-darwin, home-manager, etc.)
 nix flake update --flake ~/.dotfiles/nix
-sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName) -v
+sudo darwin-rebuild switch --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)} -v
 
 # Roll back if a rebuild went sideways
 sudo darwin-rebuild --rollback
@@ -137,7 +137,7 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 │   │   └── work/              ← work Mac: work apps + git identity, Claude via DevAI
 │   ├── hosts/
 │   │   ├── m5/                ← personal Mac: descriptor (profiles) + dock
-│   │   ├── work/              ← client-issued Mac: descriptor (placeholders) + dock
+│   │   ├── work/              ← client-issued Mac: descriptor + dock
 │   │   ├── ci/                ← CI runner descriptor (mirrors m5)
 │   │   └── template/          ← copy this when adding a new host
 │   ├── modules/               ← shared nix-darwin (system-level) modules

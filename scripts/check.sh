@@ -58,7 +58,7 @@ fi
 
 # --- Host descriptor ---
 print_section "Host descriptor"
-HOSTNAME=$(scutil --get LocalHostName)
+HOSTNAME="${DOTFILES_HOST:-$(scutil --get LocalHostName)}"
 if [ -f "nix/hosts/$HOSTNAME/default.nix" ]; then
     print_success "nix/hosts/$HOSTNAME/default.nix exists"
 else

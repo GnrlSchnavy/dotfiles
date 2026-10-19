@@ -95,7 +95,14 @@
             ++ hostModules "systemModules" host
             ++ [
               host.module
-              { system.configurationRevision = self.rev or self.dirtyRev or null; }
+              {
+                system.configurationRevision = self.rev or self.dirtyRev or null;
+                # Which darwinConfiguration this machine is. Rebuild commands
+                # and scripts prefer it over `scutil --get LocalHostName`, so
+                # a Mac whose hostname is managed (the work Mac) still finds
+                # its host.
+                environment.variables.DOTFILES_HOST = host.hostname;
+              }
 
               # Add the per-host parameterized nvim to systemPackages.
               ({ pkgs, ... }: {

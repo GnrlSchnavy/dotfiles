@@ -21,8 +21,8 @@ fails nothing is applied and the previous `flake.lock` is restored. Roughly:
 ```bash
 git pull --ff-only
 nix flake update --flake ./nix
-darwin-rebuild build --flake ~/.dotfiles/nix#$(scutil --get LocalHostName)
-sudo darwin-rebuild switch --flake ~/.dotfiles/nix#$(scutil --get LocalHostName)
+darwin-rebuild build --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)}
+sudo darwin-rebuild switch --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)}
 git commit -m "flake: update inputs" -- nix/flake.lock
 ```
 
