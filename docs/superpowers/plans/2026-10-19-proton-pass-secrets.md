@@ -3,6 +3,25 @@
 One item at a time; each is verified before the next starts. Branch per
 item, merged when its check passes. Runbooks land in `docs/` as we go.
 
+## Resume here (2026-10-19, before m5's factory reset)
+
+The chat that started this lives on m5 and is erased with it; this file
+is the hand-off. State:
+
+- **Machines:** m5 = personal (`dev` + `personal`), about to be
+  factory-reset and reinstalled from master. The client Mac = host
+  `work` (user `pnl1ln25`, selected with `DOTFILES_HOST=work`, since its
+  hostname is managed by the client), installed and in use.
+- **Done today:** profile split (dev/personal/work), work host, Colima
+  instead of Docker Desktop, CLI tools from nixpkgs, CI checks for
+  disabled casks and doc drift, Alfred on Cmd-Space, Proton Pass /
+  Spotify / Wispr Flow on both Macs, SSH keys in Proton Pass (item 1,
+  merged).
+- **Pre-reset backups** (m5): see `docs/operations.md` "Reinstalling a
+  Mac"; the kubeconfig and Maven `settings.xml` go into vault `Infra`
+  as notes.
+- **Next:** finish item 1's checks on both Macs, then item 2.
+
 Vaults (by profile, per `docs/secrets.md` conventions):
 
 | Vault | Holds | Reaches |
@@ -15,16 +34,18 @@ Vaults (by profile, per `docs/secrets.md` conventions):
 
 ## 1. SSH keys from Proton Pass — in progress
 
-Branch `ssh-proton-pass`; runbook `docs/ssh.md`.
+Merged (PR #14, `4bb8d50`); runbook `docs/ssh.md`.
 
-- [ ] Keychain fix for `pass-cli` on m5
-- [ ] Vaults `SSH-personal`, `SSH-work`
-- [ ] Keys: GitHub personal, GitLab personal, Homelab, GitHub work, GitHub personal (work Mac)
-- [ ] Public keys committed; branch merged
-- [ ] Registered: GitHub ×2 accounts, GitLab, `ssh-copy-id` to nas-1 and node-1…5, HA add-on `authorized_keys`
-- [ ] m5 rebuilt; work Mac: `pass-cli login`, Keychain fix, rebuilt
+- [x] Keychain fix for `pass-cli` on m5 (redo after the reset)
+- [x] Vaults `SSH-personal`, `SSH-work`
+- [x] Keys: GitHub personal, GitLab personal, Homelab, GitHub work, GitHub personal (work Mac)
+- [x] Public keys committed; merged
+- [x] Registered: GitHub ×2 accounts, GitLab, `ssh-copy-id -f` to nas-1 and node-1…5, HA add-on `authorized_keys`
+- [ ] m5: factory reset → `DOTFILES_HOST=m5 ./setup.sh` → `pass-cli login`, Keychain fix, agent kickstart (`docs/operations.md`, "Reinstalling a Mac")
+- [ ] work Mac: `pass-cli login`, Keychain fix, `GIT_CONFIG_GLOBAL=/dev/null git pull`, rebuild `#work`
 - **Done when:** `ssh -T git@github.com` / `git@gitlab.com` / `git@github-personal` greet the right accounts, `ssh <box> true` works for all seven boxes, and Claude's sandbox can `git push`
 - [ ] Old key files deleted, old keys removed from GitHub/GitLab/boxes
+- Later: the nodes still accept password logins — switch that off once item 3 (break-glass) works
 
 ## 2. Git commit signing (SSH)
 
