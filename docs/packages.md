@@ -122,6 +122,13 @@ Consequences:
 
 ## Gotchas
 
+- Homebrew **disables** casks over time (e.g. `chromedriver`, 2026-09-01:
+  fails Gatekeeper). A disabled cask can't be installed, so `brew bundle`
+  fails and aborts the activation before home-manager runs — only on a
+  fresh install, since existing machines just report "Using". CI checks
+  this (`scripts/check-brew.sh`); replace the cask with the nixpkgs
+  package or drop it.
+
 - Docker Desktop was replaced by Colima (October 2026). After the first
   rebuild without it, the cask is zapped; Colima's VM is separate.
 - `warp` is the **Warp terminal**; the Cloudflare VPN cask is

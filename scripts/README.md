@@ -69,6 +69,19 @@ has a README with the restore commands.
 
 Useful before a major flake update or experiment.
 
+## `check-brew.sh`
+
+Fails when a host declares a Homebrew cask or formula that Homebrew has
+disabled. `brew bundle` can't install it, which aborts the activation
+before home-manager runs — but only on a fresh machine (one that already
+has it just says "Using"), and CI's fresh install drops casks. Asks the
+Homebrew API; CI runs it on every push. Needs nix, jq, curl.
+
+```bash
+./scripts/check-brew.sh            # m5 and work
+./scripts/check-brew.sh work
+```
+
 ## `lint.sh`
 
 nixfmt, statix, deadnix and shellcheck over the repo, plus a gitleaks

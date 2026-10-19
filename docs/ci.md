@@ -8,7 +8,10 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    cross-platform; that includes the `work` host, which is never
    installed in CI), [`scripts/lint.sh`](../scripts/lint.sh) in the
    flake's dev shell (nixfmt, statix, deadnix, shellcheck, and a
-   gitleaks scan of the tree, since the repo is public), and
+   gitleaks scan of the tree, since the repo is public),
+   [`scripts/check-brew.sh`](../scripts/check-brew.sh) (no cask or
+   formula Homebrew has disabled — the fresh install drops casks, so it
+   can't catch those), and
    [`tests/run.sh`](../tests/run.sh): the gateway-check fixtures, the
    subagent-definition check, the `cc-tooling` and settings-merge tests,
    and the doc-drift check (the architecture map matches `nix/`, and
