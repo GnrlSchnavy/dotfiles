@@ -21,7 +21,6 @@
       "claude"
       "claude-code"
       "intellij-idea"
-      "lens"
       "visual-studio-code"
       "warp"
     ];
