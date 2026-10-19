@@ -101,7 +101,8 @@ Package source strategy (Nix vs Homebrew vs MAS):
 # On a non-darwin machine add --all-systems.
 cd ~/.dotfiles/nix && nix flake check --no-build
 
-# Gateway-check, agents-md, cc-tooling and settings-merge tests (bash, jq, git — no Nix needed)
+# Gateway-check, subagent, cc-tooling, settings-merge and doc-drift tests
+# (bash, jq, git — no Nix needed)
 ~/.dotfiles/tests/run.sh
 
 # Lint: nixfmt, statix, deadnix, shellcheck, gitleaks (also the pre-commit

@@ -167,7 +167,7 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 ├── .github/workflows/check.yml ← Linux eval + tests, then fresh-install CI
 ├── setup.sh                    ← bootstrap entry point
 ├── scripts/                    ← maintenance helpers (check, update, backup, lint)
-└── tests/                      ← gateway-check, agents-md, cc-tooling and settings-merge tests (tests/run.sh)
+└── tests/                      ← gateway-check, subagent, cc-tooling, settings-merge and doc-drift tests (tests/run.sh)
 ```
 
 ---

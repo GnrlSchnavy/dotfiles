@@ -120,6 +120,8 @@ never reach the personal Max login. Shared modules declare the options
 
 ## Directory map
 
+`tests/docs.sh` fails when this map and `nix/` disagree.
+
 ```
 nix/
 ├── flake.nix              # inputs + hostModules/mkDarwin/mkNvim + hosts attrset
@@ -130,13 +132,13 @@ nix/
 │   ├── README.md
 │   ├── dev/               # every machine
 │   │   ├── default.nix    # module lists
-│   │   ├── homebrew.nix   # dev casks/brews (IDEs, browsers, Claude, k8s, pass-cli)
-│   │   ├── packages.nix   # nixpkgs CLI basics (git, maven, jq, ripgrep, …)
+│   │   ├── homebrew.nix   # dev casks (IDEs, browsers, Claude); brews flux, pass-cli, opencode
+│   │   ├── packages.nix   # nixpkgs CLI tools (git, jq, kubectl, helm, gh, …)
 │   │   └── docker.nix     # Colima default profile, DOCKER_HOST, docker CLI
 │   ├── personal/          # m5
 │   │   ├── default.nix
 │   │   ├── homebrew.nix   # personal apps (Proton, Signal, Slack, Steam, …)
-│   │   ├── packages.nix   # feishin (pinned dmg)
+│   │   ├── packages.nix   # ansible, nmap, stripe-cli, feishin (pinned dmg)
 │   │   ├── claude.nix     # Claude Max: sandbox, plugins, DOTFILES_LINT_PATH, codemem lane
 │   │   ├── ssh-agent-relay.nix # git push from the Bash sandbox
 │   │   └── vault.nix      # Obsidian vault skills, OBSIDIAN_VAULT

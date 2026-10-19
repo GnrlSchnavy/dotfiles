@@ -24,7 +24,7 @@ sudo darwin-rebuild --rollback
 # Evaluate every host without building/applying (~1 min cold)
 cd ~/.dotfiles/nix && nix flake check --no-build
 
-# Gateway-check, agents-md, cc-tooling and settings-merge tests
+# Gateway-check, subagent, cc-tooling, settings-merge and doc-drift tests
 ~/.dotfiles/tests/run.sh
 ```
 

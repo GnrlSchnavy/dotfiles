@@ -10,7 +10,8 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    flake's dev shell (nixfmt, statix, deadnix, shellcheck, and a
    gitleaks scan of the tree, since the repo is public), and
    [`tests/run.sh`](../tests/run.sh): the gateway-check fixtures, the
-   `agents-md.sh`, `cc-tooling` and settings-merge tests.
+   subagent-definition check, the `cc-tooling` and settings-merge tests,
+   and the doc-drift check (the architecture map matches `nix/`).
 2. **`fresh-install`** (macOS, needs `checks`) — runs `setup.sh`
    itself against the `ci` host descriptor on a
    GitHub-hosted `xcode-27` runner: macOS 27 on Apple Silicon, in
