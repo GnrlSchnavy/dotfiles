@@ -81,6 +81,7 @@ Not a profile: `nix/modules/` and `nix/home/` apply to every host.
 | Productivity | `alfred`, `obsidian`, `rectangle` |
 | Passwords | `proton-pass` (the app; `pass-cli` below reads the same vaults) |
 | Music | `spotify` |
+| Dictation | `wispr-flow` (cloud transcription — dictated audio goes to Wispr's servers) |
 | Development | `intellij-idea`, `visual-studio-code`, `warp`, `claude` (desktop app), `claude-code` |
 
 ### CLI tools
@@ -139,7 +140,7 @@ only Docker engine — there is no Docker Desktop.
 | Networking | `tailscale-app` (homelab) |
 | Kubernetes | `lens` (homelab k3s; not on the work Mac) |
 | Browsers | `tor-browser` |
-| Dictation | `handy`, `wispr-flow` |
+| Dictation | `handy` (local; Wispr Flow is in `dev`) |
 | Games | `steam`, `crossover` |
 | Utilities and security | `little-snitch`, `knockknock`, `oversight`, `taskexplorer`, `balenaetcher` |
 

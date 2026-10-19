@@ -22,6 +22,9 @@
       # Music
       "spotify"
 
+      # Dictation (cloud transcription: audio goes to Wispr's servers)
+      "wispr-flow"
+
       # Development
       "claude"
       "claude-code"

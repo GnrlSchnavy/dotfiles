@@ -28,7 +28,6 @@
 
       # Dictation
       "handy"
-      "wispr-flow"
 
       # Games
       "crossover"
