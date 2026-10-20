@@ -147,7 +147,7 @@ nix/
 │   │   └── vault.nix      # Obsidian vault skills, OBSIDIAN_VAULT
 │   └── work/              # the client-issued Mac
 │       ├── default.nix
-│       ├── homebrew.nix   # Slack, GitHub Copilot, WhatsApp (Microsoft apps come preinstalled)
+│       ├── homebrew.nix   # Slack, GitHub Copilot, Signal, WhatsApp (Microsoft apps come preinstalled)
 │       ├── packages.nix   # azure-cli, kubelogin (KaaS/AKS cluster access)
 │       ├── git.nix        # work git identity (default on that machine)
 │       ├── ssh.nix        # SSH vault SSH-work: github.com (work), github-personal (keys in ssh/*.pub)
