@@ -8,5 +8,6 @@
   homebrew.casks = [
     "github-copilot-app"
     "slack"
+    "whatsapp"
   ];
 }
