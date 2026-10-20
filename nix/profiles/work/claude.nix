@@ -88,7 +88,19 @@ in
       ANTHROPIC_DEFAULT_HAIKU_MODEL = "claude-haiku-4-5";
       # No telemetry, error reports, auto-updates or feature-flag calls to Anthropic.
       CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1";
+      # az (behind kubelogin) writes a per-command log under ~/.azure, which
+      # the Bash sandbox can't write; without the log file it can still read
+      # the token cache.
+      AZURE_LOGGING_ENABLE_LOG_FILE = "false";
+      AZURE_CORE_COLLECT_TELEMETRY = "false";
     };
+    # kubectl to the KaaS (AKS) clusters from the Bash sandbox. A wildcard
+    # rather than the cluster hostnames, which are client identifiers and
+    # don't belong in this repo.
+    union.sandbox.network.allowedDomains = [
+      "*.hcp.westeurope.azmk8s.io" # AKS API servers
+      "login.microsoftonline.com" # Azure AD token refresh (az/kubelogin)
+    ];
     hooks = {
       SessionStart = [ { hooks = [ (hook "${hooks}/agents-md.sh") ]; } ];
       UserPromptSubmit = [ { hooks = [ (hook "${hooks}/gateway-check.sh") ]; } ];

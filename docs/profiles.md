@@ -222,6 +222,15 @@ install over an app it didn't install, which would fail the rebuild.
 The same goes for any other app the client preinstalls — leave it out
 of the profiles for that machine.
 
+### CLI tools (nixpkgs)
+
+`packages.nix`: `azure-cli` and `kubelogin`, for kubectl access to the
+Tech NL KaaS (AKS) clusters: `az login`, `az aks get-credentials`, then
+`kubelogin convert-kubeconfig -l azurecli`. `claude.nix` lets the Bash
+sandbox reach the AKS API servers (`*.hcp.westeurope.azmk8s.io`) and
+`login.microsoftonline.com`, with az's log file off, so Claude can run
+kubectl too.
+
 ### Git
 
 `git.nix`: work identity by default (`yvanstemmerik-ah`,

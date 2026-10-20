@@ -148,6 +148,7 @@ nix/
 │   └── work/              # the client-issued Mac
 │       ├── default.nix
 │       ├── homebrew.nix   # Slack, GitHub Copilot (Microsoft apps come preinstalled)
+│       ├── packages.nix   # azure-cli, kubelogin (KaaS/AKS cluster access)
 │       ├── git.nix        # work git identity (default on that machine)
 │       ├── ssh.nix        # SSH vault SSH-work: github.com (work), github-personal (keys in ssh/*.pub)
 │       └── claude.nix     # cc-work/cc-work-desktop, gateway check, overlay, model aliases, codemem lane, cc-tooling
