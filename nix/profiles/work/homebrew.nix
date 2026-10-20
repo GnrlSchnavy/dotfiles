@@ -9,6 +9,7 @@
     "github-copilot-app"
     "signal"
     "slack"
+    "tailscale-app"
     "whatsapp"
   ];
 }

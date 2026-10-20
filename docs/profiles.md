@@ -18,7 +18,7 @@ an app or brew in a profile's `homebrew.nix` isn't named here.
 
 | | m5 (`personal`) | work (`work`) |
 |---|---|---|
-| Extra apps | Proton suite, Signal, WhatsApp, Discord, Slack, Steam, … | Slack, GitHub Copilot, Signal, WhatsApp (Outlook, Teams etc. preinstalled by the client) |
+| Extra apps | Proton suite, Signal, WhatsApp, Discord, Slack, Steam, … | Slack, GitHub Copilot, Signal, WhatsApp, Tailscale (Outlook, Teams etc. preinstalled by the client) |
 | Git identity | personal (`yvan`, gmail) | work (`yvanstemmerik-ah`, ah.nl); the dotfiles repo still commits as personal |
 | Claude Code backend | Claude Max login | TechNL GenAI gateway via DevAI CLI only |
 | Start Claude with | `claude` or the desktop app | `cc-work` or `cc-work-desktop` |
@@ -213,7 +213,7 @@ from Proton Pass.
 
 ### Apps (Homebrew casks)
 
-`slack`, `github-copilot-app`, `signal`, `whatsapp`. No other personal apps.
+`slack`, `github-copilot-app`, `signal`, `whatsapp`, `tailscale-app`. No other personal apps.
 
 Outlook, Teams and the other Microsoft apps come preinstalled by the
 client's device management, so they aren't declared: brew refuses to
