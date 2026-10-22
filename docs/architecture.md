@@ -60,9 +60,11 @@ The `outputs` section defines:
   `hostModules "homeModules"`).
 - `hosts` attrset — registers `m5`, `work` and `ci`. Adding a host means
   adding an entry here (see [hosts.md](hosts.md)).
-- `checks` — every host's system, grouped by platform. `nix flake
-  check` ignores `darwinConfigurations` on its own, so this output is
-  what makes `nix flake check --no-build` actually evaluate the hosts.
+- `checks` — every host's system, grouped by platform, plus the
+  onboarding `template` (with m5's dock standing in for the one you'd
+  copy). `nix flake check` ignores `darwinConfigurations` on its own, so
+  this output is what makes `nix flake check --no-build` actually
+  evaluate the hosts.
 - `formatter` (`cd nix && nix fmt`, nixfmt over every `.nix` file) and
   `devShells.default` (`nix develop ./nix`: nixfmt, statix, deadnix,
   shellcheck, gitleaks, jq — what `scripts/lint.sh` needs), for the Mac

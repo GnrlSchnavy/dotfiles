@@ -185,11 +185,21 @@
       # `nix flake check` skips darwinConfigurations entirely; exposing each
       # host's system here is what makes `nix flake check --no-build` evaluate
       # it (add --all-systems on a machine of another platform, e.g. Linux CI).
-      checks = inputs.nixpkgs.lib.foldlAttrs (
-        acc: name: cfg:
-        inputs.nixpkgs.lib.recursiveUpdate acc {
-          ${cfg.pkgs.stdenv.hostPlatform.system}.${name} = cfg.system;
-        }
-      ) { } self.darwinConfigurations;
+      # The onboarding template is checked too, the way onboarding uses it:
+      # with a dock copied in (its step 2) and its REPLACE_ME_* placeholders
+      # as they are, which are valid values.
+      checks =
+        inputs.nixpkgs.lib.foldlAttrs
+          (
+            acc: name: cfg:
+            inputs.nixpkgs.lib.recursiveUpdate acc {
+              ${cfg.pkgs.stdenv.hostPlatform.system}.${name} = cfg.system;
+            }
+          )
+          {
+            aarch64-darwin.template =
+              (mkDarwin (import ./hosts/template // { systemModules = [ ./hosts/m5/dock.nix ]; })).system;
+          }
+          self.darwinConfigurations;
     };
 }

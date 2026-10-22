@@ -4,7 +4,8 @@
 on every push/PR to `master` (plus manual dispatch). Two jobs:
 
 1. **`checks`** (Linux, ~2 min) — `nix flake check --no-build
-   --all-systems ./nix` evaluates every host (evaluation works
+   --all-systems ./nix` evaluates every host and the onboarding
+   template (evaluation works
    cross-platform), [`scripts/lint.sh`](../scripts/lint.sh) in the
    flake's dev shell (nixfmt, statix, deadnix, shellcheck, and a
    gitleaks scan of the tree, since the repo is public),
