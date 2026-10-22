@@ -62,8 +62,15 @@ jobs:
       - name: Settings-merge and agent tests
         run: tests/run.sh
 
+  # One fresh install per role: `ci` mirrors m5 (dev + personal), `ci-work`
+  # the work Mac (dev + work). They run in parallel.
   fresh-install:
     needs: checks
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [ci, ci-work]
+    name: fresh-install (${{ matrix.host }})
     runs-on: xcode-27
     timeout-minutes: 90
     steps:
@@ -92,20 +99,22 @@ jobs:
       # Third-party tap trust is handled declaratively during
       # activation by nix/modules/homebrew-trust.nix — this run also
       # serves as its end-to-end test.
-      - name: Run setup.sh against the ci host
+      - name: Run setup.sh against the ${{ matrix.host }} host
         # The real bootstrap script on this checkout. Xcode CLT, Homebrew
         # and Nix are already on the runner, so it skips those installers,
-        # moves the /etc files aside and applies the `ci` host.
+        # moves the /etc files aside and applies the host.
         # NIX_CONFIG carries the GitHub token (higher rate limit for input
         # fetches) through sudo: setup.sh moves aside the nix.conf that
         # install-nix-action wrote it to, and root doesn't read ours.
         env:
           DOTFILES_DIR: ${{ github.workspace }}
-          DOTFILES_HOST: ci
+          DOTFILES_HOST: ${{ matrix.host }}
           NIX_CONFIG: access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
         run: ./setup.sh
 
       - name: Verify activation produced the expected symlinks
+        env:
+          HOST: ${{ matrix.host }}
         run: |
           set -euo pipefail
 
@@ -133,10 +142,29 @@ jobs:
           # owned keys merged in.
           s=~/.claude/settings.json
           if [ ! -f "$s" ] || [ -L "$s" ]; then fail "$s is not a regular file"; fi
-          jq -e '.enabledPlugins["codemem@codemem-marketplace"] == true and .sandbox.enabled == true' \
-            "$s" >/dev/null || fail "$s lacks the merged plugins/sandbox keys"
-          [ -d ~/.codemem/personal ] || fail "codemem dir missing"
-          if grep -rq '@VAULT@' ~/.claude/skills/; then fail "vault path not filled in the skills"; fi
+          jq -e '.enabledPlugins["codemem@codemem-marketplace"] == true' \
+            "$s" >/dev/null || fail "$s doesn't declare the codemem plugin"
+
+          case "$HOST" in
+            ci) # personal profile: Max with the Bash sandbox, vault skills
+              jq -e '.sandbox.enabled == true' "$s" >/dev/null || fail "$s lacks the sandbox"
+              [ -d ~/.codemem/personal ] || fail "codemem dir missing"
+              if grep -rq '@VAULT@' ~/.claude/skills/; then fail "vault path not filled in the skills"; fi
+              ;;
+            ci-work) # work profile: gateway check, overlay, cc-work, AKS tools
+              hook=~/.claude/hooks/gateway-check.sh
+              [ -x "$hook" ] || fail "$hook is not executable"
+              jq -e --arg h "$hook" '[.hooks.PreToolUse[].hooks[].command] | index($h)' \
+                "$s" >/dev/null || fail "$s lacks the gateway-check hook"
+              jq -e '.skipWebFetchPreflight == true' "$s" >/dev/null || fail "$s lacks skipWebFetchPreflight"
+              [ -d ~/.codemem/work ] || fail "codemem dir missing"
+              grep -q 'cc-work()' ~/.zshrc || fail "cc-work isn't defined in ~/.zshrc"
+              for tool in cc-tooling az kubelogin; do
+                command -v "$tool" >/dev/null || fail "$tool not on PATH"
+              done
+              ;;
+            *) fail "no smoke checks for host $HOST" ;;
+          esac
 
           # darwin-rebuild ships in the system profile
           command -v darwin-rebuild >/dev/null || fail "darwin-rebuild not on PATH"

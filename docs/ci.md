@@ -5,8 +5,7 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
 
 1. **`checks`** (Linux, ~2 min) — `nix flake check --no-build
    --all-systems ./nix` evaluates every host (evaluation works
-   cross-platform; that includes the `work` host, which is never
-   installed in CI), [`scripts/lint.sh`](../scripts/lint.sh) in the
+   cross-platform), [`scripts/lint.sh`](../scripts/lint.sh) in the
    flake's dev shell (nixfmt, statix, deadnix, shellcheck, and a
    gitleaks scan of the tree, since the repo is public),
    [`scripts/check-brew.sh`](../scripts/check-brew.sh) (no cask or
@@ -17,7 +16,8 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    and the doc-drift check (the architecture map matches `nix/`, and
    `docs/profiles.md` names every app and brew the profiles declare).
 2. **`fresh-install`** (macOS, needs `checks`) — runs `setup.sh`
-   itself against the `ci` host descriptor on a
+   itself, once per role in parallel: against the `ci` host (m5's
+   profiles) and the `ci-work` host (the work Mac's), each on a
    GitHub-hosted `xcode-27` runner: macOS 27 on Apple Silicon, in
    public preview (~10–15 min). GitHub names macOS images after their
    Xcode version now; `macos-26` is the GA fallback if the preview
@@ -31,7 +31,7 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
 2. **Use the `nix-community` cache** (`cachix-action`, `skipPush`) for
    nixvim/home-manager artifacts not on cache.nixos.org.
 3. **Run `./setup.sh` itself** with `DOTFILES_DIR` set to the checkout
-   and `DOTFILES_HOST=ci`. Xcode CLT, Homebrew and Nix are already on
+   and `DOTFILES_HOST` set to the job's host (`ci` or `ci-work`). Xcode CLT, Homebrew and Nix are already on
    the runner, so it skips those installers; it moves
    `/etc/nix/nix.conf`, `/etc/bashrc`, `/etc/zshrc` aside and applies
    the flake via `--inputs-from`. The GitHub token reaches the root
@@ -42,10 +42,14 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    asserts:
    - the home-manager symlinks exist (`~/.zshrc`, `~/.zprofile`,
      `~/.zshenv`, `~/.config/git/{config,ignore}`, `~/.ideavimrc`);
-   - Claude Code (personal profile): `~/.claude/settings.json` is a
-     regular file with codemem declared and the sandbox enabled (the
-     merged keys), `~/.codemem/personal` exists, and the vault path was
-     filled into the skills;
+   - Claude Code: `~/.claude/settings.json` is a regular file with
+     codemem declared (the merged keys); then per role —
+     - `ci` (personal): the sandbox is enabled, `~/.codemem/personal`
+       exists, and the vault path was filled into the skills;
+     - `ci-work` (work): the gateway-check hook is merged in and
+       executable, `skipWebFetchPreflight` is set, `~/.codemem/work`
+       exists, `cc-work` is defined, and `cc-tooling`, `az` and
+       `kubelogin` are on PATH;
    - `darwin-rebuild`, `brew` and `mise` (with its config) are in
      place, macOS's `java_home` lists mise's Temurin 25 and 21, the
      tapped formulas `flux` and `pass-cli` are installed, and nixpkgs'
@@ -55,19 +59,26 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
 
 - [`update-flake-lock.yml`](../.github/workflows/update-flake-lock.yml)
   opens a `flake: update inputs` PR every Monday (or on demand from the
-  Actions tab), so the inputs don't fall behind. PRs opened with the
-  default `GITHUB_TOKEN` don't trigger `check.yml`; add a fine-grained
-  token for this repo (Contents + Pull requests: read and write) as the
-  `FLAKE_UPDATE_TOKEN` secret so CI runs on them, or run `check.yml` on
-  the branch by hand.
+  Actions tab), so the inputs don't fall behind. It needs one of two
+  repo settings, or the PR is never opened (the job fails with "GitHub
+  Actions is not permitted to create or approve pull requests"):
+  - a fine-grained token for this repo (Contents + Pull requests: read
+    and write) as the `FLAKE_UPDATE_TOKEN` secret — preferred, since
+    PRs opened with it also get CI;
+  - or Settings → Actions → General → "Allow GitHub Actions to create
+    and approve pull requests"; the PR then opens with the default
+    token, which doesn't trigger `check.yml`, so run it on the branch
+    by hand.
 - [Dependabot](../.github/dependabot.yml) proposes updates for the
   GitHub Actions, which are pinned to commit SHAs (the version is in the
   trailing comment).
 
-## The `ci` host (`nix/hosts/ci/default.nix`)
+## The `ci` and `ci-work` hosts (`nix/hosts/ci*/`)
 
-Mirrors m5 — `profiles = [ "dev" "personal" ]` and `../m5/dock.nix` —
-then overrides for CI:
+`ci` mirrors m5 — `profiles = [ "dev" "personal" ]` and
+`../m5/dock.nix`; `ci-work` mirrors the work Mac — `[ "dev" "work" ]`
+and `../work/dock.nix`. Both take the runner setup in
+`nix/hosts/ci/runner.nix`:
 
 - `homebrew.casks = lib.mkForce [ ]` — casks are multi-GB and a few
   have DSL incompatibilities with the runner's Homebrew; brews alone
