@@ -146,6 +146,8 @@ nix/
 │   │   ├── ssh.nix        # SSH vault SSH-personal: GitHub, GitLab, homelab (keys in ssh/*.pub)
 │   │   ├── sandbox-git.nix # git push from the Bash sandbox via the Proton Pass agent
 │   │   ├── kube.nix       # homelab: kube-render, sealed-secrets-backup/-keys; daily launchd agent
+│   │   ├── ansible.nix    # Ansible vault password from Proton Pass (ANSIBLE_VAULT_PASSWORD_FILE)
+│   │   ├── hass.nix       # `hass`: hass-cli with the Home Assistant url/token from Proton Pass
 │   │   └── vault.nix      # Obsidian vault skills, OBSIDIAN_VAULT
 │   └── work/              # the client-issued Mac
 │       ├── default.nix

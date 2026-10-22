@@ -13,6 +13,8 @@
     ./ssh.nix
     ./sandbox-git.nix
     ./kube.nix
+    ./ansible.nix
+    ./hass.nix
     ./vault.nix
   ];
 }

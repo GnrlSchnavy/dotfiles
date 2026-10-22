@@ -149,6 +149,9 @@ reports a missing one.
 | codemem work observer auth | `pass://Ahold/TechNLGenAI/api_key` | [`nix/profiles/work/claude.nix`](../nix/profiles/work/claude.nix) |
 | `kube-render` (homelab kubeconfig) | `pass://Infra/k3s/{ca_data,client_cert_data,client_key_data}` | [`nix/profiles/personal/kube.nix`](../nix/profiles/personal/kube.nix) |
 | `sealed-secrets-backup` / `sealed-secrets-keys` | `Infra` notes `Sealed Secrets key <name>` (by title, not `pass://`) | [`nix/profiles/personal/kube.nix`](../nix/profiles/personal/kube.nix) |
+| `ansible-vault-pass` (Ansible vault password, via `ANSIBLE_VAULT_PASSWORD_FILE`) | `Infra` → `Ansible` → `vault_password` | [`nix/profiles/personal/ansible.nix`](../nix/profiles/personal/ansible.nix) |
+| `hass` (hass-cli for Home Assistant) | `Infra` → `Home Assistant` → `url`, `token` | [`nix/profiles/personal/hass.nix`](../nix/profiles/personal/hass.nix) |
+| Project `.env` files | `pass://Dev/<Project>/<field>`, resolved by `pass-cli run` | the project (see [below](#project-env-files)) |
 | SSH keys (served by `pass-cli ssh-agent`, not read through `pass://`) | vaults `SSH-personal`, `SSH-work` | [`nix/home/ssh.nix`](../nix/home/ssh.nix), [docs/ssh.md](ssh.md) |
 | Per-client Claude Code profiles | `pass://<Client>/<Channel>/{api_key,proxy_url}` | [client-tooling.md](client-tooling.md) |
 
@@ -249,3 +252,62 @@ them:
 sealed-secrets-keys | kubectl apply -f -
 kubectl -n sealed-secrets rollout restart deployment/sealed-secrets
 ```
+
+## Ansible vault password
+
+`ANSIBLE_VAULT_PASSWORD_FILE` (personal profile) points every
+`ansible`, `ansible-playbook` and `ansible-vault` run at
+`ansible-vault-pass`, a script that prints the password from the item
+`Ansible` in `Infra`, field `vault_password`. Nothing is stored on disk,
+and the env var overrides a `vault_password_file` in a repo's
+`ansible.cfg`.
+
+Set up once: in Proton Pass, vault `Infra`, create the item `Ansible`
+with a field `vault_password` holding the vault password; then delete
+the old password file. Check:
+
+```bash
+ansible-vault view <encrypted file>   # decrypts with no password file on disk
+```
+
+Every Ansible run asks Proton Pass once, so they need a `pass-cli login`;
+without one, `ansible-vault-pass` fails and Ansible reports it.
+
+## Home Assistant token
+
+`hass` runs `hass-cli` with `HASS_TOKEN` and `HASS_SERVER` read from
+the item `Home Assistant` in `Infra` (fields `token` and `url`, e.g.
+`http://<address>:8123`) for that one call. A `HASS_SERVER` already in
+the environment wins over the `url` field.
+
+Set up once: in Home Assistant, Profile → Security → Long-lived access
+tokens → Create; put it in that item's `token` field, and the URL in
+`url`. Check:
+
+```bash
+hass info         # server version and location: the token works
+hass raw get /api/  # {"message": "API running."}
+```
+
+## Project `.env` files
+
+A project's `.env` holds references, never values, and the process gets
+the values from `pass-cli run`:
+
+```bash
+# .env
+STRIPE_SECRET_KEY=pass://Dev/<Project>/stripe_secret_key
+DATABASE_URL=pass://Dev/<Project>/database_url
+```
+
+```bash
+pass-cli run --env-file .env -- npm run dev
+```
+
+One item per project in `Dev`, one field per variable (the naming
+convention above). `.env` stays globally git-ignored (`nix/home/git.nix`);
+since a refs-only file holds nothing secret, a project can also commit it
+under another name, e.g. `.env.refs`, and run with `--env-file .env.refs`.
+`pass-cli run` masks the values in the command's output; add
+`--no-masking` if that garbles legitimate output.
+
