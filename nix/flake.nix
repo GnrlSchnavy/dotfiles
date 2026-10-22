@@ -154,10 +154,11 @@
         m5 = import ./hosts/m5;
         # Client-issued work Mac.
         work = import ./hosts/work;
-        # CI fresh-install test target. Matches the GitHub Actions
-        # xcode-27 (macOS 27) runner (user "runner", /Users/runner).
-        # Not intended for use on a real machine.
+        # CI fresh-install test targets on the GitHub Actions xcode-27
+        # (macOS 27) runner (user "runner", /Users/runner): m5's profiles,
+        # and the work Mac's. Not intended for use on a real machine.
         ci = import ./hosts/ci;
+        ci-work = import ./hosts/ci-work;
       };
 
       # The Mac, plus Linux for the CI runner.

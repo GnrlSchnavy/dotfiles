@@ -13,11 +13,14 @@ descriptor lists (see [nix/profiles/README.md](../nix/profiles/README.md)):
 |---|---|---|---|---|
 | `m5` | Apple Silicon Mac, personal | `yvan` | `dev`, `personal` | No client work. Claude Code on Claude Max |
 | `work` | Client-issued Mac (Ahold), managed by the client's device management | `pnl1ln25` | `dev`, `work` | Its LocalHostName is a client asset tag, so it's selected with `DOTFILES_HOST=work` (see below). Claude Code only through DevAI/TechNL |
-| `ci` | GitHub Actions `xcode-27` (macOS 27) runner | `runner` | `dev`, `personal` | Fresh-install test target only. Mirrors m5 (its profiles and `../m5/dock.nix`) with CI overrides (casks forced to `[]`, cleanup `none`, no upgrade). Never use on a real machine |
+| `ci` | GitHub Actions `xcode-27` (macOS 27) runner | `runner` | `dev`, `personal` | Fresh-install test target only. Mirrors m5 (its profiles and `../m5/dock.nix`) with the CI overrides in `runner.nix` (casks forced to `[]`, cleanup `none`, no upgrade). Never use on a real machine |
+| `ci-work` | GitHub Actions `xcode-27` (macOS 27) runner | `runner` | `dev`, `work` | Same, for the work Mac: its profiles and `../work/dock.nix`, with `../ci/runner.nix`. Never use on a real machine |
 | `template` | — | — | `dev`, `personal` | Copy source for onboarding; placeholders `REPLACE_ME_*` |
 
-CI only evaluates the `work` host (`nix flake check`); it never installs
-it, since its Claude Code setup needs DevAI and a Proton Pass login.
+CI installs both roles: `ci` (m5's profiles) and `ci-work` (the work
+Mac's) each get a fresh install on every PR. Installing the work profile
+needs neither DevAI nor a Proton Pass login; only launching `cc-work`
+does, so that part is never exercised in CI.
 
 ### Decommissioned
 
@@ -102,6 +105,7 @@ An issuer naming Zscaler means that host is intercepted.
      m5 = import ./hosts/m5;
      work = import ./hosts/work;
      ci = import ./hosts/ci;
+     ci-work = import ./hosts/ci-work;
      <hostname> = import ./hosts/<hostname>;
    };
    ```

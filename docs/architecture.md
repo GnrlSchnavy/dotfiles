@@ -155,7 +155,8 @@ nix/
 ├── hosts/
 │   ├── m5/                # default.nix (profiles dev + personal) + dock.nix
 │   ├── work/              # default.nix (profiles dev + work; DOTFILES_HOST=work) + dock.nix
-│   ├── ci/                # GitHub Actions runner; m5's profiles and dock with CI overrides
+│   ├── ci/                # GitHub Actions runner; m5's profiles and dock; runner.nix = CI overrides
+│   ├── ci-work/           # GitHub Actions runner; the work Mac's profiles and dock; ../ci/runner.nix
 │   └── template/          # copy to onboard a new Mac
 ├── modules/               # shared nix-darwin modules (every host)
 │   ├── README.md
