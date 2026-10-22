@@ -28,6 +28,9 @@ in
 
     pkgs.stripe-cli
 
+    # GitLab (yvanpersonal: template-flux and friends)
+    pkgs.glab
+
     # Music (Jellyfin/Navidrome client)
     feishin
   ];

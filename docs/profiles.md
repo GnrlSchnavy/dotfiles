@@ -147,7 +147,7 @@ only Docker engine — there is no Docker Desktop.
 
 ### CLI tools
 
-From nixpkgs: `ansible`, `nmap`, `stripe-cli`. From Homebrew: `clamav`
+From nixpkgs: `ansible`, `nmap`, `stripe-cli`, `glab` (GitLab). From Homebrew: `clamav`
 (brew keeps freshclam's config and signature database writable; the Nix
 build doesn't).
 
