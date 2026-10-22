@@ -146,7 +146,18 @@ Project `.env` files hold `pass://Dev/<Project>/<field>` refs; run with
 Dropped 2026-10-19: not worth it. wrangler and the Stripe CLI keep their
 own logins.
 
-## 11. Maven `settings.xml` as a template per profile
+## 11. Maven `settings.xml` — work Mac: config done, needs a rebuild
+
+Decided 2026-10-22: the whole file stays a note in the client vault
+(no template in this public repo: its registry URLs are client details);
+`m2-render` writes it, a launchd agent at login and daily
+(`nix/profiles/work/maven.nix`); runbook `docs/secrets.md#maven-settingsxml`.
+Personal: not needed yet.
+
+- [x] `m2-render`, agent, docs
+- [ ] work Mac: check the note `Maven settings.xml (backup)` is in vault `Ahold` (or change `vault`/`item` in maven.nix); rebuild `#work`
+
+Original plan:
 
 `settings.xml` holds one `<server>` per registry. A template per profile,
 rendered with `pass-render`: work → the client's GitHub Packages token

@@ -251,6 +251,13 @@ clones still commit as personal.
 `github-personal` is your personal account with its own key, and git
 sends every `GnrlSchnavy` repo there (these dotfiles included).
 
+### Maven
+
+`maven.nix`: `~/.m2/settings.xml` comes from a note in the client vault
+(the client's registries and GitHub Packages token stay out of this
+repo); `m2-render` writes it, and the launchd agent `m2-render` does at
+login and daily ([docs/secrets.md](secrets.md#maven-settingsxml)).
+
 ### Claude Code — only through the gateway
 
 `claude.nix`. Client content must stay inside the sanctioned TechNL GenAI

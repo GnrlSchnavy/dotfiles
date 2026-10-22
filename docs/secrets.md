@@ -151,6 +151,7 @@ reports a missing one.
 | `sealed-secrets-backup` / `sealed-secrets-keys` | `Infra` notes `Sealed Secrets key <name>` (by title, not `pass://`) | [`nix/profiles/personal/kube.nix`](../nix/profiles/personal/kube.nix) |
 | `ansible-vault-pass` (Ansible vault password, via `ANSIBLE_VAULT_PASSWORD_FILE`) | `Infra` → `Ansible` → `vault_password` | [`nix/profiles/personal/ansible.nix`](../nix/profiles/personal/ansible.nix) |
 | `hass` (hass-cli for Home Assistant) | `Infra` → `Home Assistant` → `url`, `token` | [`nix/profiles/personal/hass.nix`](../nix/profiles/personal/hass.nix) |
+| `m2-render` (work Mac's `~/.m2/settings.xml`) | `Ahold` note `Maven settings.xml (backup)` (by title) | [`nix/profiles/work/maven.nix`](../nix/profiles/work/maven.nix) |
 | Project `.env` files | `pass://Dev/<Project>/<field>`, resolved by `pass-cli run` | the project (see [below](#project-env-files)) |
 | SSH keys (served by `pass-cli ssh-agent`, not read through `pass://`) | vaults `SSH-personal`, `SSH-work` | [`nix/home/ssh.nix`](../nix/home/ssh.nix), [docs/ssh.md](ssh.md) |
 | Per-client Claude Code profiles | `pass://<Client>/<Channel>/{api_key,proxy_url}` | [client-tooling.md](client-tooling.md) |
@@ -310,4 +311,27 @@ since a refs-only file holds nothing secret, a project can also commit it
 under another name, e.g. `.env.refs`, and run with `--env-file .env.refs`.
 `pass-cli run` masks the values in the command's output; add
 `--no-masking` if that garbles legitimate output.
+
+## Maven `settings.xml`
+
+On the work Mac, `~/.m2/settings.xml` is the note `Maven settings.xml
+(backup)` in the client vault `Ahold`, verbatim: its registry URLs and
+token are client details, so the whole file lives in Proton Pass rather
+than as a template here. `m2-render` writes it (mode 0600, through a temp
+file, so a failed fetch keeps the old one); the launchd agent `m2-render`
+runs it at login and daily, logging to `~/Library/Logs/m2-render.log`.
+After a token rotation, update the note; the Mac picks it up within a day,
+or at once with `m2-render`.
+
+The vault and title are at the top of `nix/profiles/work/maven.nix`;
+renaming the note (dropping "(backup)", say) means changing them there.
+Check:
+
+```bash
+rm ~/.m2/settings.xml && m2-render
+mvn -q dependency:resolve   # in a client project: its packages resolve
+```
+
+The personal Mac has no `settings.xml` yet; when it needs one, give the
+personal profile the same module pointing at a note in `Dev`.
 

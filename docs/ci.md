@@ -49,8 +49,8 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
        exists, and the vault path was filled into the skills;
      - `ci-work` (work): the gateway-check hook is merged in and
        executable, `skipWebFetchPreflight` is set, `~/.codemem/work`
-       exists, `cc-work` is defined, and `cc-tooling`, `az` and
-       `kubelogin` are on PATH;
+       exists, `cc-work` is defined, and `cc-tooling`, `m2-render`, `az`
+       and `kubelogin` are on PATH;
    - the `dotfiles-backup` launchd agent is loaded, and a
      `launchctl kickstart` of it leaves a backup in `~/.dotfiles-backups`;
    - `darwin-rebuild`, `brew` and `mise` (with its config) are in

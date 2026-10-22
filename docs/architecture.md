@@ -155,6 +155,7 @@ nix/
 │       ├── packages.nix   # azure-cli, kubelogin (KaaS/AKS cluster access)
 │       ├── git.nix        # work git identity (default on that machine)
 │       ├── ssh.nix        # SSH vault SSH-work: github.com (work), github-personal (keys in ssh/*.pub)
+│       ├── maven.nix      # m2-render: ~/.m2/settings.xml from a client-vault note; login + daily agent
 │       └── claude.nix     # cc-work/cc-work-desktop, gateway check, overlay, model aliases, codemem lane, cc-tooling
 ├── hosts/
 │   ├── m5/                # default.nix (profiles dev + personal) + dock.nix

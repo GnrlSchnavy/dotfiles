@@ -159,7 +159,7 @@ jobs:
               jq -e '.skipWebFetchPreflight == true' "$s" >/dev/null || fail "$s lacks skipWebFetchPreflight"
               [ -d ~/.codemem/work ] || fail "codemem dir missing"
               grep -q 'cc-work()' ~/.zshrc || fail "cc-work isn't defined in ~/.zshrc"
-              for tool in cc-tooling az kubelogin; do
+              for tool in cc-tooling m2-render az kubelogin; do
                 command -v "$tool" >/dev/null || fail "$tool not on PATH"
               done
               ;;
