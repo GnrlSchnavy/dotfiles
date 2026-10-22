@@ -20,6 +20,7 @@
     ./claude-code.nix
     ./codemem.nix
     ./ssh.nix
+    ./backup.nix
   ];
 
   # First state version we ship under home-manager. Don't change without

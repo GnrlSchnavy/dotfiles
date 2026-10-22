@@ -174,7 +174,8 @@ nix/
 │   ├── secrets.nix        # pass-get / pass-render / pass-check (Proton Pass)
 │   ├── ssh.nix            # dotfiles.ssh.{vault,hosts}; Proton Pass SSH agent, ~/.ssh/config
 │   ├── claude-code.nix    # dotfiles.claude.{settings,instructions}; settings merge; agents/commands links
-│   └── codemem.nix        # dotfiles.codemem.{lane,observer}; observer config, lane dir, plugin
+│   ├── codemem.nix        # dotfiles.codemem.{lane,observer}; observer config, lane dir, plugin
+│   └── backup.nix         # launchd agent: scripts/backup.sh weekly (Mondays 12:00)
 └── nixvim/config/         # Neovim module (NOT a flake), built per host by mkNvim
     ├── default.nix        # entry: imports the rest, Catppuccin
     ├── lsp.nix            # language servers; nixd uses flakePath/darwinHost

@@ -50,6 +50,8 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
        executable, `skipWebFetchPreflight` is set, `~/.codemem/work`
        exists, `cc-work` is defined, and `cc-tooling`, `az` and
        `kubelogin` are on PATH;
+   - the `dotfiles-backup` launchd agent is loaded, and a
+     `launchctl kickstart` of it leaves a backup in `~/.dotfiles-backups`;
    - `darwin-rebuild`, `brew` and `mise` (with its config) are in
      place, macOS's `java_home` lists mise's Temurin 25 and 21, the
      tapped formulas `flux` and `pass-cli` are installed, and nixpkgs'
