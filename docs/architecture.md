@@ -60,9 +60,11 @@ The `outputs` section defines:
   `hostModules "homeModules"`).
 - `hosts` attrset — registers `m5`, `work` and `ci`. Adding a host means
   adding an entry here (see [hosts.md](hosts.md)).
-- `checks` — every host's system, grouped by platform. `nix flake
-  check` ignores `darwinConfigurations` on its own, so this output is
-  what makes `nix flake check --no-build` actually evaluate the hosts.
+- `checks` — every host's system, grouped by platform, plus the
+  onboarding `template` (with m5's dock standing in for the one you'd
+  copy). `nix flake check` ignores `darwinConfigurations` on its own, so
+  this output is what makes `nix flake check --no-build` actually
+  evaluate the hosts.
 - `formatter` (`cd nix && nix fmt`, nixfmt over every `.nix` file) and
   `devShells.default` (`nix develop ./nix`: nixfmt, statix, deadnix,
   shellcheck, gitleaks, jq — what `scripts/lint.sh` needs), for the Mac
@@ -144,6 +146,8 @@ nix/
 │   │   ├── ssh.nix        # SSH vault SSH-personal: GitHub, GitLab, homelab (keys in ssh/*.pub)
 │   │   ├── sandbox-git.nix # git push from the Bash sandbox via the Proton Pass agent
 │   │   ├── kube.nix       # homelab: kube-render, sealed-secrets-backup/-keys; daily launchd agent
+│   │   ├── ansible.nix    # Ansible vault password from Proton Pass (ANSIBLE_VAULT_PASSWORD_FILE)
+│   │   ├── hass.nix       # `hass`: hass-cli with the Home Assistant url/token from Proton Pass
 │   │   └── vault.nix      # Obsidian vault skills, OBSIDIAN_VAULT
 │   └── work/              # the client-issued Mac
 │       ├── default.nix
@@ -151,6 +155,7 @@ nix/
 │       ├── packages.nix   # azure-cli, kubelogin (KaaS/AKS cluster access)
 │       ├── git.nix        # work git identity (default on that machine)
 │       ├── ssh.nix        # SSH vault SSH-work: github.com (work), github-personal (keys in ssh/*.pub)
+│       ├── maven.nix      # m2-render: ~/.m2/settings.xml from a client-vault note; login + daily agent
 │       └── claude.nix     # cc-work/cc-work-desktop, gateway check, overlay, model aliases, codemem lane, cc-tooling
 ├── hosts/
 │   ├── m5/                # default.nix (profiles dev + personal) + dock.nix
@@ -174,7 +179,8 @@ nix/
 │   ├── secrets.nix        # pass-get / pass-render / pass-check (Proton Pass)
 │   ├── ssh.nix            # dotfiles.ssh.{vault,hosts}; Proton Pass SSH agent, ~/.ssh/config
 │   ├── claude-code.nix    # dotfiles.claude.{settings,instructions}; settings merge; agents/commands links
-│   └── codemem.nix        # dotfiles.codemem.{lane,observer}; observer config, lane dir, plugin
+│   ├── codemem.nix        # dotfiles.codemem.{lane,observer}; observer config, lane dir, plugin
+│   └── backup.nix         # launchd agent: scripts/backup.sh weekly (Mondays 12:00)
 └── nixvim/config/         # Neovim module (NOT a flake), built per host by mkNvim
     ├── default.nix        # entry: imports the rest, Catppuccin
     ├── lsp.nix            # language servers; nixd uses flakePath/darwinHost

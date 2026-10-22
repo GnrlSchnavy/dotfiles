@@ -159,7 +159,7 @@ jobs:
               jq -e '.skipWebFetchPreflight == true' "$s" >/dev/null || fail "$s lacks skipWebFetchPreflight"
               [ -d ~/.codemem/work ] || fail "codemem dir missing"
               grep -q 'cc-work()' ~/.zshrc || fail "cc-work isn't defined in ~/.zshrc"
-              for tool in cc-tooling az kubelogin; do
+              for tool in cc-tooling m2-render az kubelogin; do
                 command -v "$tool" >/dev/null || fail "$tool not on PATH"
               done
               ;;
@@ -177,6 +177,18 @@ jobs:
           for v in 25 21; do
             grep -q "/mise-temurin-$v" <<<"$jvms" || fail "java_home doesn't list mise's Temurin $v: $jvms"
           done
+
+          # The weekly backup agent (nix/home/backup.nix) is loaded and, run
+          # through launchd, leaves a backup behind
+          label="gui/$(id -u)/org.nix-community.home.dotfiles-backup"
+          launchctl print "$label" >/dev/null || fail "$label isn't loaded"
+          launchctl kickstart "$label"
+          for _ in $(seq 30); do
+            compgen -G "$HOME/.dotfiles-backups/*/README.md" >/dev/null && break
+            sleep 2
+          done
+          compgen -G "$HOME/.dotfiles-backups/*/README.md" >/dev/null \
+            || fail "the backup agent left no backup: $(cat ~/Library/Logs/dotfiles-backup.log 2>/dev/null)"
 
           # Brew bundle should have left the declared formulas installed —
           # both from third-party taps, so this covers homebrew-trust.nix too

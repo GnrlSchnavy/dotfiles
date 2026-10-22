@@ -99,10 +99,15 @@ Done before item 4: `kubectl` needs it.
 - **Done when:** after deleting `~/.kube/config`, `kube-render && kubectl get nodes` works
 - [ ] Delete the old `k3s kubeconfig` note (and the trashed backup) in Proton Pass
 
-## 6. Ansible vault password
+## 6. Ansible vault password — config done, needs the item
 
-`Infra/Ansible/vault_password`; a script for `vault_password_file`.
+`Infra/Ansible/vault_password`; `ansible-vault-pass` prints it, and
+`ANSIBLE_VAULT_PASSWORD_FILE` points every Ansible run there
+(`nix/profiles/personal/ansible.nix`); runbook
+`docs/secrets.md#ansible-vault-password`.
 
+- [x] Script, env var, docs
+- [ ] m5: create item `Ansible` (field `vault_password`) in `Infra`; rebuild; delete the old password file
 - **Done when:** `ansible-vault view <file>` works with no password file on disk
 
 ## 7. Tailscale auth keys, Flux/GitHub deploy tokens — done (nothing to move)
@@ -115,17 +120,25 @@ key backup restores them. The factory reset cleared shell history and
 loose files. Re-bootstrapping Flux creates a new deploy key from a
 one-off GitHub token, so there's nothing to store ahead of time.
 
-## 8. Home Assistant long-lived token
+## 8. Home Assistant long-lived token — config done, needs the item
 
-`Infra/Home Assistant/token`; `hass-cli` (or curl) gets it per call.
+`Infra/Home Assistant/{token,url}`; `hass` runs hass-cli with both,
+fetched per call (`nix/profiles/personal/hass.nix`); runbook
+`docs/secrets.md#home-assistant-token`.
 
-- **Done when:** a call to the HA API with the token from Proton Pass returns `200`
+- [x] `hass` wrapper, docs
+- [ ] m5: create a long-lived token in HA; item `Home Assistant` in `Infra` with fields `token`, `url`; rebuild
+- Needs item 1's routing to `192.168.20.x` from m5 first
+- **Done when:** a call to the HA API with the token from Proton Pass returns `200` (`hass raw get /api/`)
 
-## 9. `.env` files with references
+## 9. `.env` files with references — convention documented
 
-Project `.env` files hold `pass://Dev/...` refs; run with
-`pass-cli run --env-file .env -- <cmd>`.
+Project `.env` files hold `pass://Dev/<Project>/<field>` refs; run with
+`pass-cli run --env-file .env -- <cmd>`. Convention and example:
+`docs/secrets.md#project-env-files`.
 
+- [x] Docs
+- [ ] One project: values into an item in `Dev`, `.env` rewritten to refs
 - **Done when:** one project starts with a refs-only `.env`
 
 ## 10. Cloudflare / wrangler and Stripe CLI — dropped
@@ -133,7 +146,18 @@ Project `.env` files hold `pass://Dev/...` refs; run with
 Dropped 2026-10-19: not worth it. wrangler and the Stripe CLI keep their
 own logins.
 
-## 11. Maven `settings.xml` as a template per profile
+## 11. Maven `settings.xml` — work Mac: config done, needs a rebuild
+
+Decided 2026-10-22: the whole file stays a note in the client vault
+(no template in this public repo: its registry URLs are client details);
+`m2-render` writes it, a launchd agent at login and daily
+(`nix/profiles/work/maven.nix`); runbook `docs/secrets.md#maven-settingsxml`.
+Personal: not needed yet.
+
+- [x] `m2-render`, agent, docs
+- [ ] work Mac: check the note `Maven settings.xml (backup)` is in vault `Ahold` (or change `vault`/`item` in maven.nix); rebuild `#work`
+
+Original plan:
 
 `settings.xml` holds one `<server>` per registry. A template per profile,
 rendered with `pass-render`: work → the client's GitHub Packages token

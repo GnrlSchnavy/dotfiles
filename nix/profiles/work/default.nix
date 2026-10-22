@@ -12,5 +12,6 @@
     ./claude.nix
     ./git.nix
     ./ssh.nix
+    ./maven.nix
   ];
 }

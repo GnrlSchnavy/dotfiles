@@ -67,6 +67,12 @@ has a README with the restore commands.
 ./scripts/backup.sh
 ```
 
+It also runs on its own every Monday at 12:00 (launchd agent
+`dotfiles-backup`, from `nix/home/backup.nix`; a sleeping Mac catches up
+on wake), logging to `~/Library/Logs/dotfiles-backup.log`. Run that
+agent now with
+`launchctl kickstart gui/$(id -u)/org.nix-community.home.dotfiles-backup`.
+
 Useful before a major flake update or experiment.
 
 ## `check-brew.sh`

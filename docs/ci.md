@@ -4,7 +4,8 @@
 on every push/PR to `master` (plus manual dispatch). Two jobs:
 
 1. **`checks`** (Linux, ~2 min) — `nix flake check --no-build
-   --all-systems ./nix` evaluates every host (evaluation works
+   --all-systems ./nix` evaluates every host and the onboarding
+   template (evaluation works
    cross-platform), [`scripts/lint.sh`](../scripts/lint.sh) in the
    flake's dev shell (nixfmt, statix, deadnix, shellcheck, and a
    gitleaks scan of the tree, since the repo is public),
@@ -48,8 +49,10 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
        exists, and the vault path was filled into the skills;
      - `ci-work` (work): the gateway-check hook is merged in and
        executable, `skipWebFetchPreflight` is set, `~/.codemem/work`
-       exists, `cc-work` is defined, and `cc-tooling`, `az` and
-       `kubelogin` are on PATH;
+       exists, `cc-work` is defined, and `cc-tooling`, `m2-render`, `az`
+       and `kubelogin` are on PATH;
+   - the `dotfiles-backup` launchd agent is loaded, and a
+     `launchctl kickstart` of it leaves a backup in `~/.dotfiles-backups`;
    - `darwin-rebuild`, `brew` and `mise` (with its config) are in
      place, macOS's `java_home` lists mise's Temurin 25 and 21, the
      tapped formulas `flux` and `pass-cli` are installed, and nixpkgs'

@@ -172,6 +172,13 @@ controller's keys in `Infra` ([docs/secrets.md](secrets.md#sealed-secrets-keys))
 The launchd agent `homelab-secrets` runs the render and the backup at login
 and daily.
 
+`ansible.nix`: `ANSIBLE_VAULT_PASSWORD_FILE` points every Ansible run at
+`ansible-vault-pass`, which prints the vault password from
+`Infra/Ansible` ([docs/secrets.md](secrets.md#ansible-vault-password)),
+so no password file sits on disk. `hass.nix`: `hass` is hass-cli with the
+server URL and token from `Infra/Home Assistant`, fetched per call
+([docs/secrets.md](secrets.md#home-assistant-token)).
+
 ### Claude Code — Claude Max, sandboxed
 
 `claude.nix`. Sign in to your Claude Max account in the desktop app or
@@ -243,6 +250,13 @@ clones still commit as personal.
 ([docs/ssh.md](ssh.md)). `github.com` is the work account;
 `github-personal` is your personal account with its own key, and git
 sends every `GnrlSchnavy` repo there (these dotfiles included).
+
+### Maven
+
+`maven.nix`: `~/.m2/settings.xml` comes from a note in the client vault
+(the client's registries and GitHub Packages token stay out of this
+repo); `m2-render` writes it, and the launchd agent `m2-render` does at
+login and daily ([docs/secrets.md](secrets.md#maven-settingsxml)).
 
 ### Claude Code — only through the gateway
 
