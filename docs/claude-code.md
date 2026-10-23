@@ -135,12 +135,12 @@ don't work inside Seatbelt — run those yourself, or list them in
 
 Commits in this repo run the lint pre-commit hook, which normally gets
 its tools from `nix develop` — unreachable from the sandbox (no Nix
-daemon socket). So `claude.nix` sets `DOTFILES_LINT_PATH` to the same
-tools (`nix/lint-tools.nix`), and `.githooks/pre-commit` puts them on
-`PATH` when `$SANDBOX_RUNTIME` is set: Claude's commits get the full
-lint, gitleaks included, before anything is pushed to this public repo.
-Without the variable (a session older than the rebuild) the hook skips
-with a warning and CI lints after the push.
+daemon socket). So `claude-code.nix` sets `DOTFILES_LINT_PATH` to the
+same tools (`nix/lint-tools.nix`) on every host, and `.githooks/pre-commit`
+puts them on `PATH` when `$SANDBOX_RUNTIME` is set: Claude's commits get
+the full lint, gitleaks on the staged changes included, before anything
+is pushed to this public repo. Without the variable (a session older than
+the rebuild) the hook refuses the commit; start a new session.
 
 ### Git push/pull from the sandbox
 

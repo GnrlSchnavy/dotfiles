@@ -1,19 +1,9 @@
 # Claude Code, personal: signed in to Claude Max (desktop app or `claude`),
 # Bash always sandboxed, codemem extracting via Max. The plumbing is in
 # nix/home/claude-code.nix and codemem.nix; this module only sets options.
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
+{ config, lib, ... }:
 
 let
-  dotfilesLintTools = pkgs.buildEnv {
-    name = "dotfiles-lint-tools";
-    paths = import ../../lint-tools.nix pkgs;
-  };
-
   # npm, Gradle and Maven caches for sandboxed commands only. The sandbox
   # may write here and nowhere your own builds, IntelliJ or codemem's npx
   # read from.
@@ -45,10 +35,6 @@ in
   };
 
   dotfiles.claude.settings = {
-    # The dotfiles' lint tools, for the pre-commit hook in the Bash sandbox,
-    # where `nix develop` can't run (.githooks/pre-commit).
-    env.DOTFILES_LINT_PATH = "${dotfilesLintTools}/bin";
-
     # The Bash sandbox (macOS Seatbelt). Sandbox paths are plain absolute or
     # ~/ — not the // form permission rules use. Builds still need their
     # registries; their caches are sandbox-only (sandboxCaches below).

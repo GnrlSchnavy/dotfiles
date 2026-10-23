@@ -20,6 +20,13 @@ let
   claudeDir = "${config.home.homeDirectory}/.claude";
   json = pkgs.formats.json { };
 
+  # The dotfiles' lint tools, for the pre-commit hook in the Bash sandbox,
+  # where `nix develop` can't run (.githooks/pre-commit).
+  lintTools = pkgs.buildEnv {
+    name = "dotfiles-lint-tools";
+    paths = import ../lint-tools.nix pkgs;
+  };
+
   mergeSettings = pkgs.writeShellApplication {
     name = "merge-claude-settings";
     runtimeInputs = [
@@ -57,6 +64,8 @@ in
       ".claude/agents".source = ../../system/.claude/agents;
       ".claude/commands".source = ../../system/.claude/commands;
     };
+
+    dotfiles.claude.settings.env.DOTFILES_LINT_PATH = "${lintTools}/bin";
 
     # Secrets Claude has no reason to read, on every host. The Read tool (and
     # Grep/Glob) gets them all; the Bash sandbox only those its commands

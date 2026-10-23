@@ -93,7 +93,8 @@ Homebrew API; CI runs it on every push. Needs nix, jq, curl.
 ## `lint.sh`
 
 nixfmt, statix, deadnix and shellcheck over the repo, plus a gitleaks
-scan of the working tree (the repo is public). Runs inside
+scan of the working tree (the repo is public); from the pre-commit hook
+also of the staged changes, in CI also of every commit. Runs inside
 `nix develop ./nix` on its own if the tools aren't on PATH.
 
 ```bash

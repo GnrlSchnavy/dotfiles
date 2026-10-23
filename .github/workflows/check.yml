@@ -8,7 +8,7 @@ name: fresh-install test
 # otherwise only discover by running setup on a fresh machine.
 #
 # The CI hosts skip casks (some have DSL incompatibilities specific
-# to the runner image) and disables homebrew zap/upgrade, keeping runs
+# to the runner image) and disable homebrew zap/upgrade, keeping runs
 # to ~10-15 min while still exercising the full path. The runner is
 # macOS 27 on Apple Silicon, like the real host. GitHub now names macOS
 # images after their Xcode version, so the macOS 27 image is `xcode-27`
@@ -42,6 +42,9 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history: lint's gitleaks scans every commit, not just the tree.
+          fetch-depth: 0
 
       - name: Install Nix
         uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31.11.2
@@ -51,8 +54,8 @@ jobs:
       - name: Evaluate every host (no build)
         run: nix flake check --no-build --all-systems ./nix
 
-      # nixfmt, statix, deadnix, shellcheck and a gitleaks scan; the same
-      # script the pre-commit hook runs.
+      # nixfmt, statix, deadnix, shellcheck and gitleaks (tree and every
+      # commit); the same script the pre-commit hook runs.
       - name: Lint
         run: nix develop ./nix --command scripts/lint.sh
 

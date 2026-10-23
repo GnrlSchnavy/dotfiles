@@ -7,8 +7,9 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    --all-systems ./nix` evaluates every host and the onboarding
    template (evaluation works
    cross-platform), [`scripts/lint.sh`](../scripts/lint.sh) in the
-   flake's dev shell (nixfmt, statix, deadnix, shellcheck, and a
-   gitleaks scan of the tree, since the repo is public),
+   flake's dev shell (nixfmt, statix, deadnix, shellcheck, and
+   gitleaks over the tree and every commit, since the repo is public: a
+   secret added and removed within one push is still in its history),
    [`scripts/check-brew.sh`](../scripts/check-brew.sh) (no cask or
    formula Homebrew has disabled — the fresh install drops casks, so it
    can't catch those), and
