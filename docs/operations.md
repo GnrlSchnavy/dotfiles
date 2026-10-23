@@ -13,10 +13,13 @@ sudo darwin-rebuild switch --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --g
 Other common operations:
 
 ```bash
-# Update all flake inputs, then rebuild
-nix flake update --flake ~/.dotfiles/nix
-sudo darwin-rebuild switch --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)} -v
-# (commit the resulting flake.lock change)
+# Newer flake inputs: master only takes PRs, so let CI bump and test them,
+# merge the PR once green, then apply
+gh workflow run update-flake-lock.yml
+~/.dotfiles/scripts/update.sh
+
+# Ship your own committed change (opens a PR; merge it once CI is green)
+dotpr
 
 # Roll back the last rebuild
 sudo darwin-rebuild --rollback

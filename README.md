@@ -93,9 +93,13 @@ the declared plugins (codemem included) when a session first starts.
 # Apply a config change (works for system, user, or homebrew changes)
 sudo darwin-rebuild switch --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)} -v
 
-# Update all flake inputs (nixpkgs, nix-darwin, home-manager, etc.)
-nix flake update --flake ~/.dotfiles/nix
-sudo darwin-rebuild switch --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)} -v
+# Newer flake inputs: CI opens a tested PR (weekly, or now with this);
+# merge it once green, then pull, review and apply
+gh workflow run update-flake-lock.yml
+~/.dotfiles/scripts/update.sh
+
+# Ship your own committed change: master only takes PRs (docs/ci.md)
+dotpr
 
 # Roll back if a rebuild went sideways
 sudo darwin-rebuild --rollback
