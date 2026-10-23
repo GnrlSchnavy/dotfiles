@@ -43,7 +43,12 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    the flake via `--inputs-from`. The GitHub token reaches the root
    `nix run` through `NIX_CONFIG` (setup.sh passes it through sudo),
    because the nix.conf that held it was just moved aside.
-5. **Smoke checks**: PATH is prepended with
+5. **Rebuild over the install**: a second `darwin-rebuild switch` with
+   the installed `darwin-rebuild`, since every real rebuild runs over an
+   existing install; activation steps that only break the second time
+   (a non-idempotent merge, a launchd reload, nix-homebrew's adopted
+   prefix) fail here.
+6. **Smoke checks**: PATH is prepended with
    `/run/current-system/sw/bin` and the per-user profile, then it
    asserts:
    - the home-manager symlinks exist (`~/.zshrc`, `~/.zprofile`,

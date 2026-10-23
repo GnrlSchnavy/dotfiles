@@ -125,6 +125,17 @@ jobs:
           NIX_CONFIG: access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
         run: ./setup.sh
 
+      # Real rebuilds go over an existing install, not a fresh one: switch
+      # again with the installed darwin-rebuild, as update.sh does. The smoke
+      # checks below then see the second activation's result.
+      - name: Rebuild over the install
+        env:
+          HOST: ${{ matrix.host }}
+          NIX_CONFIG: access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sudo --preserve-env=NIX_CONFIG /run/current-system/sw/bin/darwin-rebuild \
+            switch --flake "$GITHUB_WORKSPACE/nix#$HOST"
+
       - name: Verify activation produced the expected symlinks
         env:
           HOST: ${{ matrix.host }}
