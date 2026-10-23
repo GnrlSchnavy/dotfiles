@@ -44,7 +44,8 @@ The `outputs` section defines:
   [`modules/homebrew.nix`](../nix/modules/homebrew.nix) (Homebrew on,
   `cleanup = "zap"`, auto-update/upgrade), and
   [`modules/homebrew-trust.nix`](../nix/modules/homebrew-trust.nix)
-  (`brew trust` for every third-party tap the host declares).
+  (trust for each third-party formula and cask the host declares,
+  imported with nix-homebrew).
 - `hostModules kind host` — a host's `systemModules` or `homeModules`:
   each listed profile's (`nix/profiles/<name>/default.nix`) first, then
   the host's own.
@@ -169,7 +170,7 @@ nix/
 │   ├── system.nix         # macOS defaults, caps-lock→escape, dark mode, finder
 │   ├── environment.nix    # EDITOR/VISUAL=nvim, kubectl aliases (k, kgp, kaf, …)
 │   ├── homebrew.nix       # homebrew.enable + onActivation (cleanup = "zap")
-│   └── homebrew-trust.nix # brew trust for the host's third-party taps
+│   └── homebrew-trust.nix # trust for the host's third-party formulae and casks
 ├── home/                  # shared home-manager modules (every host)
 │   ├── default.nix        # imports the modules below; home.stateVersion
 │   ├── zsh.nix            # .zprofile/.zshrc content, aliases, session vars

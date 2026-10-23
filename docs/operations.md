@@ -141,13 +141,15 @@ removes anything not declared in the host's profiles' `homebrew.nix`. Declare it
 
 **"Refusing to load formula ... from untrusted tap"** — Homebrew
 (mid-2026+) gates third-party taps behind explicit trust.
-`nix/modules/homebrew-trust.nix` handles this declaratively: during
-every activation it derives the tap list from the host's declared
-brews/casks (`owner/tap/name` entries) and runs `brew trust` on each,
-so rebuilds, fresh installs, and CI are all covered. If the error
-still appears, the rebuild ran before the module landed on this
-machine — pull and rebuild again, or `brew trust <owner>/<tap>` once
-by hand.
+`nix/modules/homebrew-trust.nix` handles this declaratively: it trusts
+each third-party formula and cask the host declares (`owner/tap/name`
+entries), one by one, not the whole tap, and nix-homebrew writes the
+entries during activation, before brew bundle. If the error still
+appears, the rebuild ran before the module landed on this machine —
+pull and rebuild again, or `brew trust --formula <owner/tap/name>` once
+by hand. Trust outlives its entry: after removing a tap package, run
+`brew untrust --formula <owner/tap/name>`; `brew trust` lists what's
+trusted.
 
 **Brew bundle fails on one cask** — usually upstream; try
 `brew install --cask <name>` for the real error, comment the cask out

@@ -14,9 +14,9 @@ by [`flake.nix`](../flake.nix) into every `darwinConfiguration` via
 - **`homebrew.nix`** — `homebrew.enable` and `onActivation`
   (`cleanup = "zap"`, auto-update, upgrade). The casks and brews
   themselves come from the profiles.
-- **`homebrew-trust.nix`** — runs `brew trust` during activation for
-  every third-party tap the host declares, which Homebrew requires
-  before it loads their formulae.
+- **`homebrew-trust.nix`** — trusts each third-party formula and cask
+  the host declares (not whole taps), which Homebrew requires before it
+  loads them. Imported with nix-homebrew in `flake.nix`.
 
 Role-level modules (`homebrew.nix` lists, `packages.nix`, Docker,
 Claude Code, git identity) live in [`../profiles/<role>/`](../profiles/README.md);

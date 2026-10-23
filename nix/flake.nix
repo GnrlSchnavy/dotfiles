@@ -47,7 +47,6 @@
         ./modules/system.nix
         ./modules/environment.nix
         ./modules/homebrew.nix
-        ./modules/homebrew-trust.nix
       ];
 
       # A host's modules of one kind ("systemModules" or "homeModules"): its
@@ -115,6 +114,7 @@
                   autoMigrate = true;
                 };
               }
+              ./modules/homebrew-trust.nix
             ]
             ++ [
               home-manager.darwinModules.home-manager

@@ -109,9 +109,9 @@ jobs:
       - name: Move the runner's Homebrew aside
         run: sudo mv /opt/homebrew /opt/homebrew.runner
 
-      # Third-party tap trust is handled declaratively during
-      # activation by nix/modules/homebrew-trust.nix — this run also
-      # serves as its end-to-end test.
+      # Third-party formulae are trusted one by one during activation by
+      # nix/modules/homebrew-trust.nix — this run also serves as its
+      # end-to-end test.
       - name: Run setup.sh against the ${{ matrix.host }} host
         # The real bootstrap script on this checkout. Xcode CLT, Homebrew
         # and Nix are already on the runner, so it skips those installers,

@@ -40,8 +40,9 @@ Not a profile: `nix/modules/` and `nix/home/` apply to every host.
   screen shows a contact email, guest login off.
 - **Homebrew policy** (`modules/homebrew.nix`): `cleanup = "zap"` — what
   isn't declared for the host is uninstalled on rebuild; brew
-  auto-updates and upgrades on every rebuild. Third-party taps are
-  trusted automatically (`modules/homebrew-trust.nix`).
+  auto-updates and upgrades on every rebuild. Formulae and casks from
+  third-party taps are trusted one by one, automatically
+  (`modules/homebrew-trust.nix`).
 - **Nix itself** (`modules/nix.nix`): unfree packages allowed, weekly
   garbage collection of generations older than 30 days, store dedup.
 - **Shell** (`home/zsh.nix`, `modules/environment.nix`): zsh with
