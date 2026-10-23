@@ -10,9 +10,10 @@
       "nix-command"
       "flakes"
     ];
-    # @admin covers any user in the admin group, which is the default
-    # for the primaryUser on macOS — no need to hardcode a username.
-    trusted-users = [ "@admin" ];
+    # trusted-users stays at its default (root): a trusted user can pick
+    # substituters and skip signature checks, which is root by another name,
+    # and nothing here needs it. A binary cache goes in extra-substituters
+    # plus extra-trusted-public-keys instead.
     warn-dirty = false;
   };
 
