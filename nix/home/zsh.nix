@@ -73,6 +73,26 @@
       # Obsidian CLI on PATH
       export PATH="$PATH:/Applications/Obsidian.app/Contents/MacOS"
 
+      # The dotfiles' master only takes PRs (docs/ci.md#master-is-protected).
+      # `dotpr [branch]` turns your commits into one: commits made on master
+      # move to a new branch (master goes back to origin's), the branch is
+      # pushed and gh opens the PR. Merge it on GitHub once CI is green.
+      dotpr() {
+        if [[ -n $(git status --porcelain --untracked-files=no) ]]; then
+          echo "dotpr: commit or stash your changes first" >&2; return 1
+        fi
+        local branch=$(git branch --show-current)
+        if [[ $branch == master ]]; then
+          git fetch -q origin master || return 1
+          if [[ -z $(git log --oneline origin/master..HEAD) ]]; then
+            echo "dotpr: no commits on master that origin doesn't have" >&2; return 1
+          fi
+          branch=''${1:-change-$(date +%Y%m%d-%H%M)}
+          git switch -c "$branch" && git branch -f master origin/master || return 1
+        fi
+        git push -u origin "$branch" && gh pr create --fill --base master --head "$branch"
+      }
+
       # Quick note editing: open nvim in the notes directory straight
       # into the fuzzy file finder. Uses the Obsidian vault ($OBSIDIAN_VAULT,
       # profiles/personal/vault.nix) when present, ~/notes otherwise.

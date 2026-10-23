@@ -51,18 +51,14 @@ if [ "$(git rev-parse HEAD)" != "$before" ]; then
     fi
 fi
 
-# Update Nix flake inputs
-print_step "Updating Nix flake inputs..."
-nix flake update --flake ./nix
-if git diff --quiet -- nix/flake.lock; then
-    print_success "Inputs already up to date"
-fi
+# Inputs aren't bumped here: master only takes PRs, so newer inputs arrive
+# through the weekly lock-update PR (or Actions → update flake.lock → Run
+# workflow), tested by CI before any Mac runs them.
 
 # Build first: a failure here changes nothing on the machine.
 print_step "Building the configuration for $HOSTNAME (nothing applied yet)..."
 if ! darwin-rebuild build --flake "$FLAKE"; then
-    print_error "Build failed — restoring the previous nix/flake.lock"
-    git checkout -- nix/flake.lock
+    print_error "Build failed — nothing applied"
     exit 1
 fi
 rm -f result
@@ -72,13 +68,8 @@ print_step "Applying system configuration for $HOSTNAME..."
 if sudo darwin-rebuild switch --flake "$FLAKE"; then
     print_success "System configuration applied"
 else
-    print_error "Switch failed — nix/flake.lock left updated for inspection (roll back: sudo darwin-rebuild --rollback)"
+    print_error "Switch failed (roll back: sudo darwin-rebuild --rollback)"
     exit 1
-fi
-
-if ! git diff --quiet -- nix/flake.lock; then
-    git commit -q -m "flake: update inputs" -- nix/flake.lock
-    print_success "Committed nix/flake.lock — push it with: git push"
 fi
 
 # Sanity check

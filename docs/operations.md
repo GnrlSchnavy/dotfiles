@@ -108,7 +108,7 @@ gui/$(id -u)/org.nix-community.home.homelab-secrets`, see
 
 | Script | What it does | When |
 |---|---|---|
-| `update.sh` | `git pull --ff-only` → shows the pulled commits and asks before going on → `nix flake update` → `darwin-rebuild build` (restores the old lock if it fails) → `sudo darwin-rebuild switch` → commits `flake.lock` | when you want newer inputs before the weekly lock-update PR lands; push afterwards |
+| `update.sh` | `git pull --ff-only` → shows the pulled commits and asks before going on → `darwin-rebuild build` → `sudo darwin-rebuild switch` | after merging a PR (yours or the weekly lock update); it never bumps inputs itself |
 | `check.sh` | Health check: repo clean, flake evaluates, host descriptor exists, every home-manager symlink resolves, tooling on PATH, mise's configured versions installed | after a rebuild or when something feels off |
 | `lint.sh` | nixfmt, statix, deadnix, shellcheck and a gitleaks scan; also the pre-commit hook and a CI step | runs on every commit; by hand after a big edit (`cd nix && nix fmt` fixes formatting) |
 | `backup.sh` | Copies the state git can't regenerate (Claude `settings.json` and `.claude.json`, codemem DBs, Docker config) plus brew lists and versions into `~/.dotfiles-backups/<timestamp>/`, owner-only; keeps the newest 5 | runs weekly on its own (launchd agent `dotfiles-backup`, Mondays 12:00, `nix/home/backup.nix`); by hand before a big flake update or experiment |
