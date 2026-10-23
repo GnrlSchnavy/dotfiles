@@ -8,29 +8,28 @@ guide.
 
 ## `update.sh`
 
-Pull the repo, refresh flake inputs, build, then switch — and commit
-`nix/flake.lock` once the switch succeeds (push it yourself).
+Pull the repo, build, then switch: it applies `master`, nothing newer.
 
 ```bash
 ./scripts/update.sh
 ```
 
 It stops if the pull fails, and builds before switching: if the build
-fails nothing is applied and the previous `flake.lock` is restored. Pulled
-commits are applied as root, so it lists them (`git log --stat`) and asks
-first; answering no undoes the pull. Roughly:
+fails nothing is applied. Pulled commits are applied as root, so it lists
+them (`git log --stat`) and asks first; answering no undoes the pull.
+Roughly:
 
 ```bash
 git pull --ff-only
-nix flake update --flake ./nix
 darwin-rebuild build --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)}
 sudo darwin-rebuild switch --flake ~/.dotfiles/nix#${DOTFILES_HOST:-$(scutil --get LocalHostName)}
-git commit -m "flake: update inputs" -- nix/flake.lock
 ```
 
-Inputs are also bumped weekly by CI as a pull request (see
-[`docs/ci.md`](../docs/ci.md)); merging that and pulling is the
-low-effort path.
+It doesn't bump flake inputs: `master` only takes PRs, so newer inputs
+come from the weekly lock-update PR, which CI tests first (see
+[`docs/ci.md`](../docs/ci.md)). For one sooner: Actions → update
+flake.lock → Run workflow (`gh workflow run update-flake-lock.yml`),
+merge its PR once green, then run `update.sh`.
 
 ## `check.sh`
 
@@ -56,8 +55,9 @@ Copies the state git can't regenerate into
 hold credentials):
 
 - Claude Code's `~/.claude/settings.json` and `~/.claude.json` (app-owned)
-- the codemem memory databases (`~/.codemem/*/mem.sqlite`, via
-  `sqlite3 .backup` so a running observer doesn't corrupt the copy)
+- this Mac's codemem memory database (`~/.codemem/<lane>/mem.sqlite`,
+  the lane from `$CODEMEM_LANE`; every lane if that's unset), via
+  `sqlite3 .backup` so a running observer doesn't corrupt the copy
 - `~/.docker/config.json`
 - Homebrew package lists, macOS / nix-darwin versions, the repo commit
 

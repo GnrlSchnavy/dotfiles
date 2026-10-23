@@ -12,7 +12,11 @@
 #     shared/tree/...                 # applied to every repo of that client
 #     repos/<repo>/tree/...           # applied to that one repo
 #
-# Every file under a tree/ maps to the same relative path in the live checkout.
+# Every file under a tree/ maps to the same relative path in the live checkout,
+# but only instructions and prompts: CLAUDE.md and AGENTS.md (any folder) and
+# Markdown under .claude/agents/ and .claude/commands/. Anything else (a
+# .claude/settings.json with env, hooks or permissions, a script) is skipped
+# with a warning, so a client repo can't change how Claude runs here.
 # Files are SYMLINKED in (single source of truth; Claude Code follows symlinks
 # for agents and instruction files) and their paths are written into the repo's
 # info/exclude inside a marked, removable block — so git never sees them and
@@ -49,6 +53,14 @@ _strip_block() { awk -v b="$MARK_BEGIN" -v e="$MARK_END" '$0==b{skip=1} !skip{pr
 
 # Relative paths listed in the current block (stdin->stdout).
 _block_paths() { awk -v b="$MARK_BEGIN" -v e="$MARK_END" '$0==b{on=1;next} $0==e{on=0} on{sub(/^\//, ""); print}'; }
+
+# True when <relative path> is a kind of file apply may link.
+_allowed() {
+  case "/$1" in
+    */CLAUDE.md | */AGENTS.md | /.claude/agents/*.md | /.claude/commands/*.md) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
 # True when <path> is a link this tool created (it points into the tooling home,
 # or the pre-rename ~/.opencode-clients).
@@ -91,6 +103,10 @@ cmd_apply() { # <client>/<repo>
   for tree in "${trees[@]}"; do
     while IFS= read -r -d '' f; do
       rel="${f#"$tree"/}"
+      if ! _allowed "$rel"; then
+        printf '  ! skipped %s (only CLAUDE.md, AGENTS.md, agents and commands are linked)\n' "$rel" >&2
+        continue
+      fi
       found=""
       for i in "${!rels[@]}"; do
         if [ "${rels[i]}" = "$rel" ]; then srcs[i]="$f"; found=1; break; fi

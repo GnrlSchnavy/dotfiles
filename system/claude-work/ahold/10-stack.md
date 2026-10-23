@@ -1,13 +1,15 @@
 # Ahold overlay — stack & conventions
 
-<!-- Fill in Ahold's actual conventions as they solidify. Seeded with the
-     enterprise-Java defaults implied by the available agents; adjust to match
-     the real codebase. Add more files alongside this one (e.g. 20-pr.md,
-     30-compliance.md) — every *.md in this folder is loaded on the work machine. -->
+<!-- This repo is public: keep this overlay to what's generic. Client-specific
+     build commands, test gates, PR conventions and compliance notes belong in
+     the private client tooling repo, as CLAUDE.md / AGENTS.md files that
+     cc-tooling links into each checkout (docs/client-tooling.md). Every *.md
+     in this folder is loaded on the work machine. -->
 
 - Primary stack: Java / Spring Boot (services), Angular (front-end), Kubernetes
   for deployment.
 - Follow the existing module/package structure and naming already in the repo
   over any generic convention.
-- (TODO) Document Ahold-specific build commands, test gates, branch/PR
-  conventions, and any required headers/compliance notes here.
+- Repo-specific build commands, test gates and PR conventions come from the
+  checkout's own `CLAUDE.md` / `AGENTS.md` (linked by `cc-tooling`); follow
+  those over anything here.

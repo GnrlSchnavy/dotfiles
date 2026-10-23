@@ -49,10 +49,22 @@ rm "$t/shared/tree/.claude/agents/common.md"
 cct apply acme/svc
 [ ! -e .claude/agents/common.md ] && [ ! -L .claude/agents/common.md ] && clean; check $? "re-apply drops links no longer provided"
 
-echo mine > notes.md && mkdir -p "$t/repos/svc/tree" && echo theirs > "$t/repos/svc/tree/notes.md"
+echo mine > CLAUDE.md && mkdir -p "$t/repos/svc/tree" && echo theirs > "$t/repos/svc/tree/CLAUDE.md"
 if cct apply acme/svc; then fail "refuses to overwrite an untracked file"; else pass "refuses to overwrite an untracked file"; fi
-same "$(cat notes.md)" mine; check $? "untracked file left intact"
-rm notes.md "$t/repos/svc/tree/notes.md"
+same "$(cat CLAUDE.md)" mine; check $? "untracked file left intact"
+rm CLAUDE.md "$t/repos/svc/tree/CLAUDE.md"
+
+# Only instructions and prompts are linked: settings, hooks and scripts aren't.
+mkdir -p "$t/repos/svc/tree/.claude/hooks" "$t/repos/svc/tree/.claude/commands"
+echo '{"env":{"X":"1"}}' > "$t/repos/svc/tree/.claude/settings.json"
+echo 'exit 0' > "$t/repos/svc/tree/.claude/hooks/pre.sh"
+echo cmd > "$t/repos/svc/tree/.claude/commands/build.md"
+out="$(bash "$tool" apply acme/svc 2>&1)"; check $? "apply with unlinkable files still succeeds"
+[ ! -e .claude/settings.json ] && [ ! -e .claude/hooks/pre.sh ] && clean; check $? "settings and hooks aren't linked"
+[ -L .claude/commands/build.md ] && [ -L .claude/agents/x.md ] && clean; check $? "commands and agents are linked"
+grep -q 'skipped .claude/settings.json' <<<"$out"; check $? "skipped files are reported"
+rm -r "$t/repos/svc/tree/.claude/hooks" "$t/repos/svc/tree/.claude/settings.json" "$t/repos/svc/tree/.claude/commands"
+cct apply acme/svc
 
 bash "$tool" status | grep -q '/module/AGENTS.md'; check $? "status lists applied files"
 cct unapply && [ ! -e module/AGENTS.md ] && [ ! -e .claude/agents/x.md ] && clean && ! grep -q oc-tooling .git/info/exclude; check $? "unapply removes links and the block"

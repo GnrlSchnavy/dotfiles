@@ -41,6 +41,9 @@ in
   config = lib.mkIf (cfg.lane != null) {
     xdg.configFile."codemem/${lane}.json".source = json.generate "codemem-${lane}.json" cfg.observer;
 
+    # For scripts/backup.sh, which backs up only this lane.
+    home.sessionVariables.CODEMEM_LANE = lane;
+
     home.activation.codememDirs = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       run mkdir -p ${dir}
     '';

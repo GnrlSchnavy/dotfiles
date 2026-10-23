@@ -27,6 +27,11 @@ let
     paths = import ../lint-tools.nix pkgs;
   };
 
+  # npm, Gradle and Maven caches for sandboxed commands only. The sandbox
+  # may write here and nowhere your own builds, IntelliJ or codemem's npx
+  # read from.
+  sandboxCaches = "${config.home.homeDirectory}/.cache/claude-sandbox";
+
   mergeSettings = pkgs.writeShellApplication {
     name = "merge-claude-settings";
     runtimeInputs = [
@@ -66,6 +71,26 @@ in
     };
 
     dotfiles.claude.settings.env.DOTFILES_LINT_PATH = "${lintTools}/bin";
+
+    # ~/.zshenv runs for every command the sandbox starts, with
+    # $SANDBOX_RUNTIME set, so wrappers (./mvnw, ./gradlew) and child
+    # processes get these too. ~/.m2/settings.xml and ~/.npmrc are still
+    # read; ~/.gradle/gradle.properties isn't (it lives in GRADLE_USER_HOME).
+    programs.zsh.envExtra = ''
+      if [[ -n $SANDBOX_RUNTIME ]]; then
+        export npm_config_cache=${sandboxCaches}/npm
+        export GRADLE_USER_HOME=${sandboxCaches}/gradle
+        export MAVEN_USER_HOME=${sandboxCaches}/m2
+        export MAVEN_OPTS="-Dmaven.repo.local=${sandboxCaches}/m2/repository''${MAVEN_OPTS:+ $MAVEN_OPTS}"
+      fi
+    '';
+    home.activation.claudeSandboxCaches = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      run mkdir -p ${sandboxCaches}
+    '';
+    # The only extra path the sandbox may write. Owned outright (set): union
+    # entries never leave, and paths like ~/.m2, ~/.gradle and ~/.npm must,
+    # since code planted there runs outside the sandbox later.
+    dotfiles.claude.settings.set.sandbox.filesystem.allowWrite = [ sandboxCaches ];
 
     # Secrets Claude has no reason to read, on every host. The Read tool (and
     # Grep/Glob) gets them all; the Bash sandbox only those its commands

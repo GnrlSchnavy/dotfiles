@@ -46,9 +46,12 @@ under a `tree/`:
       shared/tree/...         # (optional) applied to every repo of that client
 
 Every file under a `tree/` maps to the same relative path in the live
-checkout — the directory layout *is* the manifest. A `tree/` typically holds
-`.claude/agents/*.md` (project subagents) and nested `AGENTS.md` /
-`CLAUDE.md` files (per-package rules).
+checkout — the directory layout *is* the manifest. Only instructions and
+prompts are linked: `.claude/agents/*.md` (project subagents),
+`.claude/commands/*.md`, and nested `AGENTS.md` / `CLAUDE.md` files
+(per-package rules). Anything else (a `.claude/settings.json`, hooks,
+scripts) is skipped with a warning, so the private repo can't change
+Claude's permissions, environment or hooks on this Mac.
 
 > **Porting from OpenCode.** The existing Ahold tooling repo still holds
 > OpenCode-format files (`.opencode/agent/*.md`, `opencode.json`, nested

@@ -96,7 +96,8 @@ in
     };
     # kubectl to the KaaS (AKS) clusters from the Bash sandbox. A wildcard
     # rather than the cluster hostnames, which are client identifiers and
-    # don't belong in this repo.
+    # don't belong in this repo; it matches any AKS API server, so add the
+    # exact hosts with /sandbox (union keeps them) and this can go.
     union.sandbox.network.allowedDomains = [
       "*.hcp.westeurope.azmk8s.io" # AKS API servers
       "login.microsoftonline.com" # Azure AD token refresh (az/kubelogin)
@@ -111,9 +112,21 @@ in
         }
       ];
     };
-    # WebFetch's preflight sends the target hostname to api.anthropic.com.
-    set.skipWebFetchPreflight = true;
-    default.model = "opus";
+    set = {
+      # WebFetch's preflight sends the target hostname to api.anthropic.com.
+      skipWebFetchPreflight = true;
+      # The Bash sandbox, forced on every rebuild as on m5: a failed
+      # sandboxed command may not be retried outside it.
+      sandbox = {
+        enabled = true;
+        allowUnsandboxedCommands = false;
+      };
+    };
+    default = {
+      model = "opus";
+      # Keep Bash permission prompts as they were (only written when unset).
+      sandbox.autoAllowBashIfSandboxed = false;
+    };
   };
 
   home.file.".claude/hooks".source = ../../../system/claude-work/hooks;

@@ -203,6 +203,15 @@ GitHub Packages token). Requires Claude Code CLI **>= 2.1.285** (the
 `claude-code` cask) — older builds reject `claude-opus-5-5` as
 `unrecognized_model`.
 
+Bash runs in the sandbox here too, forced on every rebuild like on m5
+(`allowUnsandboxedCommands: false`; prompts unchanged), with the same
+sandbox-only build caches, read denies and Docker access. kubectl reaches
+the AKS clusters through a wildcard (`*.hcp.westeurope.azmk8s.io`), since
+the cluster hostnames are client identifiers; it matches any AKS API
+server, so add your exact hosts with `/sandbox` (they survive rebuilds)
+and the wildcard can go. Other hosts (the client's package registries,
+say) prompt once per domain.
+
 ### The launchers (zsh functions)
 
 - **`cc-work`** — refuses to start unless `devai-claude` is installed.
@@ -284,9 +293,10 @@ Testcontainers and Claude Code all use it.
   inherit the shell).
 - **The CLI** — `docker` from nixpkgs with the compose and buildx
   plugins.
-- **Personal sandbox** — `claude.nix` allows the socket in
-  `sandbox.network.allowUnixSockets`, so sandboxed Claude can run
-  `docker`, `docker compose` and Testcontainers itself. Accepted risk:
+- **The Bash sandbox** (both Macs) — `docker.nix` allows the socket in
+  `sandbox.network.allowUnixSockets` and sets `allowLocalBinding`, so
+  sandboxed Claude can run `docker`, `docker compose` and Testcontainers
+  itself. Accepted risk:
   containers have their own network (outside the sandbox's domain
   allowlist) and can write `~/projects`, which is why the sandbox gets
   no secrets to carry out (git-only SSH agent, read denies).
@@ -349,9 +359,14 @@ LTS covers it.
   only for personal sessions and Docker Desktop for everything else.
   Replaced by one role per machine; see git history before `7714277`.
   On m5, `~/.claude-work`, `~/.codemem/work-ahold` and
-  `~/.config/codemem/work-ahold.json` can be deleted by hand.
-- **OpenCode** was replaced by Claude Code and fully removed. Leftovers:
-  `~/.local/share/opencode`, `~/.cache/opencode`, `~/.config/opencode`.
+  `~/.config/codemem/work-ahold.json` hold client data: delete them by
+  hand. Until then every rebuild warns, and the weekly backup skips them
+  (it backs up only the Mac's own codemem lane).
+- **OpenCode** was replaced by Claude Code as the configured agent: its
+  config, agents and client tooling are gone. The `opencode` CLI itself
+  is still installed on both Macs by the `dev` profile, by choice. Old
+  config leftovers: `~/.local/share/opencode`, `~/.cache/opencode`,
+  `~/.config/opencode`.
 - **claude-mem** was replaced by codemem. On a machine that still has
   it: `npx claude-mem uninstall`, then `rm -rf ~/.claude-mem` if you
   don't want its memories.

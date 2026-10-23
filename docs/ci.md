@@ -46,9 +46,10 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
      `~/.zshenv`, `~/.config/git/{config,ignore}`, `~/.ideavimrc`);
    - Claude Code: `~/.claude/settings.json` is a regular file with
      codemem declared (the merged keys); then per role —
-     - both: the secret read-denies are merged in;
-     - `ci` (personal): the sandbox is enabled, writes only its own
-       caches and reaches only the git SSH agent, `~/.codemem/personal`
+     - both: the secret read-denies are merged in, the sandbox is forced
+       on and writes only its own caches;
+     - `ci` (personal): the sandbox reaches only the git SSH agent,
+       `~/.codemem/personal`
        exists, and the vault path was filled into the skills;
      - `ci-work` (work): the gateway-check hook is merged in and
        executable, `skipWebFetchPreflight` is set, `~/.codemem/work`
@@ -93,6 +94,11 @@ named `master`, targets the default branch with:
   PR reports all three.
 - **Block force pushes** and **restrict deletions**.
 - No bypass list.
+
+Your own changes go the same way: commit as usual, then `dotpr [branch]`
+(a zsh function, `nix/home/zsh.nix`) moves commits made on `master` to a
+branch, pushes it and opens the PR with `gh`; merge it once CI is green,
+then `scripts/update.sh`. Needs `gh auth login` once per Mac.
 
 Renaming a job or a matrix host renames its check: update the ruleset in
 the same PR, or nothing can merge.
