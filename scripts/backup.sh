@@ -64,8 +64,10 @@ for rel in "${STATE_FILES[@]}"; do
 done
 
 # sqlite3's .backup takes a consistent copy even while codemem is writing.
+# Only this Mac's lane (CODEMEM_LANE, from codemem.nix): a leftover lane, like
+# a client one on a personal Mac, never lands in its backups.
 print_step "Backing up codemem memory databases..."
-for db in "$HOME"/.codemem/*/mem.sqlite; do
+for db in "$HOME"/.codemem/${CODEMEM_LANE:-*}/mem.sqlite; do
     [ -f "$db" ] || continue
     rel="${db#"$HOME"/}"
     mkdir -p "$BACKUP_DIR/home/$(dirname "$rel")"

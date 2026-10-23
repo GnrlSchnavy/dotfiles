@@ -359,7 +359,9 @@ LTS covers it.
   only for personal sessions and Docker Desktop for everything else.
   Replaced by one role per machine; see git history before `7714277`.
   On m5, `~/.claude-work`, `~/.codemem/work-ahold` and
-  `~/.config/codemem/work-ahold.json` can be deleted by hand.
+  `~/.config/codemem/work-ahold.json` hold client data: delete them by
+  hand. Until then every rebuild warns, and the weekly backup skips them
+  (it backs up only the Mac's own codemem lane).
 - **OpenCode** was replaced by Claude Code and fully removed. Leftovers:
   `~/.local/share/opencode`, `~/.cache/opencode`, `~/.config/opencode`.
 - **claude-mem** was replaced by codemem. On a machine that still has

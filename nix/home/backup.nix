@@ -31,15 +31,21 @@ in
       ];
       # launchd's PATH is just /usr/bin:/bin:/usr/sbin:/sbin; the script also
       # records the brew lists and the nix-darwin generation.
-      EnvironmentVariables.PATH = lib.concatStringsSep ":" [
-        "/etc/profiles/per-user/${config.home.username}/bin"
-        "/run/current-system/sw/bin"
-        "${osConfig.homebrew.prefix}/bin"
-        "/usr/bin"
-        "/bin"
-        "/usr/sbin"
-        "/sbin"
-      ];
+      EnvironmentVariables = {
+        PATH = lib.concatStringsSep ":" [
+          "/etc/profiles/per-user/${config.home.username}/bin"
+          "/run/current-system/sw/bin"
+          "${osConfig.homebrew.prefix}/bin"
+          "/usr/bin"
+          "/bin"
+          "/usr/sbin"
+          "/sbin"
+        ];
+      }
+      # The codemem lane to back up (launchd doesn't read the shell's).
+      // lib.optionalAttrs (config.dotfiles.codemem.lane != null) {
+        CODEMEM_LANE = config.dotfiles.codemem.lane;
+      };
       StandardOutPath = log;
       StandardErrorPath = log;
     };

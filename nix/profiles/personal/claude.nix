@@ -1,9 +1,19 @@
 # Claude Code, personal: signed in to Claude Max (desktop app or `claude`),
 # Bash always sandboxed, codemem extracting via Max. The plumbing is in
 # nix/home/claude-code.nix and codemem.nix; this module only sets options.
-_:
+{ lib, ... }:
 
 {
+  # Client data from the two-lane era (docs/claude-code.md#history) doesn't
+  # belong on a personal Mac: every rebuild says so until it's deleted.
+  home.activation.workLeftovers = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    for d in "$HOME/.claude-work" "$HOME"/.codemem/work* "$HOME"/.config/codemem/work*.json; do
+      if [ -e "$d" ]; then
+        warnEcho "client data from the old work lane is still on this personal Mac: $d (delete it)"
+      fi
+    done
+  '';
+
   dotfiles.codemem = {
     lane = "personal";
     observer = {
