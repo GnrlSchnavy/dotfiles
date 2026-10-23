@@ -98,14 +98,21 @@ them off in `/sandbox` lasts until the next rebuild. Bash prompts stay
 as they were (`autoAllowBashIfSandboxed: false`, only written when
 unset).
 
-Sandboxed commands can write only to the project folder, `$TMPDIR`,
-`~/.m2`, `~/.gradle` and `~/.npm`, and reach without asking only Maven
-Central, Gradle, npm, the k3s API, the Cloudflare API and `github.com`
-(other hosts prompt per domain). Add more in `claude.nix`
-(`union.sandbox.filesystem.allowWrite`, `…network.allowedDomains`) or in
-`/sandbox` — your own entries survive rebuilds. The Docker socket
-([below](#docker-colima)) and the Proton Pass SSH agent's are the only unix
-sockets allowed; `network.allowLocalBinding: true` lets tests reach a
+Sandboxed commands can write only to the project folder, `$TMPDIR` and
+`~/.cache/claude-sandbox`, and reach without asking only Maven Central,
+Gradle, npm, the k3s API, the Cloudflare API and `github.com` (other
+hosts prompt per domain). Builds in the sandbox get their own npm,
+Gradle and Maven caches there (`~/.zshenv` sets `npm_config_cache`,
+`GRADLE_USER_HOME`, `MAVEN_USER_HOME` and `maven.repo.local` when
+`$SANDBOX_RUNTIME` is set): code the sandbox drops into `~/.m2`,
+`~/.gradle` or `~/.npm` would later run outside it, in your own builds,
+IntelliJ or codemem's `npx`. `~/.m2/settings.xml` and `~/.npmrc` are
+still read; `~/.gradle/gradle.properties` isn't. Add domains in
+`claude.nix` (`union.sandbox.network.allowedDomains`) or in `/sandbox` —
+your own entries survive rebuilds. Write paths and unix sockets are
+owned by `claude.nix` (`set`): a `/sandbox` change to them lasts until
+the next rebuild. The Docker socket ([below](#docker-colima)) and the git
+SSH agent's are the only unix sockets allowed; `network.allowLocalBinding: true` lets tests reach a
 container's published ports on `localhost` (otherwise Seatbelt only
 allows the sandbox proxy there). Known friction: Go CLIs such as `gh`
 don't work inside Seatbelt — run those yourself, or list them in

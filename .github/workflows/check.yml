@@ -150,6 +150,11 @@ jobs:
           case "$HOST" in
             ci) # personal profile: Max with the Bash sandbox, vault skills
               jq -e '.sandbox.enabled == true' "$s" >/dev/null || fail "$s lacks the sandbox"
+              jq -e --arg c "$HOME/.cache/claude-sandbox" '.sandbox.filesystem.allowWrite == [$c]' \
+                "$s" >/dev/null || fail "$s: the sandbox may write outside its own caches"
+              jq -e --arg g "$HOME/.ssh/proton-pass-git-agent.sock" --arg a "$HOME/.ssh/proton-pass-agent.sock" \
+                '.sandbox.network.allowUnixSockets | index($g) and (index($a) | not)' \
+                "$s" >/dev/null || fail "$s: the sandbox must get the git SSH agent only"
               [ -d ~/.codemem/personal ] || fail "codemem dir missing"
               if grep -rq '@VAULT@' ~/.claude/skills/; then fail "vault path not filled in the skills"; fi
               ;;
