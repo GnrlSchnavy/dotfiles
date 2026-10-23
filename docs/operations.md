@@ -42,7 +42,10 @@ Idempotent; safe to re-run. Steps, in order:
    exists — if not, prints the new-host onboarding steps and exits
    (see [hosts.md](hosts.md)).
 4. Installs Homebrew (nix-homebrew patches it later but needs the
-   initial install) and Nix (multi-user daemon).
+   initial install) and Nix (multi-user daemon): a pinned release
+   (`NIX_VERSION` in setup.sh), whose installer must match the pinned
+   SHA-256 before it runs. To bump: take the version and its
+   `https://releases.nixos.org/nix/nix-<version>/install.sha256`.
 5. Moves pre-existing `/etc/nix/nix.conf`, `/etc/bashrc`, `/etc/zshrc`
    to `*.before-nix-darwin` so nix-darwin can take them over.
 6. `sudo nix run --inputs-from ~/.dotfiles/nix nix-darwin#darwin-rebuild -- switch --flake ~/.dotfiles/nix#<host>`
