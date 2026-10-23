@@ -25,6 +25,17 @@ in
   home.sessionVariables = dockerEnv;
   # Claude Code sessions started from the desktop app don't inherit the shell.
   dotfiles.claude.settings.env = dockerEnv;
+  # Claude's Bash sandbox may use the engine: docker, compose, Testcontainers.
+  # Accepted risk: containers have their own network (outside the sandbox's
+  # domain allowlist) and write ~/projects, so the sandbox holds no secrets.
+  # The socket list is owned outright (set): a socket dropped from the config
+  # leaves the sandbox on the next rebuild.
+  # allowLocalBinding lets sandboxed tests reach a container's published
+  # ports on localhost; without it only the sandbox proxy is reachable there.
+  dotfiles.claude.settings.set.sandbox.network = {
+    allowUnixSockets = [ socket ];
+    allowLocalBinding = true;
+  };
 
   services.colima = {
     enable = true;

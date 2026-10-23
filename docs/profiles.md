@@ -22,7 +22,7 @@ an app or brew in a profile's `homebrew.nix` isn't named here.
 | Git identity | personal (`yvan`, gmail) | work (`yvanstemmerik-ah`, ah.nl); the dotfiles repo still commits as personal |
 | Claude Code backend | Claude Max login | TechNL GenAI gateway via DevAI CLI only |
 | Start Claude with | `claude` or the desktop app | `cc-work` or `cc-work-desktop` |
-| Bash sandbox | always on | off |
+| Bash sandbox | always on | always on |
 | Plugins | codemem + superpowers, code-review, playwright, … | codemem only |
 | Blocking hooks | none | gateway check on every prompt and tool call |
 | Extra `CLAUDE.md` | — | Ahold overlay (data isolation, stack) |
@@ -188,13 +188,14 @@ server URL and token from `Infra/Home Assistant`, fetched per call
 
 - **Bash sandbox, always on** (macOS Seatbelt). Commands can't fall back
   to running unsandboxed, even in auto mode. Allowed beyond the project:
-  writes to `~/.m2`, `~/.gradle`, `~/.npm`; network to Maven Central,
-  Gradle, npm, the k3s API, Cloudflare's API (wrangler) and GitHub
-  (SSH); the Colima socket (so Claude can run `docker` and
+  writes to its own build caches (`~/.cache/claude-sandbox`); network to
+  Maven Central, Gradle, npm, the k3s API, Cloudflare's API (wrangler)
+  and GitHub (SSH); the Colima socket (so Claude can run `docker` and
   Testcontainers); localhost binding (tests reaching published ports).
+  Secrets it never needs are unreadable ([claude-code.md](claude-code.md#secrets-claude-cant-read)).
 - **Git push and pull from the sandbox** (`sandbox-git.nix`): the sandbox
-  may use the Proton Pass SSH agent's socket, and a `git()` wrapper sends
-  sandboxed git over SSH through the sandbox proxy.
+  may use the git SSH agent's socket (GitHub and GitLab keys only), and a
+  `git()` wrapper sends sandboxed git over SSH through the sandbox proxy.
 - **Plugins**: codemem, superpowers, frontend-design, context7,
   code-review, code-simplifier, skill-creator, playwright, feature-dev,
   kotlin-lsp (clangd-lsp and swift-lsp off). Fetched by the first
@@ -291,8 +292,11 @@ proxy and model routing.
 - **No calls to Anthropic**: telemetry, error reports, auto-updates and
   feature flags are off; WebFetch's preflight (which sends the hostname
   to Anthropic) is skipped.
-- **No sandbox and no extra plugins** — only codemem. Add plugins in
-  `claude.nix` if you want them there.
+- **Bash sandbox, always on**, as on m5: its own build caches, the Colima
+  socket, the read denies; the AKS hosts above, other hosts prompt per
+  domain.
+- **No extra plugins** — only codemem. Add plugins in `claude.nix` if
+  you want them there.
 - **codemem**: lane `work` (`~/.codemem/work`), memories extracted
   through the TechNL proxy with a key read from Proton Pass.
 - **`cc-tooling`**: applies per-client Claude Code tooling (agents,
