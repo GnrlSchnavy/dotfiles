@@ -79,6 +79,24 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
   GitHub Actions, which are pinned to commit SHAs (the version is in the
   trailing comment).
 
+## `master` is protected
+
+Both Macs apply `master` as root on their next update, so nothing lands
+there unchecked. A repository ruleset (Settings → Rules → Rulesets),
+named `master`, targets the default branch with:
+
+- **Require a pull request before merging**, 0 approvals (a one-person
+  repo): no direct pushes, not from you, a Claude session or the
+  lock-update token.
+- **Require status checks to pass**: `checks`, `fresh-install (ci)`,
+  `fresh-install (ci-work)`. The workflow has no path filters, so every
+  PR reports all three.
+- **Block force pushes** and **restrict deletions**.
+- No bypass list.
+
+Renaming a job or a matrix host renames its check: update the ruleset in
+the same PR, or nothing can merge.
+
 ## The `ci` and `ci-work` hosts (`nix/hosts/ci*/`)
 
 `ci` mirrors m5 — `profiles = [ "dev" "personal" ]` and
