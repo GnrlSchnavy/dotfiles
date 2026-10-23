@@ -81,7 +81,7 @@ Not a profile: `nix/modules/` and `nix/home/` apply to every host.
 | Productivity | `alfred`, `obsidian`, `rectangle` |
 | Passwords | `proton-pass` (the app; `pass-cli` below reads the same vaults) |
 | Music | `spotify` |
-| Dictation | `wispr-flow` (cloud transcription — dictated audio goes to Wispr's servers) |
+| Dictation | `wispr-flow` (cloud transcription — dictated audio goes to Wispr's servers; on the client Mac too, by choice) |
 | Development | `intellij-idea`, `visual-studio-code`, `warp`, `claude` (desktop app), `claude-code` |
 
 ### CLI tools
@@ -97,7 +97,7 @@ From Homebrew, each for a stated reason (`homebrew.nix`):
 |---|---|
 | `fluxcd/tap/flux` | official tap; tracks the cluster's controller releases |
 | `protonpass/tap/pass-cli` | official tap; brew owns its updates |
-| `opencode`, `openspec` | release about weekly; stable nixpkgs lags |
+| `opencode`, `openspec` | release about weekly; stable nixpkgs lags. On the client Mac too, by choice; there OpenCode is outside the DevAI gateway, so point it only at providers the client allows |
 
 ### Alfred on Cmd-Space
 

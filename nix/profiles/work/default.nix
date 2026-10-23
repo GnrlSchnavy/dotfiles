@@ -2,7 +2,8 @@
 # CLI tools, the work git identity, SSH keys from the Proton Pass vault
 # SSH-work, and Claude Code through the sanctioned DevAI/TechNL gateway
 # only, with codemem extracting through the same gateway. No personal apps
-# besides Signal, WhatsApp and Tailscale, no Claude Max login, no vault.
+# besides Signal, WhatsApp and Tailscale (the dev profile's Wispr Flow and
+# OpenCode are here too, by choice), no Claude Max login, no vault.
 {
   systemModules = [
     ./homebrew.nix

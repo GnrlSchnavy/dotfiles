@@ -134,7 +134,7 @@ nix/
 │   ├── README.md
 │   ├── dev/               # every machine
 │   │   ├── default.nix    # module lists
-│   │   ├── homebrew.nix   # dev casks (IDEs, browsers, Claude); brews flux, pass-cli, opencode
+│   │   ├── homebrew.nix   # dev casks (IDEs, browsers, Claude, Wispr Flow); brews flux, pass-cli, opencode, openspec
 │   │   ├── packages.nix   # nixpkgs CLI tools (git, jq, kubectl, helm, gh, …)
 │   │   ├── docker.nix     # Colima default profile, DOCKER_HOST, docker CLI
 │   │   └── alfred.nix     # Cmd-Space: Spotlight's shortcut off, Alfred's hotkey on

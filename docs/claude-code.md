@@ -362,8 +362,11 @@ LTS covers it.
   `~/.config/codemem/work-ahold.json` hold client data: delete them by
   hand. Until then every rebuild warns, and the weekly backup skips them
   (it backs up only the Mac's own codemem lane).
-- **OpenCode** was replaced by Claude Code and fully removed. Leftovers:
-  `~/.local/share/opencode`, `~/.cache/opencode`, `~/.config/opencode`.
+- **OpenCode** was replaced by Claude Code as the configured agent: its
+  config, agents and client tooling are gone. The `opencode` CLI itself
+  is still installed on both Macs by the `dev` profile, by choice. Old
+  config leftovers: `~/.local/share/opencode`, `~/.cache/opencode`,
+  `~/.config/opencode`.
 - **claude-mem** was replaced by codemem. On a machine that still has
   it: `npx claude-mem uninstall`, then `rm -rf ~/.claude-mem` if you
   don't want its memories.
