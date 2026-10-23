@@ -1,12 +1,13 @@
 name: fresh-install test
 
 # End-to-end test: install Nix, then run `./setup.sh` itself against the
-# `ci` host descriptor (matches the runner's environment). Catches eval errors,
+# `ci` and `ci-work` host descriptors (m5's and the work Mac's profiles on
+# the runner). Catches eval errors,
 # build failures, activation script errors, home-manager activation
 # issues, and brew-bundle issues — the full surface area we'd
 # otherwise only discover by running setup on a fresh machine.
 #
-# The `ci` host skips casks (some have DSL incompatibilities specific
+# The CI hosts skip casks (some have DSL incompatibilities specific
 # to the runner image) and disables homebrew zap/upgrade, keeping runs
 # to ~10-15 min while still exercising the full path. The runner is
 # macOS 27 on Apple Silicon, like the real host. GitHub now names macOS
@@ -14,13 +15,14 @@ name: fresh-install test
 # (public preview). If it queues or misbehaves, `macos-26` is the GA
 # fallback.
 
+# No path filters: master's ruleset requires these checks, and a filtered-out
+# PR would never report them. Docs changes need the gitleaks scan and the
+# docs drift test too.
 on:
   push:
     branches: [master]
-    paths-ignore: ["docs/**", "*.md"]
   pull_request:
     branches: [master]
-    paths-ignore: ["docs/**", "*.md"]
   workflow_dispatch:
 
 # A newer push to the same branch or PR supersedes a running check.
