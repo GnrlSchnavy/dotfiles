@@ -1,39 +1,72 @@
 name: update flake.lock
 
-# Weekly pull request bumping nix/flake.lock, so inputs don't sit months
-# behind again. check.yml tests the PR like any other.
+# Weekly pull requests bumping nix/flake.lock, so inputs don't sit months
+# behind again. check.yml tests them like any other PR. Two PRs: one for
+# nix-homebrew alone (one maintainer, its activation runs as root, and a
+# bump of it once broke every rebuild), one for every other input.
 #
 # PRs opened with the default GITHUB_TOKEN don't trigger other workflows,
-# so check.yml would not run on them. Add a fine-grained token for this
-# repo (Contents + Pull requests: read and write) as the FLAKE_UPDATE_TOKEN
-# secret to have CI run on the PR; without it, run check.yml on the
-# branch by hand (Actions → fresh-install test → Run workflow).
+# so the PRs are opened with FLAKE_UPDATE_TOKEN: a fine-grained token for
+# this repo (Contents + Pull requests: read and write). The job fails
+# without it rather than open a PR CI never checks.
 
 on:
   schedule:
     - cron: "17 4 * * 1" # Mondays 04:17 UTC
   workflow_dispatch:
 
+# The token above does the writing; the job's own token only reads.
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   update:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: inputs
+            branch: update_flake_lock_action
+            title: "flake: update inputs"
+          - group: nix-homebrew
+            branch: update_flake_lock_nix_homebrew
+            title: "flake: update nix-homebrew"
+    name: update (${{ matrix.group }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Require FLAKE_UPDATE_TOKEN
+        env:
+          TOKEN: ${{ secrets.FLAKE_UPDATE_TOKEN }}
+        run: |
+          [ -n "$TOKEN" ] || { echo "::error::FLAKE_UPDATE_TOKEN isn't set (docs/ci.md)"; exit 1; }
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install Nix
         uses: cachix/install-nix-action@448cde739abec1eaf0646249e3d25bb8d9bc7702 # v31.11.2
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Pick the inputs
+        id: pick
+        env:
+          GROUP: ${{ matrix.group }}
+        run: |
+          if [ "$GROUP" = nix-homebrew ]; then
+            echo "inputs=nix-homebrew" >>"$GITHUB_OUTPUT"
+          else
+            echo "inputs=$(jq -r '.nodes.root.inputs | keys - ["nix-homebrew"] | join(" ")' nix/flake.lock)" >>"$GITHUB_OUTPUT"
+          fi
+
       - name: Update flake.lock and open a PR
         uses: DeterminateSystems/update-flake-lock@da03c0f078bc4b2c37ee4f7e072d34bf8f188bb3 # v29
         with:
           path-to-flake-dir: nix
-          token: ${{ secrets.FLAKE_UPDATE_TOKEN || secrets.GITHUB_TOKEN }}
-          pr-title: "flake: update inputs"
-          commit-msg: "flake: update inputs"
+          inputs: ${{ steps.pick.outputs.inputs }}
+          branch: ${{ matrix.branch }}
+          token: ${{ secrets.FLAKE_UPDATE_TOKEN }}
+          pr-title: ${{ matrix.title }}
+          commit-msg: ${{ matrix.title }}

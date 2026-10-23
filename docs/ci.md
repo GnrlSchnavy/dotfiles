@@ -69,17 +69,16 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
 ## Scheduled jobs
 
 - [`update-flake-lock.yml`](../.github/workflows/update-flake-lock.yml)
-  opens a `flake: update inputs` PR every Monday (or on demand from the
-  Actions tab), so the inputs don't fall behind. It needs one of two
-  repo settings, or the PR is never opened (the job fails with "GitHub
-  Actions is not permitted to create or approve pull requests"):
-  - a fine-grained token for this repo (Contents + Pull requests: read
-    and write) as the `FLAKE_UPDATE_TOKEN` secret — preferred, since
-    PRs opened with it also get CI;
-  - or Settings → Actions → General → "Allow GitHub Actions to create
-    and approve pull requests"; the PR then opens with the default
-    token, which doesn't trigger `check.yml`, so run it on the branch
-    by hand.
+  opens two PRs every Monday (or on demand: Actions → update flake.lock
+  → Run workflow, or `gh workflow run update-flake-lock.yml`), so the
+  inputs don't fall behind: `flake: update nix-homebrew` on its own (one
+  maintainer, its activation runs as root, and a bump of it once broke
+  every rebuild) and `flake: update inputs` for the rest. Read the
+  nix-homebrew one before merging. Both are opened with
+  `FLAKE_UPDATE_TOKEN`, a fine-grained token for this repo (Contents +
+  Pull requests: read and write), so `check.yml` runs on them; the job
+  fails without it, and when it expires (renew it, same secret name).
+  The job's own token is read-only.
 - [Dependabot](../.github/dependabot.yml) proposes updates for the
   GitHub Actions, which are pinned to commit SHAs (the version is in the
   trailing comment).
