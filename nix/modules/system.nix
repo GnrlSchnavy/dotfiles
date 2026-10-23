@@ -26,12 +26,8 @@
     };
 
     # Login window configuration
-    loginwindow = {
-      # Lost-device contact. This repo is public, so no phone number here;
-      # the address is already public as the git identity.
-      LoginwindowText = "Yvan Stemmerik · yvanstemmerik@gmail.com";
-      GuestEnabled = false;
-    };
+    # Lost-device text: per host (nix/hosts/m5), not on the client Mac.
+    loginwindow.GuestEnabled = false;
 
     # Window manager settings
     WindowManager.EnableStandardClickToShowDesktop = false;

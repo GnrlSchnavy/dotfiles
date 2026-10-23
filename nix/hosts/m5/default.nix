@@ -23,5 +23,9 @@
 
     # Declare the user so home-manager can read users.users.yvan.home.
     users.users.yvan.home = "/Users/yvan";
+
+    # Lost-device contact. This repo is public, so no phone number here;
+    # the address is already public as the git identity.
+    system.defaults.loginwindow.LoginwindowText = "Yvan Stemmerik · yvanstemmerik@gmail.com";
   };
 }
