@@ -83,6 +83,21 @@ a `/plugin` toggle on a declared plugin lasts until the next rebuild.
 `codemem-setup` installs codemem right away, for a machine that has only
 run `claude -p`.
 
+### Secrets Claude can't read
+
+`claude-code.nix` denies, on every host, reading what Claude never needs
+(`union`, so your own deny rules stay):
+
+| Path | Read tool, Grep, Glob | Bash sandbox |
+|---|---|---|
+| `~/.dotfiles-backups`, `~/.codemem`, `~/.zsh_history` | denied | denied |
+| `~/.ssh`, `~/.kube`, `~/.m2/settings.xml`, `~/.docker/config.json` | denied | readable: sandboxed git, kubectl and builds need them |
+| `.env`, `.env.local`, `.env.*.local` (any folder) | denied | readable |
+
+`.env.example` and committed `.env.<mode>` files stay readable. Outside
+the sandbox (an unsandboxed Bash command on the work Mac) only the Read
+tool rules apply.
+
 ## Personal profile
 
 [`nix/profiles/personal/claude.nix`](../nix/profiles/personal/claude.nix):

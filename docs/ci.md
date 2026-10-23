@@ -45,6 +45,7 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
      `~/.zshenv`, `~/.config/git/{config,ignore}`, `~/.ideavimrc`);
    - Claude Code: `~/.claude/settings.json` is a regular file with
      codemem declared (the merged keys); then per role —
+     - both: the secret read-denies are merged in;
      - `ci` (personal): the sandbox is enabled, writes only its own
        caches and reaches only the git SSH agent, `~/.codemem/personal`
        exists, and the vault path was filled into the skills;

@@ -58,6 +58,31 @@ in
       ".claude/commands".source = ../../system/.claude/commands;
     };
 
+    # Secrets Claude has no reason to read, on every host. The Read tool (and
+    # Grep/Glob) gets them all; the Bash sandbox only those its commands
+    # never need: sandboxed git reads ~/.ssh/config and known_hosts (no key
+    # files: those stay in Proton Pass), sandboxed kubectl ~/.kube, and builds
+    # ~/.m2/settings.xml. .env.example and committed .env.<mode> stay readable.
+    dotfiles.claude.settings.union = {
+      permissions.deny = [
+        "Read(~/.ssh/**)"
+        "Read(~/.kube/**)"
+        "Read(~/.dotfiles-backups/**)"
+        "Read(~/.codemem/**)"
+        "Read(~/.zsh_history)"
+        "Read(~/.m2/settings.xml)"
+        "Read(~/.docker/config.json)"
+        "Read(**/.env)"
+        "Read(**/.env.local)"
+        "Read(**/.env.*.local)"
+      ];
+      sandbox.filesystem.denyRead = [
+        "~/.dotfiles-backups"
+        "~/.codemem"
+        "~/.zsh_history"
+      ];
+    };
+
     home.activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       run ${mergeSettings}/bin/merge-claude-settings ${claudeDir}/settings.json ${json.generate "claude-owned.json" cfg.settings} ${claudeDir}/hooks/ ${../../system/.claude/settings.json}
     '';
