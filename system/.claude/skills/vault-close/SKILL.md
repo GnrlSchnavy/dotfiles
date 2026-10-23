@@ -1,7 +1,7 @@
 ---
 name: vault-close
 description: End of day processing — extracts action items from today, surfaces vault connections, identifies carry-forward items, and suggests what to link.
-allowed-tools: Bash Read Glob Grep
+allowed-tools: Read Glob Grep Bash(obsidian:*)
 ---
 
 # End of Day Review — /vault-close

@@ -2,7 +2,7 @@
 name: vault-trace
 description: Track how an idea or concept has evolved over time across the vault — builds a chronological map of its development.
 argument-hint: <concept to trace>
-allowed-tools: Bash Read Glob Grep
+allowed-tools: Read Glob Grep Bash(obsidian:*)
 ---
 
 # Idea Trace — /vault-trace

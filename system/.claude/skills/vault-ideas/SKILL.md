@@ -1,7 +1,7 @@
 ---
 name: vault-ideas
 description: Deep 30-day vault scan with cross-domain pattern detection and graph analysis to generate ideas across all domains — tools to build, things to write, conversations to have, systems to implement.
-allowed-tools: Bash Read Glob Grep
+allowed-tools: Read Glob Grep Bash(obsidian:*)
 ---
 
 # Idea Generation — /vault-ideas

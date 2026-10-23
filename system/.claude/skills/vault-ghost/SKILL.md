@@ -2,7 +2,7 @@
 name: vault-ghost
 description: Answer a question the way I would — builds a voice profile from the vault, writes in my voice, then evaluates fidelity.
 argument-hint: <question>
-allowed-tools: Bash Read Glob Grep
+allowed-tools: Read Glob Grep Bash(obsidian:*)
 ---
 
 # Ghost Writer — /vault-ghost

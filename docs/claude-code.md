@@ -184,7 +184,11 @@ pulled commits before applying them as root.
 [`nix/profiles/personal/vault.nix`](../nix/profiles/personal/vault.nix)
 links `system/.claude/skills/` (the `vault-*` Obsidian skills) with the
 vault path substituted for `@VAULT@`, and sets `OBSIDIAN_VAULT` for the
-`notes`/`note` shell functions. Personal only.
+`notes`/`note` shell functions. Personal only. Notes include web clippings,
+so the skills pre-approve only reading, the `obsidian` CLI and (for
+`vault-today` and `vault-graduate`) writing inside the vault; any other
+command still asks. `tests/skills.sh` fails on an unscoped Bash, Write or
+Edit.
 
 ## Work profile
 

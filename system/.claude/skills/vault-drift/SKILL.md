@@ -1,7 +1,7 @@
 ---
 name: vault-drift
 description: Compare my stated intentions against actual behavior over 30-60 days — surfaces what I'm avoiding and what's getting unplanned attention.
-allowed-tools: Bash Read Glob Grep
+allowed-tools: Read Glob Grep Bash(obsidian:*)
 ---
 
 # Drift Detection — /vault-drift
