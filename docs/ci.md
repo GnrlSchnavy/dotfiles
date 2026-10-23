@@ -32,14 +32,18 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    limits).
 2. **Use the `nix-community` cache** (`cachix-action`, `skipPush`) for
    nixvim/home-manager artifacts not on cache.nixos.org.
-3. **Run `./setup.sh` itself** with `DOTFILES_DIR` set to the checkout
-   and `DOTFILES_HOST` set to the job's host (`ci` or `ci-work`). Xcode CLT, Homebrew and Nix are already on
-   the runner, so it skips those installers; it moves
+3. **Move the runner's Homebrew aside** (`/opt/homebrew.runner`): it
+   isn't a git checkout, so nix-homebrew couldn't adopt it.
+4. **Run `./setup.sh` itself** with `DOTFILES_DIR` set to the checkout
+   and `DOTFILES_HOST` set to the job's host (`ci` or `ci-work`). It
+   installs Homebrew as on a new Mac, which nix-homebrew then takes
+   over; Xcode CLT and Nix are already on the runner, so it skips those
+   installers; it moves
    `/etc/nix/nix.conf`, `/etc/bashrc`, `/etc/zshrc` aside and applies
    the flake via `--inputs-from`. The GitHub token reaches the root
    `nix run` through `NIX_CONFIG` (setup.sh passes it through sudo),
    because the nix.conf that held it was just moved aside.
-4. **Smoke checks**: PATH is prepended with
+5. **Smoke checks**: PATH is prepended with
    `/run/current-system/sw/bin` and the per-user profile, then it
    asserts:
    - the home-manager symlinks exist (`~/.zshrc`, `~/.zprofile`,
@@ -113,8 +117,8 @@ and `../work/dock.nix`. Both take the runner setup in
 - `homebrew.casks = lib.mkForce [ ]` — casks are multi-GB and a few
   have DSL incompatibilities with the runner's Homebrew; brews alone
   exercise the brew-bundle path.
-- `homebrew.onActivation.cleanup = lib.mkForce "none"` — don't zap the
-  runner's pre-installed packages.
+- Homebrew is nix-homebrew's, cleanup `zap` included, as on the Macs:
+  the job moves the runner's own Homebrew aside first.
 - `homebrew.onActivation.upgrade = lib.mkForce false` — nothing to
   upgrade on a fresh runner; avoids unrelated upstream failures.
 - `username = "runner"`, home `/Users/runner`.
@@ -122,7 +126,11 @@ and `../work/dock.nix`. Both take the runner setup in
 ## What CI catches / misses
 
 Catches: Nix eval errors, package build failures, activation script
-errors, home-manager activation problems, brew formula issues.
+errors, home-manager activation problems, brew formula issues, and
+nix-homebrew's own `brew` (its launcher with the brew it pins): the
+smoke checks run it, and `tests/flake-lock.sh` fails if `brew-src` is
+overridden again, the mismatch that once broke every rebuild while CI
+stayed green.
 
 Misses:
 
@@ -131,11 +139,11 @@ Misses:
   major (now 27; moved off macOS 15 after a build that passed there
   failed on the Mac), but it's a fresh image: Keychain, existing
   Homebrew state and app security prompts only show up on the Mac.
-- **The `work` profile's activation** — the `work` host is evaluated
-  but never installed (its Claude Code setup needs DevAI and a Proton
-  Pass login), so `cc-work`, the gateway hooks and the work casks only
-  get exercised on the work Mac. `tests/gateway-check.sh` covers the
-  hook's logic.
+- **Anything behind a login** — `ci-work` installs the work profile, but
+  DevAI and Proton Pass aren't signed in, so `cc-work`, the gateway
+  check in a live session, the SSH agents and the `pass-cli` renders
+  only run on the Macs. `tests/gateway-check.sh` covers the hook's
+  logic.
 
 ## Maintenance couplings
 
