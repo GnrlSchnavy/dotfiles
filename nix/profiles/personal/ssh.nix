@@ -1,5 +1,6 @@
-# SSH on a personal Mac: keys from the Proton Pass vault SSH-personal
-# (docs/ssh.md). The public halves live in ./ssh/.
+# SSH on a personal Mac: the GitHub and GitLab keys in the Proton Pass vault
+# SSH-git, the homelab key in SSH-personal (docs/ssh.md). Claude's Bash
+# sandbox reaches only SSH-git's agent. The public halves live in ./ssh/.
 { lib, ... }:
 
 let
@@ -41,11 +42,18 @@ in
 {
   dotfiles.ssh = {
     vault = "SSH-personal";
+    gitVault = "SSH-git";
     hosts = {
       # GnrlSchnavy
-      "github.com".publicKey = ./ssh/github.pub;
+      "github.com" = {
+        publicKey = ./ssh/github.pub;
+        git = true;
+      };
       # yvanpersonal
-      "gitlab.com".publicKey = ./ssh/gitlab.pub;
+      "gitlab.com" = {
+        publicKey = ./ssh/gitlab.pub;
+        git = true;
+      };
     }
     // lib.mapAttrs' (
       name: box:

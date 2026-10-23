@@ -42,12 +42,7 @@ in
         "192.168.1.106:6443" # k3s API (kubectl/flux, via the sandbox proxy)
         "api.cloudflare.com" # wrangler
       ];
-      # The Docker engine (nix/profiles/dev/docker.nix).
-      network.allowUnixSockets = [
-        "${config.home.homeDirectory}/${config.services.colima.colimaHomeDir}/default/docker.sock"
-      ];
     };
-
     set = {
       # Forced on every rebuild: a failed sandboxed command may not be
       # retried outside the sandbox, so the boundary holds in auto mode too.
@@ -58,6 +53,13 @@ in
         # reaching a container's published ports. Without it only the sandbox
         # proxy is reachable on localhost.
         network.allowLocalBinding = true;
+        # The Docker engine (nix/profiles/dev/docker.nix). Its containers
+        # have their own network and write ~/projects: an accepted risk, as
+        # the sandbox holds no secrets. Owned outright, like sandbox-git.nix's
+        # socket, so a dropped socket leaves the sandbox.
+        network.allowUnixSockets = [
+          "${config.home.homeDirectory}/${config.services.colima.colimaHomeDir}/default/docker.sock"
+        ];
       };
       # Declared rather than installed by hand: the first interactive session
       # fetches any enabled plugin it doesn't have yet. false disables an

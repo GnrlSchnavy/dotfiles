@@ -111,7 +111,7 @@ descriptor; the flake adds them ahead of the host's own.
 | Profile | Used by | Adds |
 |---|---|---|
 | `dev` | every host | dev casks/brews, nixpkgs CLI basics, the Colima Docker engine |
-| `personal` | `m5`, `ci` | personal apps; SSH keys from Proton Pass (`SSH-personal`); Claude Code on Max, sandboxed, pushing through that agent; vault skills; codemem lane `personal` |
+| `personal` | `m5`, `ci` | personal apps; SSH keys from Proton Pass (`SSH-git`, `SSH-personal`); Claude Code on Max, sandboxed, pushing through the git-only agent; vault skills; codemem lane `personal` |
 | `work` | `work` | work apps; work git identity; Claude Code via DevAI only (`cc-work`), gateway check, Ahold overlay; codemem lane `work`; `cc-tooling` |
 
 A host takes `dev` plus **exactly one** of `personal` / `work`: they set
@@ -143,8 +143,8 @@ nix/
 │   │   ├── homebrew.nix   # personal apps (Proton, Signal, Slack, Steam, …)
 │   │   ├── packages.nix   # ansible, nmap, stripe-cli, feishin (pinned dmg)
 │   │   ├── claude.nix     # Claude Max: sandbox, plugins, DOTFILES_LINT_PATH, codemem lane
-│   │   ├── ssh.nix        # SSH vault SSH-personal: GitHub, GitLab, homelab (keys in ssh/*.pub)
-│   │   ├── sandbox-git.nix # git push from the Bash sandbox via the Proton Pass agent
+│   │   ├── ssh.nix        # SSH vaults SSH-git (GitHub, GitLab) and SSH-personal (homelab); keys in ssh/*.pub
+│   │   ├── sandbox-git.nix # git push from the Bash sandbox via the git-only agent
 │   │   ├── kube.nix       # homelab: kube-render, sealed-secrets-backup/-keys; daily launchd agent
 │   │   ├── ansible.nix    # Ansible vault password from Proton Pass (ANSIBLE_VAULT_PASSWORD_FILE)
 │   │   ├── hass.nix       # `hass`: hass-cli with the Home Assistant url/token from Proton Pass
@@ -177,7 +177,7 @@ nix/
 │   ├── git.nix            # programs.git; personal identity as mkDefault; dotfiles clones
 │   ├── files.nix          # file-pointer dotfiles (.ideavimrc)
 │   ├── secrets.nix        # pass-get / pass-render / pass-check (Proton Pass)
-│   ├── ssh.nix            # dotfiles.ssh.{vault,hosts}; Proton Pass SSH agent, ~/.ssh/config
+│   ├── ssh.nix            # dotfiles.ssh.{vault,gitVault,hosts}; Proton Pass SSH agents, ~/.ssh/config
 │   ├── claude-code.nix    # dotfiles.claude.{settings,instructions}; settings merge; agents/commands links
 │   ├── codemem.nix        # dotfiles.codemem.{lane,observer}; observer config, lane dir, plugin
 │   └── backup.nix         # launchd agent: scripts/backup.sh weekly (Mondays 12:00)

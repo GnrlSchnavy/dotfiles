@@ -138,20 +138,24 @@ plain `ssh` in the sandbox:
   in `$HTTP_PROXY` and `127.0.0.1` (the proxy refuses `localhost`).
   Outside the sandbox `git` is untouched. Only `git` typed in Bash gets
   this, not a git run from inside another program.
-- **Only fixed-path sockets.** The sandbox allows unix sockets by path.
-  The keys come from the Proton Pass SSH agent ([docs/ssh.md](ssh.md)),
-  whose socket is fixed (`~/.ssh/proton-pass-agent.sock`), so the
-  sandbox allows exactly that one and `~/.ssh/config` already points
-  `github.com` at it. No key files, no passphrases.
+- **Only fixed-path sockets, git keys only.** The sandbox allows unix
+  sockets by path. It gets the git agent's
+  (`~/.ssh/proton-pass-git-agent.sock`, vault `SSH-git`,
+  [docs/ssh.md](ssh.md)), which `~/.ssh/config` already uses for
+  `github.com` and `gitlab.com`; the homelab key's agent isn't allowed.
+  The socket list is owned outright (`set`), so a rebuild removes any
+  socket the config no longer names. No key files, no passphrases.
 
 Check it from a session with
-`SSH_AUTH_SOCK=~/.ssh/proton-pass-agent.sock ssh-add -l` and
+`SSH_AUTH_SOCK=~/.ssh/proton-pass-git-agent.sock ssh-add -l` and
 `git ls-remote origin`. Not covered: `gh` (HTTPS API) and HTTPS remotes;
 `git.nix` rewrites `https://github.com` to SSH anyway.
 
-The trade-off: sandboxed commands can use **every key loaded in the
-agent** for any SSH host the allowlist lets through (today only
-`github.com`), and push to any repo those keys can write to.
+The trade-off: sandboxed commands can use the GitHub and GitLab keys for
+any SSH host the allowlist lets through (today only `github.com`), push
+to any repo those keys can write to, and sign commits. These dotfiles'
+`master` is protected by a ruleset (PR + green CI), and `update.sh` shows
+pulled commits before applying them as root.
 
 ### Vault skills
 
@@ -256,7 +260,10 @@ Testcontainers and Claude Code all use it.
   plugins.
 - **Personal sandbox** — `claude.nix` allows the socket in
   `sandbox.network.allowUnixSockets`, so sandboxed Claude can run
-  `docker`, `docker compose` and Testcontainers itself.
+  `docker`, `docker compose` and Testcontainers itself. Accepted risk:
+  containers have their own network (outside the sandbox's domain
+  allowlist) and can write `~/projects`, which is why the sandbox gets
+  no secrets to carry out (git-only SSH agent, read denies).
 
 Day to day: bind mounts outside `~/projects` (including `$TMPDIR`) come
 up empty inside containers; Testcontainers copies files over the API,
