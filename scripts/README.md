@@ -16,7 +16,9 @@ Pull the repo, refresh flake inputs, build, then switch — and commit
 ```
 
 It stops if the pull fails, and builds before switching: if the build
-fails nothing is applied and the previous `flake.lock` is restored. Roughly:
+fails nothing is applied and the previous `flake.lock` is restored. Pulled
+commits are applied as root, so it lists them (`git log --stat`) and asks
+first; answering no undoes the pull. Roughly:
 
 ```bash
 git pull --ff-only

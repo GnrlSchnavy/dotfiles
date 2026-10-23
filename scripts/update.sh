@@ -29,11 +29,26 @@ fi
 
 # Update Git repository
 print_step "Pulling latest from origin..."
+before="$(git rev-parse HEAD)"
 if git pull --ff-only origin "$(git branch --show-current)"; then
     print_success "Repository updated"
 else
     print_error "Pull failed (uncommitted changes? diverged from origin?) — fix that, then re-run"
     exit 1
+fi
+
+# What was pulled runs as root below, so it gets a look first. Declining
+# rewinds the pull: the next run shows the same commits again.
+if [ "$(git rev-parse HEAD)" != "$before" ]; then
+    print_step "New commits (applied as root below):"
+    git --no-pager log --stat --format='%n%C(yellow)%h%C(reset) %an, %ar: %s' "$before..HEAD"
+    echo
+    read -r -p "Apply these commits? [y/N] " answer || answer=""
+    if [ "$answer" != "y" ] && [ "$answer" != "Y" ]; then
+        git reset -q --keep "$before"
+        print_warning "Not applied; the pull was undone"
+        exit 1
+    fi
 fi
 
 # Update Nix flake inputs
