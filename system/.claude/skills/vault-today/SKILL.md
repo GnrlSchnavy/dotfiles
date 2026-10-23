@@ -1,7 +1,7 @@
 ---
 name: vault-today
 description: Morning review — reads recent daily notes, open tasks, and active projects to create a prioritized plan for the day. Creates today's daily note if it doesn't exist.
-allowed-tools: Bash Read Write Glob Grep
+allowed-tools: Read Write(/@VAULT@/**) Glob Grep Bash(obsidian:*)
 ---
 
 # Morning Review — /vault-today

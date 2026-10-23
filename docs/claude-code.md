@@ -83,6 +83,21 @@ a `/plugin` toggle on a declared plugin lasts until the next rebuild.
 `codemem-setup` installs codemem right away, for a machine that has only
 run `claude -p`.
 
+### Secrets Claude can't read
+
+`claude-code.nix` denies, on every host, reading what Claude never needs
+(`union`, so your own deny rules stay):
+
+| Path | Read tool, Grep, Glob | Bash sandbox |
+|---|---|---|
+| `~/.dotfiles-backups`, `~/.codemem`, `~/.zsh_history` | denied | denied |
+| `~/.ssh`, `~/.kube`, `~/.m2/settings.xml`, `~/.docker/config.json` | denied | readable: sandboxed git, kubectl and builds need them |
+| `.env`, `.env.local`, `.env.*.local` (any folder) | denied | readable |
+
+`.env.example` and committed `.env.<mode>` files stay readable. Outside
+the sandbox (an unsandboxed Bash command on the work Mac) only the Read
+tool rules apply.
+
 ## Personal profile
 
 [`nix/profiles/personal/claude.nix`](../nix/profiles/personal/claude.nix):
@@ -98,14 +113,21 @@ them off in `/sandbox` lasts until the next rebuild. Bash prompts stay
 as they were (`autoAllowBashIfSandboxed: false`, only written when
 unset).
 
-Sandboxed commands can write only to the project folder, `$TMPDIR`,
-`~/.m2`, `~/.gradle` and `~/.npm`, and reach without asking only Maven
-Central, Gradle, npm, the k3s API, the Cloudflare API and `github.com`
-(other hosts prompt per domain). Add more in `claude.nix`
-(`union.sandbox.filesystem.allowWrite`, `…network.allowedDomains`) or in
-`/sandbox` — your own entries survive rebuilds. The Docker socket
-([below](#docker-colima)) and the Proton Pass SSH agent's are the only unix
-sockets allowed; `network.allowLocalBinding: true` lets tests reach a
+Sandboxed commands can write only to the project folder, `$TMPDIR` and
+`~/.cache/claude-sandbox`, and reach without asking only Maven Central,
+Gradle, npm, the k3s API, the Cloudflare API and `github.com` (other
+hosts prompt per domain). Builds in the sandbox get their own npm,
+Gradle and Maven caches there (`~/.zshenv` sets `npm_config_cache`,
+`GRADLE_USER_HOME`, `MAVEN_USER_HOME` and `maven.repo.local` when
+`$SANDBOX_RUNTIME` is set): code the sandbox drops into `~/.m2`,
+`~/.gradle` or `~/.npm` would later run outside it, in your own builds,
+IntelliJ or codemem's `npx`. `~/.m2/settings.xml` and `~/.npmrc` are
+still read; `~/.gradle/gradle.properties` isn't. Add domains in
+`claude.nix` (`union.sandbox.network.allowedDomains`) or in `/sandbox` —
+your own entries survive rebuilds. Write paths and unix sockets are
+owned by `claude.nix` (`set`): a `/sandbox` change to them lasts until
+the next rebuild. The Docker socket ([below](#docker-colima)) and the git
+SSH agent's are the only unix sockets allowed; `network.allowLocalBinding: true` lets tests reach a
 container's published ports on `localhost` (otherwise Seatbelt only
 allows the sandbox proxy there). Known friction: Go CLIs such as `gh`
 don't work inside Seatbelt — run those yourself, or list them in
@@ -113,12 +135,12 @@ don't work inside Seatbelt — run those yourself, or list them in
 
 Commits in this repo run the lint pre-commit hook, which normally gets
 its tools from `nix develop` — unreachable from the sandbox (no Nix
-daemon socket). So `claude.nix` sets `DOTFILES_LINT_PATH` to the same
-tools (`nix/lint-tools.nix`), and `.githooks/pre-commit` puts them on
-`PATH` when `$SANDBOX_RUNTIME` is set: Claude's commits get the full
-lint, gitleaks included, before anything is pushed to this public repo.
-Without the variable (a session older than the rebuild) the hook skips
-with a warning and CI lints after the push.
+daemon socket). So `claude-code.nix` sets `DOTFILES_LINT_PATH` to the
+same tools (`nix/lint-tools.nix`) on every host, and `.githooks/pre-commit`
+puts them on `PATH` when `$SANDBOX_RUNTIME` is set: Claude's commits get
+the full lint, gitleaks on the staged changes included, before anything
+is pushed to this public repo. Without the variable (a session older than
+the rebuild) the hook refuses the commit; start a new session.
 
 ### Git push/pull from the sandbox
 
@@ -138,27 +160,35 @@ plain `ssh` in the sandbox:
   in `$HTTP_PROXY` and `127.0.0.1` (the proxy refuses `localhost`).
   Outside the sandbox `git` is untouched. Only `git` typed in Bash gets
   this, not a git run from inside another program.
-- **Only fixed-path sockets.** The sandbox allows unix sockets by path.
-  The keys come from the Proton Pass SSH agent ([docs/ssh.md](ssh.md)),
-  whose socket is fixed (`~/.ssh/proton-pass-agent.sock`), so the
-  sandbox allows exactly that one and `~/.ssh/config` already points
-  `github.com` at it. No key files, no passphrases.
+- **Only fixed-path sockets, git keys only.** The sandbox allows unix
+  sockets by path. It gets the git agent's
+  (`~/.ssh/proton-pass-git-agent.sock`, vault `SSH-git`,
+  [docs/ssh.md](ssh.md)), which `~/.ssh/config` already uses for
+  `github.com` and `gitlab.com`; the homelab key's agent isn't allowed.
+  The socket list is owned outright (`set`), so a rebuild removes any
+  socket the config no longer names. No key files, no passphrases.
 
 Check it from a session with
-`SSH_AUTH_SOCK=~/.ssh/proton-pass-agent.sock ssh-add -l` and
+`SSH_AUTH_SOCK=~/.ssh/proton-pass-git-agent.sock ssh-add -l` and
 `git ls-remote origin`. Not covered: `gh` (HTTPS API) and HTTPS remotes;
 `git.nix` rewrites `https://github.com` to SSH anyway.
 
-The trade-off: sandboxed commands can use **every key loaded in the
-agent** for any SSH host the allowlist lets through (today only
-`github.com`), and push to any repo those keys can write to.
+The trade-off: sandboxed commands can use the GitHub and GitLab keys for
+any SSH host the allowlist lets through (today only `github.com`), push
+to any repo those keys can write to, and sign commits. These dotfiles'
+`master` is protected by a ruleset (PR + green CI), and `update.sh` shows
+pulled commits before applying them as root.
 
 ### Vault skills
 
 [`nix/profiles/personal/vault.nix`](../nix/profiles/personal/vault.nix)
 links `system/.claude/skills/` (the `vault-*` Obsidian skills) with the
 vault path substituted for `@VAULT@`, and sets `OBSIDIAN_VAULT` for the
-`notes`/`note` shell functions. Personal only.
+`notes`/`note` shell functions. Personal only. Notes include web clippings,
+so the skills pre-approve only reading, the `obsidian` CLI and (for
+`vault-today` and `vault-graduate`) writing inside the vault; any other
+command still asks. `tests/skills.sh` fails on an unscoped Bash, Write or
+Edit.
 
 ## Work profile
 
@@ -256,7 +286,10 @@ Testcontainers and Claude Code all use it.
   plugins.
 - **Personal sandbox** — `claude.nix` allows the socket in
   `sandbox.network.allowUnixSockets`, so sandboxed Claude can run
-  `docker`, `docker compose` and Testcontainers itself.
+  `docker`, `docker compose` and Testcontainers itself. Accepted risk:
+  containers have their own network (outside the sandbox's domain
+  allowlist) and can write `~/projects`, which is why the sandbox gets
+  no secrets to carry out (git-only SSH agent, read denies).
 
 Day to day: bind mounts outside `~/projects` (including `$TMPDIR`) come
 up empty inside containers; Testcontainers copies files over the API,

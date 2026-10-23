@@ -16,7 +16,9 @@ Pull the repo, refresh flake inputs, build, then switch — and commit
 ```
 
 It stops if the pull fails, and builds before switching: if the build
-fails nothing is applied and the previous `flake.lock` is restored. Roughly:
+fails nothing is applied and the previous `flake.lock` is restored. Pulled
+commits are applied as root, so it lists them (`git log --stat`) and asks
+first; answering no undoes the pull. Roughly:
 
 ```bash
 git pull --ff-only
@@ -91,7 +93,8 @@ Homebrew API; CI runs it on every push. Needs nix, jq, curl.
 ## `lint.sh`
 
 nixfmt, statix, deadnix and shellcheck over the repo, plus a gitleaks
-scan of the working tree (the repo is public). Runs inside
+scan of the working tree (the repo is public); from the pre-commit hook
+also of the staged changes, in CI also of every commit. Runs inside
 `nix develop ./nix` on its own if the tools aren't on PATH.
 
 ```bash

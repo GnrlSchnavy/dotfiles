@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Repo lint: Nix formatting and lint, shell scripts, and a secrets scan of
-# the working tree (this repo is public). CI runs it, and so does the
-# pre-commit hook in .githooks/. Needs the tools from `nix develop ./nix`;
+# the working tree (this repo is public), plus what's staged when the
+# pre-commit hook in .githooks/ runs it and every commit when CI does. Needs the tools from `nix develop ./nix`;
 # without them it re-runs itself inside that shell.
 set -euo pipefail
 
@@ -36,5 +36,12 @@ run shellcheck -s bash -S error setup.sh scripts/*.sh
 
 step "gitleaks"
 run gitleaks dir . --no-banner --redact
+if [ -n "${DOTFILES_LINT_STAGED:-}" ]; then
+  run gitleaks git --pre-commit --staged --no-banner --redact .
+fi
+# A secret added and removed again within one push is still public.
+if [ -n "${CI:-}" ]; then
+  run gitleaks git --no-banner --redact .
+fi
 
 exit $status

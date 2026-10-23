@@ -4,13 +4,15 @@ Private SSH keys live **only in Proton Pass** — never as files in
 `~/.ssh`. On each Mac, `pass-cli ssh-agent` serves the keys of that
 Mac's vault on a fixed socket, `~/.ssh/proton-pass-agent.sock`, and
 `~/.ssh/config` (written by home-manager) sends each host to that agent
-with the right key.
+with the right key. m5 runs a second agent for its git-hosting keys
+(vault `SSH-git`, socket `~/.ssh/proton-pass-git-agent.sock`): the only
+one Claude Code's Bash sandbox may use.
 
 | Vault | Used by (profile) | Key (item title) | For |
 |---|---|---|---|
-| `SSH-personal` | `personal` (m5) | `GitHub personal` | GitHub `GnrlSchnavy` |
+| `SSH-git` | `personal` (m5) | `GitHub personal` | GitHub `GnrlSchnavy`; signs commits |
 | | | `GitLab personal` | GitLab `yvanpersonal` |
-| | | `Homelab` | `nas-1`, `node-1` … `node-5`, `ha` (Home Assistant) |
+| `SSH-personal` | `personal` (m5) | `Homelab` | `nas-1`, `node-1` … `node-5`, `ha` (Home Assistant) |
 | `SSH-work` | `work` (the client Mac) | `GitHub work` | GitHub `yvanstemmerik-ah` (`github.com`) |
 | | | `GitHub personal (work Mac)` | GitHub `GnrlSchnavy` (`github-personal`) |
 
@@ -22,6 +24,9 @@ Why it's split like this:
 - **One key per account per Mac:** the work Mac has its own key for your
   personal GitHub account, so you can revoke that Mac alone (GitHub →
   Settings → SSH keys) without touching m5.
+- **Git keys apart on m5:** Claude's sandbox needs a key to push, so it
+  gets an agent that holds only `SSH-git`'s keys. The homelab key
+  (`root` on Home Assistant) stays in `SSH-personal`, out of its reach.
 - **One key for the whole homelab:** a key identifies the *client* (this
   Mac), not the server, and every homelab box is reached from the same
   Mac through the same agent — separate keys per server would add work,
@@ -33,7 +38,7 @@ Why it's split like this:
 |---|---|
 | The agent (launchd, at login) and `~/.ssh/config` | [`nix/home/ssh.nix`](../nix/home/ssh.nix) — shared plumbing, no keys |
 | Vault, hosts and public keys, per profile | `nix/profiles/{personal,work}/ssh.nix` and `…/ssh/*.pub` |
-| Claude Code's sandbox pushing through the same agent | [`nix/profiles/personal/sandbox-git.nix`](../nix/profiles/personal/sandbox-git.nix) |
+| Claude Code's sandbox pushing through the git agent (`SSH-git` only) | [`nix/profiles/personal/sandbox-git.nix`](../nix/profiles/personal/sandbox-git.nix) |
 | Work Mac: every `GnrlSchnavy` repo (these dotfiles too) goes via `github-personal` | [`nix/profiles/work/ssh.nix`](../nix/profiles/work/ssh.nix) |
 | Commit signing with the same keys | [`nix/home/git.nix`](../nix/home/git.nix) ([below](#commit-signing)) |
 
@@ -66,14 +71,15 @@ Vaults and keys belong to your Proton account, so you can create the
 work Mac's keys from m5 too.
 
 ```bash
+pass-cli vault create --name SSH-git
 pass-cli vault create --name SSH-personal
 pass-cli vault create --name SSH-work
 
 # New keys, generated inside Proton Pass. No passphrase: the vault
 # already encrypts them.
-pass-cli item create ssh-key generate --vault-name SSH-personal \
+pass-cli item create ssh-key generate --vault-name SSH-git \
   --title "GitHub personal"
-pass-cli item create ssh-key generate --vault-name SSH-personal \
+pass-cli item create ssh-key generate --vault-name SSH-git \
   --title "GitLab personal"
 pass-cli item create ssh-key generate --vault-name SSH-personal \
   --title "Homelab"
@@ -92,7 +98,7 @@ Print each vault's public keys (only public keys — safe to copy) with a
 temporary agent:
 
 ```bash
-for v in SSH-personal SSH-work; do
+for v in SSH-git SSH-personal SSH-work; do
   sock="$TMPDIR/pp-$v.sock"
   pass-cli ssh-agent start --vault-name "$v" --socket-path "$sock" >/dev/null 2>&1 &
   sleep 5
@@ -145,6 +151,7 @@ Then:
 
 ```bash
 SSH_AUTH_SOCK=~/.ssh/proton-pass-agent.sock ssh-add -l   # the vault's keys
+SSH_AUTH_SOCK=~/.ssh/proton-pass-git-agent.sock ssh-add -l   # m5: SSH-git's keys
 ssh -T git@github.com              # m5: "Hi GnrlSchnavy!"   work Mac: "Hi yvanstemmerik-ah!"
 ssh -T git@github-personal         # work Mac only: "Hi GnrlSchnavy!"
 ssh nas-1 true                     # m5 only; likewise node-1 … node-5 and ha
@@ -154,6 +161,20 @@ ssh -T git@gitlab.com              # m5: "Welcome to GitLab, @yvanpersonal!"
 The first rebuild replaces a hand-written `~/.ssh/config` with the
 managed one (the old file is kept as `~/.ssh/config.hm-backup`); move
 any host you still need into `~/.ssh/config.local`.
+
+## Moving the git keys to `SSH-git` (m5, once)
+
+m5 used to keep all three keys in `SSH-personal`. To split them:
+
+1. In the Proton Pass app, create the vault **`SSH-git`**, then move
+   `GitHub personal` and `GitLab personal` into it (item → ⋯ → Move to
+   another vault). Move, don't copy: `SSH-personal` keeps only
+   `Homelab`.
+2. Rebuild, and restart the old agent so it drops the moved keys:
+   `launchctl kickstart -k gui/$(id -u)/org.nix-community.home.proton-pass-ssh-agent`.
+3. Check: `ssh-add -l` on each socket ([above](#applying-and-checking))
+   lists the git keys on the git agent and only `Homelab` on the other;
+   `ssh -T git@github.com`, `ssh nas-1 true` and a signed commit work.
 
 ## Removing the old key files
 
@@ -230,7 +251,7 @@ delete the branch.
 
 | Symptom | Check |
 |---|---|
-| `Permission denied (publickey)` | Is the agent up? `SSH_AUTH_SOCK=~/.ssh/proton-pass-agent.sock ssh-add -l`. If not: `tail ~/Library/Logs/proton-pass-ssh-agent.log` |
+| `Permission denied (publickey)` | Is the agent up? `SSH_AUTH_SOCK=~/.ssh/proton-pass-agent.sock ssh-add -l` (m5's git hosts: `proton-pass-git-agent.sock`). If not: `tail ~/Library/Logs/proton-pass-ssh-agent.log` (or `proton-pass-git-agent.log`) |
 | Log says not logged in / no session | `pass-cli login`, then `launchctl kickstart -k gui/$(id -u)/org.nix-community.home.proton-pass-ssh-agent` |
 | It broke right after a rebuild | A `pass-cli` upgrade hit the Keychain prompt: redo prerequisite 3 |
 | The agent lists no keys | Wrong vault name, or a key Proton can't use: `pass-cli ssh-agent debug --vault-name SSH-personal` |

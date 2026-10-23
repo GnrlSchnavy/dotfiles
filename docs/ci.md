@@ -7,8 +7,9 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    --all-systems ./nix` evaluates every host and the onboarding
    template (evaluation works
    cross-platform), [`scripts/lint.sh`](../scripts/lint.sh) in the
-   flake's dev shell (nixfmt, statix, deadnix, shellcheck, and a
-   gitleaks scan of the tree, since the repo is public),
+   flake's dev shell (nixfmt, statix, deadnix, shellcheck, and
+   gitleaks over the tree and every commit, since the repo is public: a
+   secret added and removed within one push is still in its history),
    [`scripts/check-brew.sh`](../scripts/check-brew.sh) (no cask or
    formula Homebrew has disabled — the fresh install drops casks, so it
    can't catch those), and
@@ -45,7 +46,9 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
      `~/.zshenv`, `~/.config/git/{config,ignore}`, `~/.ideavimrc`);
    - Claude Code: `~/.claude/settings.json` is a regular file with
      codemem declared (the merged keys); then per role —
-     - `ci` (personal): the sandbox is enabled, `~/.codemem/personal`
+     - both: the secret read-denies are merged in;
+     - `ci` (personal): the sandbox is enabled, writes only its own
+       caches and reaches only the git SSH agent, `~/.codemem/personal`
        exists, and the vault path was filled into the skills;
      - `ci-work` (work): the gateway-check hook is merged in and
        executable, `skipWebFetchPreflight` is set, `~/.codemem/work`
@@ -75,6 +78,24 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
 - [Dependabot](../.github/dependabot.yml) proposes updates for the
   GitHub Actions, which are pinned to commit SHAs (the version is in the
   trailing comment).
+
+## `master` is protected
+
+Both Macs apply `master` as root on their next update, so nothing lands
+there unchecked. A repository ruleset (Settings → Rules → Rulesets),
+named `master`, targets the default branch with:
+
+- **Require a pull request before merging**, 0 approvals (a one-person
+  repo): no direct pushes, not from you, a Claude session or the
+  lock-update token.
+- **Require status checks to pass**: `checks`, `fresh-install (ci)`,
+  `fresh-install (ci-work)`. The workflow has no path filters, so every
+  PR reports all three.
+- **Block force pushes** and **restrict deletions**.
+- No bypass list.
+
+Renaming a job or a matrix host renames its check: update the ruleset in
+the same PR, or nothing can merge.
 
 ## The `ci` and `ci-work` hosts (`nix/hosts/ci*/`)
 

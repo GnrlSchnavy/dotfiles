@@ -2,7 +2,7 @@
 name: vault-challenge
 description: Pressure test a belief or idea — uses the vault's own history to find contradictions, counter-evidence, and shifts in my thinking.
 argument-hint: <topic or belief>
-allowed-tools: Bash Read Glob Grep
+allowed-tools: Read Glob Grep Bash(obsidian:*)
 ---
 
 # Challenge Mode — /vault-challenge

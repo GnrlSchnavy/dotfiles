@@ -1,7 +1,7 @@
 ---
 name: vault-graduate
 description: Extract ideas, insights, and original thinking from daily notes and promote them into standalone notes in the vault.
-allowed-tools: Bash Read Write Glob Grep
+allowed-tools: Read Write(/@VAULT@/**) Glob Grep Bash(obsidian:*)
 ---
 
 # Idea Graduation — /vault-graduate

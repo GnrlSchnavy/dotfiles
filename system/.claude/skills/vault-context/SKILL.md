@@ -1,7 +1,7 @@
 ---
 name: vault-context
 description: Load full context about my life, work, and current state from my Obsidian vault. Reads context files, daily notes, MOCs, and follows backlinks to build a complete picture.
-allowed-tools: Bash Read Glob Grep
+allowed-tools: Read Glob Grep Bash(obsidian:*)
 ---
 
 # Vault Context Loader

@@ -1,7 +1,7 @@
 ---
 name: vault-emerge
 description: Surface ideas the vault implies but never states — finds conclusions from scattered premises, unnamed patterns, and unarticulated directions.
-allowed-tools: Bash Read Glob Grep
+allowed-tools: Read Glob Grep Bash(obsidian:*)
 ---
 
 # Emerge — /vault-emerge

@@ -153,7 +153,7 @@ reports a missing one.
 | `hass` (hass-cli for Home Assistant) | `Infra` → `Home Assistant` → `url`, `token` | [`nix/profiles/personal/hass.nix`](../nix/profiles/personal/hass.nix) |
 | `m2-render` (work Mac's `~/.m2/settings.xml`) | `Ahold` note `Maven settings.xml (backup)` (by title) | [`nix/profiles/work/maven.nix`](../nix/profiles/work/maven.nix) |
 | Project `.env` files | `pass://Dev/<Project>/<field>`, resolved by `pass-cli run` | the project (see [below](#project-env-files)) |
-| SSH keys (served by `pass-cli ssh-agent`, not read through `pass://`) | vaults `SSH-personal`, `SSH-work` | [`nix/home/ssh.nix`](../nix/home/ssh.nix), [docs/ssh.md](ssh.md) |
+| SSH keys (served by `pass-cli ssh-agent`, not read through `pass://`) | vaults `SSH-git`, `SSH-personal`, `SSH-work` | [`nix/home/ssh.nix`](../nix/home/ssh.nix), [docs/ssh.md](ssh.md) |
 | Per-client Claude Code profiles | `pass://<Client>/<Channel>/{api_key,proxy_url}` | [client-tooling.md](client-tooling.md) |
 
 The codemem observer entry is a raw `observer_auth_command` array

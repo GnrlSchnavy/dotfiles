@@ -20,6 +20,13 @@ let
   claudeDir = "${config.home.homeDirectory}/.claude";
   json = pkgs.formats.json { };
 
+  # The dotfiles' lint tools, for the pre-commit hook in the Bash sandbox,
+  # where `nix develop` can't run (.githooks/pre-commit).
+  lintTools = pkgs.buildEnv {
+    name = "dotfiles-lint-tools";
+    paths = import ../lint-tools.nix pkgs;
+  };
+
   mergeSettings = pkgs.writeShellApplication {
     name = "merge-claude-settings";
     runtimeInputs = [
@@ -56,6 +63,33 @@ in
       # Static, never rewritten by the app, so safe as read-only store links.
       ".claude/agents".source = ../../system/.claude/agents;
       ".claude/commands".source = ../../system/.claude/commands;
+    };
+
+    dotfiles.claude.settings.env.DOTFILES_LINT_PATH = "${lintTools}/bin";
+
+    # Secrets Claude has no reason to read, on every host. The Read tool (and
+    # Grep/Glob) gets them all; the Bash sandbox only those its commands
+    # never need: sandboxed git reads ~/.ssh/config and known_hosts (no key
+    # files: those stay in Proton Pass), sandboxed kubectl ~/.kube, and builds
+    # ~/.m2/settings.xml. .env.example and committed .env.<mode> stay readable.
+    dotfiles.claude.settings.union = {
+      permissions.deny = [
+        "Read(~/.ssh/**)"
+        "Read(~/.kube/**)"
+        "Read(~/.dotfiles-backups/**)"
+        "Read(~/.codemem/**)"
+        "Read(~/.zsh_history)"
+        "Read(~/.m2/settings.xml)"
+        "Read(~/.docker/config.json)"
+        "Read(**/.env)"
+        "Read(**/.env.local)"
+        "Read(**/.env.*.local)"
+      ];
+      sandbox.filesystem.denyRead = [
+        "~/.dotfiles-backups"
+        "~/.codemem"
+        "~/.zsh_history"
+      ];
     };
 
     home.activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

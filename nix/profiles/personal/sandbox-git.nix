@@ -1,9 +1,9 @@
 # Git push/pull from Claude Code's Bash sandbox.
 #
-# The sandbox only reaches unix sockets it allows by fixed path; the Proton
-# Pass SSH agent (nix/home/ssh.nix) has one, so the sandbox gets that socket
-# and git in the sandbox reaches github.com over SSH tunnelled through the
-# sandbox proxy.
+# The sandbox only reaches unix sockets it allows by fixed path. It gets the
+# git agent's (vault SSH-git, nix/home/ssh.nix), which holds only the GitHub
+# and GitLab keys, and git in the sandbox reaches github.com over SSH
+# tunnelled through the sandbox proxy. The homelab key's agent stays out.
 {
   config,
   lib,
@@ -12,7 +12,7 @@
 }:
 
 let
-  inherit (config.dotfiles.ssh) socket;
+  socket = config.dotfiles.ssh.gitSocket;
 
   # SSH command for git in sandboxed Bash: tunnels through the sandbox proxy
   # and uses the agent. Set per call by the git() function below, since the
@@ -26,9 +26,11 @@ let
   };
 in
 {
-  dotfiles.claude.settings.union.sandbox.network = {
-    allowedDomains = [ "github.com" ];
-    allowUnixSockets = [ socket ];
+  dotfiles.claude.settings = {
+    union.sandbox.network.allowedDomains = [ "github.com" ];
+    # Owned outright (set): a socket dropped from here leaves the sandbox on
+    # the next rebuild, where a union entry would stay forever.
+    set.sandbox.network.allowUnixSockets = [ socket ];
   };
 
   programs.zsh.initContent = lib.mkAfter ''

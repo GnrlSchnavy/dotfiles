@@ -2,7 +2,7 @@
 name: vault-connect
 description: Take two domains or concepts and connect them using the vault's content and link graph — find unexpected bridges between them.
 argument-hint: <domain1> <domain2>
-allowed-tools: Bash Read Glob Grep
+allowed-tools: Read Glob Grep Bash(obsidian:*)
 ---
 
 # Concept Connector — /vault-connect

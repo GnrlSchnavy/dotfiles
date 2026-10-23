@@ -158,9 +158,11 @@ shared default, nothing to override.
 
 ### SSH
 
-`ssh.nix`: keys from the Proton Pass vault `SSH-personal`
-([docs/ssh.md](ssh.md)) — GitHub (GnrlSchnavy), GitLab (yvanpersonal) and the homelab
-(`ssh nas-1`, `node-1` … `node-5`, `ha`). No key files on disk.
+`ssh.nix`: keys from Proton Pass ([docs/ssh.md](ssh.md)) — GitHub
+(GnrlSchnavy) and GitLab (yvanpersonal) from vault `SSH-git`, the homelab
+(`ssh nas-1`, `node-1` … `node-5`, `ha`) from `SSH-personal`, each served
+by its own agent; Claude's sandbox gets only the git one. No key files on
+disk.
 
 ### Homelab (k3s)
 

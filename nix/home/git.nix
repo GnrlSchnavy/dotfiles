@@ -36,7 +36,7 @@ let
   sshKeygen = pkgs.writeShellApplication {
     name = "git-ssh-keygen";
     runtimeInputs = [ pkgs.openssh ];
-    runtimeEnv.SSH_AUTH_SOCK = config.dotfiles.ssh.socket;
+    runtimeEnv.SSH_AUTH_SOCK = config.dotfiles.ssh.signingSocket;
     text = ''exec ssh-keygen "$@"'';
   };
 in

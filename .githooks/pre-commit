@@ -4,16 +4,16 @@
 # Skip once with `git commit --no-verify`.
 #
 # In Claude Code's Bash sandbox `nix develop` can't reach the Nix daemon, so
-# the personal profile provides the same tools on DOTFILES_LINT_PATH
-# (nix/profiles/personal/claude.nix). Without that (before a rebuild, say)
-# the hook skips with a warning and CI lints after the push.
+# claude-code.nix provides the same tools on DOTFILES_LINT_PATH. Without that
+# (a session older than the rebuild, say) the commit is refused: an unscanned
+# commit pushed to this public repo can't be taken back.
 if [ -n "${SANDBOX_RUNTIME:-}" ]; then
   if [ -d "${DOTFILES_LINT_PATH:-}" ]; then
     PATH="$DOTFILES_LINT_PATH:$PATH"
     export PATH
   else
-    echo "pre-commit: Claude sandbox without DOTFILES_LINT_PATH; skipping lint (CI runs it after the push)" >&2
-    exit 0
+    echo "pre-commit: no lint tools in this Claude sandbox (DOTFILES_LINT_PATH unset); start a new session after the rebuild" >&2
+    exit 1
   fi
 fi
-exec "$(git rev-parse --show-toplevel)/scripts/lint.sh"
+DOTFILES_LINT_STAGED=1 exec "$(git rev-parse --show-toplevel)/scripts/lint.sh"
