@@ -168,6 +168,8 @@ jobs:
           if [ ! -f "$s" ] || [ -L "$s" ]; then fail "$s is not a regular file"; fi
           jq -e '.enabledPlugins["codemem@codemem-marketplace"] == true' \
             "$s" >/dev/null || fail "$s doesn't declare the codemem plugin"
+          jq -e '.extraKnownMarketplaces["codemem-marketplace"].source.plugins[0].source.sha | test("^[0-9a-f]{40}$")' \
+            "$s" >/dev/null || fail "$s doesn't pin codemem's plugin to a commit"
           jq -e '(.permissions.deny | index("Read(~/.ssh/**)")) and (.sandbox.filesystem.denyRead | index("~/.codemem"))' \
             "$s" >/dev/null || fail "$s lacks the secret read-denies"
           jq -e '.sandbox.enabled == true and .sandbox.allowUnsandboxedCommands == false' \

@@ -48,7 +48,7 @@ in
       default = { };
       description = ''
         Keys Nix owns in ~/.claude/settings.json, grouped by how they merge:
-        env, union, hooks, default, set (see system/bin/merge-claude-settings.sh).
+        env, union, hooks, default, set, replace (see system/bin/merge-claude-settings.sh).
         Hooks are only managed under ~/.claude/hooks/.
       '';
     };

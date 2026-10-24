@@ -9,7 +9,9 @@
 #   hooks    hook entries whose command starts with the prefix are replaced;
 #            other hooks stay, even in the same matcher group
 #   default  written only where absent, nested keys included
-#   set      always written
+#   set      always written (objects merge into what's there)
+#   replace  a list of {path, value}: the value at that path is replaced
+#            outright, so keys it no longer has don't linger
 # A missing file starts from the seed (the reference snapshot). A file that
 # isn't valid JSON is moved aside and the merge starts from the seed, so a
 # half-written file never aborts the rebuild.
@@ -58,6 +60,7 @@ jq --slurpfile owned "$owned" --arg prefix "$prefix" --argjson prev "$prev" '
       | with_entries(select(.value | length > 0)))
   | (($o.default // {}) * .)
   | . * ($o.set // {})
+  | reduce ($o.replace // [])[] as $r (.; setpath($r.path; $r.value))
 ' "$file" >"$tmp"
 mv "$tmp" "$file"
 
