@@ -84,6 +84,8 @@ Not a profile: `nix/modules/` and `nix/home/` apply to every host.
 | Productivity | `alfred`, `obsidian`, `rectangle` |
 | Passwords | `proton-pass` (the app; `pass-cli` below reads the same vaults) |
 | Music | `spotify` |
+| Communication | `signal`, `slack`, `whatsapp` |
+| Networking | `tailscale-app` (the homelab, on a personal Mac) |
 | Dictation | `wispr-flow` (cloud transcription — dictated audio goes to Wispr's servers; on the client Mac too, by choice) |
 | Development | `intellij-idea`, `visual-studio-code`, `warp`, `claude` (desktop app), `claude-code` |
 
@@ -137,10 +139,9 @@ only Docker engine — there is no Docker Desktop.
 
 | Group | Apps |
 |---|---|
-| Communication | `discord`, `signal`, `slack`, `whatsapp` |
+| Communication | `discord` (Signal, Slack and WhatsApp are in `dev`) |
 | Media | `vlc`, `jellyfin-media-player`, Feishin (music; pinned dmg via Nix); Spotify is in `dev` |
 | Proton | `proton-drive`, `proton-mail`, `proton-mail-bridge`, `protonvpn` (Proton Pass is in `dev`) |
-| Networking | `tailscale-app` (homelab) |
 | Development | `t3-code` (T3 Code, a front end for Claude Code) |
 | Kubernetes | `lens` (homelab k3s; not on the work Mac) |
 | Browsers | `tor-browser` |
@@ -234,7 +235,8 @@ from Proton Pass.
 
 ### Apps (Homebrew casks)
 
-`slack`, `github-copilot-app`, `signal`, `whatsapp`, `tailscale-app`. No other personal apps.
+`github-copilot-app`; Slack, Signal, WhatsApp and Tailscale come from
+`dev`. No other personal apps.
 
 Outlook, Teams and the other Microsoft apps come preinstalled by the
 client's device management, so they aren't declared: brew refuses to

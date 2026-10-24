@@ -9,9 +9,6 @@
 
       # Communication
       "discord"
-      "signal"
-      "slack"
-      "whatsapp"
 
       # Media
       "jellyfin-media-player"
@@ -24,7 +21,6 @@
 
       # Networking
       "protonvpn"
-      "tailscale-app"
 
       # Dictation
       "handy"

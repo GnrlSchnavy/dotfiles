@@ -11,7 +11,7 @@ sudo darwin-rebuild switch --flake ~/.dotfiles/nix#<host> -v
 
 | Layer | Manages | Config lives in |
 |---|---|---|
-| **nix-darwin** | System: macOS defaults, dock, keyboard, launchd, system packages | `nix/modules/*.nix` (shared) + `nix/profiles/<role>/{packages,homebrew}.nix` (per role) + `nix/hosts/<name>/dock.nix` (per machine) |
+| **nix-darwin** | System: macOS defaults, dock, keyboard, launchd, system packages | `nix/modules/*.nix` (shared, Dock behaviour included) + `nix/profiles/<role>/{packages,homebrew}.nix` (per role) + `nix/hosts/<name>/dock.nix` (per machine: the Dock's apps) |
 | **home-manager** | User: `~/.zshrc`, `~/.config/git/*`, `~/.ideavimrc`, `~/.claude/*`, Colima, Claude Code launchers | `nix/home/*.nix` (shared) + `nix/profiles/<role>/*.nix` (per role) |
 | **nix-homebrew** | Homebrew itself + declared brews/casks/masApps | `nix/modules/homebrew.nix` (activation) + `nix/profiles/<role>/homebrew.nix` (lists) |
 
@@ -170,6 +170,7 @@ nix/
 │   ├── README.md
 │   ├── nix.nix            # nix daemon, gc (weekly, >30d), store optimise, allowUnfree
 │   ├── system.nix         # macOS defaults, caps-lock→escape, dark mode, finder
+│   ├── dock.nix           # Dock behaviour (hosts' dock.nix list the apps)
 │   ├── environment.nix    # EDITOR/VISUAL=nvim, kubectl aliases (k, kgp, kaf, …)
 │   ├── homebrew.nix       # homebrew.enable + onActivation (cleanup = "zap")
 │   └── homebrew-trust.nix # trust for the host's third-party formulae and casks

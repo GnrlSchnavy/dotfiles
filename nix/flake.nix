@@ -45,6 +45,7 @@
       sharedModules = [
         ./modules/nix.nix
         ./modules/system.nix
+        ./modules/dock.nix
         ./modules/environment.nix
         ./modules/homebrew.nix
       ];

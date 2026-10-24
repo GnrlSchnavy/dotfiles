@@ -22,6 +22,14 @@
       # Music
       "spotify"
 
+      # Communication
+      "signal"
+      "slack"
+      "whatsapp"
+
+      # Networking (the homelab on a personal Mac)
+      "tailscale-app"
+
       # Dictation (cloud transcription: audio goes to Wispr's servers)
       "wispr-flow"
 
