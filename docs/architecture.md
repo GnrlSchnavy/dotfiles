@@ -11,7 +11,7 @@ sudo darwin-rebuild switch --flake ~/.dotfiles/nix#<host> -v
 
 | Layer | Manages | Config lives in |
 |---|---|---|
-| **nix-darwin** | System: macOS defaults, dock, keyboard, launchd, system packages | `nix/modules/*.nix` (shared) + `nix/profiles/<role>/{packages,homebrew}.nix` (per role) + `nix/hosts/<name>/dock.nix` (per machine) |
+| **nix-darwin** | System: macOS defaults, dock, keyboard, launchd, system packages | `nix/modules/*.nix` (shared, Dock behaviour included) + `nix/profiles/<role>/{packages,homebrew}.nix` (per role) + `nix/hosts/<name>/dock.nix` (per machine: the Dock's apps) |
 | **home-manager** | User: `~/.zshrc`, `~/.config/git/*`, `~/.ideavimrc`, `~/.claude/*`, Colima, Claude Code launchers | `nix/home/*.nix` (shared) + `nix/profiles/<role>/*.nix` (per role) |
 | **nix-homebrew** | Homebrew itself + declared brews/casks/masApps | `nix/modules/homebrew.nix` (activation) + `nix/profiles/<role>/homebrew.nix` (lists) |
 
@@ -59,8 +59,9 @@ The `outputs` section defines:
   the host's inline `module` + the nvim package + nix-homebrew setup +
   home-manager (which imports `nix/home/` plus
   `hostModules "homeModules"`).
-- `hosts` attrset — registers `m5`, `work` and `ci`. Adding a host means
-  adding an entry here (see [hosts.md](hosts.md)).
+- `hosts` — every folder in `nix/hosts/` except `template` (today `m5`,
+  `work`, `ci`, `ci-work`), so adding a host is adding its folder (see
+  [hosts.md](hosts.md)); a descriptor's `hostname` must match its folder.
 - `checks` — every host's system, grouped by platform, plus the
   onboarding `template` (with m5's dock standing in for the one you'd
   copy). `nix flake check` ignores `darwinConfigurations` on its own, so
@@ -111,9 +112,9 @@ descriptor; the flake adds them ahead of the host's own.
 
 | Profile | Used by | Adds |
 |---|---|---|
-| `dev` | every host | dev casks/brews, nixpkgs CLI basics, the Colima Docker engine |
-| `personal` | `m5`, `ci` | personal apps; SSH keys from Proton Pass (`SSH-git`, `SSH-personal`); Claude Code on Max, sandboxed, pushing through the git-only agent; vault skills; codemem lane `personal` |
-| `work` | `work` | work apps; work git identity; Claude Code via DevAI only (`cc-work`), gateway check, Ahold overlay; codemem lane `work`; `cc-tooling` |
+| `dev` | every host | dev casks/brews (chat apps and Tailscale included), nixpkgs CLI basics, the Colima Docker engine |
+| `personal` | `m5`, `ci` | personal apps; the application firewall; SSH keys from Proton Pass (`SSH-git`, `SSH-personal`); Claude Code on Max, sandboxed, pushing through the git-only agent; vault skills; codemem lane `personal` |
+| `work` | `work`, `ci-work` | work apps; work git identity; Claude Code via DevAI only (`cc-work`), gateway check, Ahold overlay; codemem lane `work`; `cc-tooling` |
 
 A host takes `dev` plus **exactly one** of `personal` / `work`: they set
 the same options (codemem's lane, git identity), and client content must
@@ -169,6 +170,7 @@ nix/
 │   ├── README.md
 │   ├── nix.nix            # nix daemon, gc (weekly, >30d), store optimise, allowUnfree
 │   ├── system.nix         # macOS defaults, caps-lock→escape, dark mode, finder
+│   ├── dock.nix           # Dock behaviour (hosts' dock.nix list the apps)
 │   ├── environment.nix    # EDITOR/VISUAL=nvim, kubectl aliases (k, kgp, kaf, …)
 │   ├── homebrew.nix       # homebrew.enable + onActivation (cleanup = "zap")
 │   └── homebrew-trust.nix # trust for the host's third-party formulae and casks

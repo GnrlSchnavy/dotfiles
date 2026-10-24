@@ -1,3 +1,6 @@
+# work's Dock apps: Outlook and Teams come from the client's device
+# management, the rest from Homebrew casks. The Dock's behaviour is shared:
+# nix/modules/dock.nix.
 { ... }:
 
 let
@@ -5,30 +8,11 @@ let
   app = name: "/Applications/${name}.app";
 in
 {
-  system.defaults.dock = {
-    # Dock behavior
-    show-recents = false;
-    static-only = true;
-    minimize-to-application = true;
-    launchanim = false;
-    autohide = true;
-
-    # Dock appearance
-    orientation = "right";
-    tilesize = 36;
-    magnification = false;
-
-    # Dock timing
-    autohide-delay = 0.01;
-    autohide-time-modifier = 0.1;
-
-    # Persistent applications (all installed via Homebrew casks)
-    persistent-apps = map app [
-      "Brave Browser"
-      "Microsoft Outlook"
-      "Microsoft Teams"
-      "Slack"
-      "IntelliJ IDEA"
-    ];
-  };
+  system.defaults.dock.persistent-apps = map app [
+    "Brave Browser"
+    "Microsoft Outlook"
+    "Microsoft Teams"
+    "Slack"
+    "IntelliJ IDEA"
+  ];
 }

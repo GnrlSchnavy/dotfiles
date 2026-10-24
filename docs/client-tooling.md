@@ -171,8 +171,8 @@ Mirror [`nix/profiles/work/`](../nix/profiles/work/) (Ahold).
    `observer_base_url` and calls `api.anthropic.com` unless that env var is set.
 
 7. **Host** — the client's Mac gets a descriptor with
-   `profiles = [ "dev" "<client>" ]`, registered in `nix/flake.nix`
-   ([hosts.md](hosts.md#onboarding-a-new-mac)). Never add a client profile to
+   `profiles = [ "dev" "<client>" ]`, in its own `nix/hosts/<name>/`
+   folder ([hosts.md](hosts.md#onboarding-a-new-mac)). Never add a client profile to
    the personal Mac.
 
 8. `git add` the changed files and run `./setup.sh` (or `darwin-rebuild

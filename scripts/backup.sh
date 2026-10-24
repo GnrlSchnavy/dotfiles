@@ -106,11 +106,17 @@ Everything else (dotfiles, packages) comes from the repo: clone it and run
 setup.sh. \`dotfiles-commit.txt\` is the repo commit at backup time.
 EOF
 
+# Only the timestamped backups this script makes: anything else you keep in
+# ~/.dotfiles-backups is never counted or removed.
+backups() {
+    find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d \
+        -name '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]'
+}
 print_step "Pruning old backups (keeping the newest $BACKUP_KEEP)..."
-count=$(find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+count=$(backups | wc -l | tr -d ' ')
 excess=$((count - BACKUP_KEEP))
 if [ "$excess" -gt 0 ]; then
-    find "$BACKUP_ROOT" -mindepth 1 -maxdepth 1 -type d | sort | head -n "$excess" | while read -r old; do
+    backups | sort | head -n "$excess" | while read -r old; do
         rm -rf "$old"
         echo "  🗑  $(basename "$old")"
     done

@@ -58,14 +58,9 @@ cp -r nix/hosts/template "nix/hosts/$(scutil --get LocalHostName)"
 #    dock with: cp nix/hosts/m5/dock.nix nix/hosts/<your-hostname>/
 $EDITOR "nix/hosts/$(scutil --get LocalHostName)/default.nix"
 
-# 3. Register it in nix/flake.nix's `hosts` attrset:
-#    hosts = {
-#      m5 = import ./hosts/m5;
-#      <your-hostname> = import ./hosts/<your-hostname>;
-#    };
-
-# 4. Stage and commit (Nix flakes only see git-tracked files)
-git add nix/hosts/<your-hostname>/ nix/flake.nix
+# 3. Stage and commit (Nix flakes only see git-tracked files). No
+#    registration: nix/flake.nix picks up every folder in nix/hosts/.
+git add nix/hosts/<your-hostname>/
 git commit -m "host: add <your-hostname>"
 
 # Then run setup.
@@ -142,10 +137,12 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 │   ├── hosts/
 │   │   ├── m5/                ← personal Mac: descriptor (profiles) + dock
 │   │   ├── work/              ← client-issued Mac: descriptor + dock
-│   │   ├── ci/                ← CI runner descriptor (mirrors m5)
+│   │   ├── ci/                ← CI runner descriptor (mirrors m5) + runner.nix
+│   │   ├── ci-work/           ← CI runner descriptor (mirrors the work Mac)
 │   │   └── template/          ← copy this when adding a new host
 │   ├── modules/               ← shared nix-darwin (system-level) modules
 │   │   ├── system.nix         ← macOS defaults (keyboard, finder, login window), Touch ID sudo
+│   │   ├── dock.nix           ← Dock behaviour (each host's dock.nix lists its apps)
 │   │   ├── environment.nix    ← system-wide env vars and aliases
 │   │   ├── nix.nix            ← nix daemon config (gc, optimise, settings)
 │   │   ├── homebrew.nix       ← Homebrew on, onActivation (cleanup = "zap")
@@ -157,6 +154,8 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 │   │   ├── git.nix            ← git config, personal identity by default
 │   │   ├── files.nix          ← file-pointer dotfiles (.ideavimrc)
 │   │   ├── secrets.nix        ← Proton Pass helpers (pass-get, pass-render)
+│   │   ├── ssh.nix            ← Proton Pass SSH agents + ~/.ssh/config
+│   │   ├── backup.nix         ← weekly scripts/backup.sh (launchd)
 │   │   ├── claude-code.nix    ← Claude Code plumbing: settings merge, CLAUDE.md, agents
 │   │   └── codemem.nix        ← codemem lane + observer config
 │   └── nixvim/                ← neovim configuration as a nix module
@@ -180,23 +179,27 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 
 [`.github/workflows/check.yml`](.github/workflows/check.yml) first
 evaluates every host and runs `tests/run.sh` on Linux (~2 min), then
-runs the full bootstrap on a clean macOS 27 GitHub-hosted runner
-against the `ci` host descriptor. It catches:
+runs the full bootstrap on clean macOS 27 GitHub-hosted runners, once
+per role: the `ci` host (m5's profiles) and `ci-work` (the work Mac's),
+each rebuilt a second time over the fresh install. It catches:
 
 - Nix evaluation errors (typos, wrong types, missing imports)
 - Build failures in any package
 - Activation script errors
 - Home-manager activation issues
-- Brew bundle failures (formulas only — see caveats)
+- Brew bundle failures (formulas only — see caveats), through
+  nix-homebrew's own `brew` as on the Macs
 
-Runs ~10–15 min per push. The smoke check at the end verifies every
-managed symlink exists and key brew formulas are installed.
+Runs ~10–15 min per push and on every PR; `master` only takes PRs with
+all of it green ([docs/ci.md](docs/ci.md)). The smoke checks at the end
+verify the managed symlinks, key brew formulas, and the security
+settings (sandbox, read denies, firewall, pins).
 
 ### Caveats
 
 - **Casks aren't tested in CI.** A few have DSL incompatibilities
   with the runner image's Homebrew that don't reproduce on
-  real Macs. The CI host overrides `homebrew.casks = []`.
+  real Macs. The CI hosts override `homebrew.casks = []`.
 - **Same macOS major, not the same machine.** The runner is macOS 27 on
   Apple Silicon, like the real host, but it's a fresh image: anything
   that depends on local state (the Keychain, an existing Homebrew,

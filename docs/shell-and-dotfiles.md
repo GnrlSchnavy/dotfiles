@@ -80,8 +80,8 @@ pattern instead.
   each mapped to the IntelliJ action that does the same job. Uses the
   bundled surround, commentary and highlightedyank extensions; reload
   with `:source ~/.ideavimrc` or restart the IDE after a rebuild.
-- **macOS defaults** (keyboard, dock behavior, finder, animations):
-  `nix/modules/system.nix` (shared) and `nix/hosts/<name>/dock.nix`
-  (per-host dock apps). Dock apps must exist in `/Applications` — i.e.
+- **macOS defaults** (keyboard, finder, animations):
+  `nix/modules/system.nix`; dock behavior: `nix/modules/dock.nix` (both
+  shared); `nix/hosts/<name>/dock.nix` (per-host dock apps). Dock apps must exist in `/Applications` — i.e.
   be installed as casks by one of the host's profiles — or the dock
   entry shows a question mark.

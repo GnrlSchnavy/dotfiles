@@ -69,7 +69,9 @@ let
   };
 
   # Every backed-up key as one kubectl List on stdout, for a restore
-  # (`| kubectl apply -f -`) or kubeseal --recovery-private-key.
+  # (`| kubectl apply -f -`) or kubeseal --recovery-private-key. All or
+  # nothing: every note is read and checked before anything is printed, so a
+  # failed read can't hand kubectl a partial key set.
   sealedSecretsKeys = pkgs.writeShellApplication {
     name = "sealed-secrets-keys";
     runtimeInputs = [ pkgs.jq ];
@@ -80,9 +82,16 @@ let
         echo "sealed-secrets-keys: no Sealed Secrets keys in Infra" >&2
         exit 1
       fi
+      notes=()
       while IFS= read -r t; do
-        ${passCli} item view --vault-name Infra --item-title "$t" --field note
-      done <<<"$titles" | jq -s '{apiVersion: "v1", kind: "List", items: .}'
+        if ! note="$(${passCli} item view --vault-name Infra --item-title "$t" --field note)" ||
+          ! jq -e '.kind == "Secret" and (.data | length > 0)' >/dev/null 2>&1 <<<"$note"; then
+          echo "sealed-secrets-keys: couldn't read $t as a Secret; printing nothing" >&2
+          exit 1
+        fi
+        notes+=("$note")
+      done <<<"$titles"
+      printf '%s\n' "''${notes[@]}" | jq -s '{apiVersion: "v1", kind: "List", items: .}'
     '';
   };
 
