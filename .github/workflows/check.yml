@@ -8,7 +8,7 @@ name: fresh-install test
 # otherwise only discover by running setup on a fresh machine.
 #
 # The CI hosts skip casks (some have DSL incompatibilities specific
-# to the runner image) and disable homebrew zap/upgrade, keeping runs
+# to the runner image) and homebrew upgrades, keeping runs
 # to ~10-15 min while still exercising the full path. The runner is
 # macOS 27 on Apple Silicon, like the real host. GitHub now names macOS
 # images after their Xcode version, so the macOS 27 image is `xcode-27`
@@ -101,9 +101,17 @@ jobs:
           name: nix-community
           skipPush: true
 
-      # Third-party tap trust is handled declaratively during
-      # activation by nix/modules/homebrew-trust.nix — this run also
-      # serves as its end-to-end test.
+      # The runner's own Homebrew isn't a git checkout, so nix-homebrew
+      # can't adopt it. Moved aside, setup.sh installs Homebrew as on a new
+      # Mac and nix-homebrew takes it over: CI runs the same brew launcher
+      # and pinned brew as the Macs (a mismatch of the two once broke every
+      # rebuild while CI stayed green).
+      - name: Move the runner's Homebrew aside
+        run: sudo mv /opt/homebrew /opt/homebrew.runner
+
+      # Third-party formulae are trusted one by one during activation by
+      # nix/modules/homebrew-trust.nix — this run also serves as its
+      # end-to-end test.
       - name: Run setup.sh against the ${{ matrix.host }} host
         # The real bootstrap script on this checkout. Xcode CLT, Homebrew
         # and Nix are already on the runner, so it skips those installers,
@@ -116,6 +124,17 @@ jobs:
           DOTFILES_HOST: ${{ matrix.host }}
           NIX_CONFIG: access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
         run: ./setup.sh
+
+      # Real rebuilds go over an existing install, not a fresh one: switch
+      # again with the installed darwin-rebuild, as update.sh does. The smoke
+      # checks below then see the second activation's result.
+      - name: Rebuild over the install
+        env:
+          HOST: ${{ matrix.host }}
+          NIX_CONFIG: access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sudo --preserve-env=NIX_CONFIG /run/current-system/sw/bin/darwin-rebuild \
+            switch --flake "$GITHUB_WORKSPACE/nix#$HOST"
 
       - name: Verify activation produced the expected symlinks
         env:
@@ -149,6 +168,8 @@ jobs:
           if [ ! -f "$s" ] || [ -L "$s" ]; then fail "$s is not a regular file"; fi
           jq -e '.enabledPlugins["codemem@codemem-marketplace"] == true' \
             "$s" >/dev/null || fail "$s doesn't declare the codemem plugin"
+          jq -e '.extraKnownMarketplaces["codemem-marketplace"].source.plugins[0].source.sha | test("^[0-9a-f]{40}$")' \
+            "$s" >/dev/null || fail "$s doesn't pin codemem's plugin to a commit"
           jq -e '(.permissions.deny | index("Read(~/.ssh/**)")) and (.sandbox.filesystem.denyRead | index("~/.codemem"))' \
             "$s" >/dev/null || fail "$s lacks the secret read-denies"
           jq -e '.sandbox.enabled == true and .sandbox.allowUnsandboxedCommands == false' \
@@ -202,6 +223,14 @@ jobs:
           done
           compgen -G "$HOME/.dotfiles-backups/*/README.md" >/dev/null \
             || fail "the backup agent left no backup: $(cat ~/Library/Logs/dotfiles-backup.log 2>/dev/null)"
+
+          # Homebrew is nix-homebrew's (its launcher, linked from the store)
+          # and starts
+          case "$(readlink /opt/homebrew/bin/brew)" in
+            /nix/store/*) ;;
+            *) fail "/opt/homebrew/bin/brew isn't nix-homebrew's launcher" ;;
+          esac
+          brew --version | grep -q '^Homebrew ' || fail "brew doesn't start: $(brew --version 2>&1 | tail -3)"
 
           # Brew bundle should have left the declared formulas installed —
           # both from third-party taps, so this covers homebrew-trust.nix too

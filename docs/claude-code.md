@@ -55,8 +55,12 @@ the live file:
   are replaced; other hooks (plugins, your own) are kept, even in the
   same matcher group;
 - `default` — written only where absent (so `/model` etc. keep working);
-- `set` — always written (`enabledPlugins`, marketplaces, forced
-  sandbox flags).
+- `set` — always written, objects merged into what's there
+  (`enabledPlugins`, forced sandbox flags, the sandbox's write paths and
+  sockets);
+- `replace` — a list of `{ path, value }`: the value at that path is
+  written outright, so keys it no longer has don't linger (codemem's
+  marketplace).
 
 A missing file starts from the snapshot, so a fresh machine needs no
 manual step. A file that isn't valid JSON is moved to
@@ -343,6 +347,20 @@ Anthropic observer ignores `observer_base_url` and calls
 why `cc-work` and the gateway check insist on it. The extraction sweep
 runs in the viewer the MCP server auto-starts (~2 min after a session
 goes idle), so work extraction stays in the TechNL channel.
+
+**Pinned plugin, unpinned package.** The marketplace is declared inline
+(`replace`, so nothing of the old github source lingers), with the
+plugin's folder pinned to one upstream commit (`ref` + `sha`, today
+v0.46.3): its hooks and MCP launch command can't change until the pin
+is bumped in a PR. To bump, take a release tag's commit
+(`git ls-remote https://github.com/kunickiaj/codemem 'refs/tags/vX^{}'`)
+and update `ref` and `sha` together in `codemem.nix`. Still unpinned:
+those hooks and the MCP server run the codemem npm package with
+`npx -y`, so the package itself is npm's latest. If an existing install
+keeps loading codemem from the old github marketplace after the
+rebuild, remove it once (`claude plugin marketplace remove
+codemem-marketplace`; memories in `~/.codemem` stay) and start a
+session.
 
 **No secrets live in the repo.** The TechNL key and proxy URL are
 resolved at runtime via `pass-cli`, and paths use

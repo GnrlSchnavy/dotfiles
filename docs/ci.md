@@ -32,14 +32,23 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
    limits).
 2. **Use the `nix-community` cache** (`cachix-action`, `skipPush`) for
    nixvim/home-manager artifacts not on cache.nixos.org.
-3. **Run `./setup.sh` itself** with `DOTFILES_DIR` set to the checkout
-   and `DOTFILES_HOST` set to the job's host (`ci` or `ci-work`). Xcode CLT, Homebrew and Nix are already on
-   the runner, so it skips those installers; it moves
+3. **Move the runner's Homebrew aside** (`/opt/homebrew.runner`): it
+   isn't a git checkout, so nix-homebrew couldn't adopt it.
+4. **Run `./setup.sh` itself** with `DOTFILES_DIR` set to the checkout
+   and `DOTFILES_HOST` set to the job's host (`ci` or `ci-work`). It
+   installs Homebrew as on a new Mac, which nix-homebrew then takes
+   over; Xcode CLT and Nix are already on the runner, so it skips those
+   installers; it moves
    `/etc/nix/nix.conf`, `/etc/bashrc`, `/etc/zshrc` aside and applies
    the flake via `--inputs-from`. The GitHub token reaches the root
    `nix run` through `NIX_CONFIG` (setup.sh passes it through sudo),
    because the nix.conf that held it was just moved aside.
-4. **Smoke checks**: PATH is prepended with
+5. **Rebuild over the install**: a second `darwin-rebuild switch` with
+   the installed `darwin-rebuild`, since every real rebuild runs over an
+   existing install; activation steps that only break the second time
+   (a non-idempotent merge, a launchd reload, nix-homebrew's adopted
+   prefix) fail here.
+6. **Smoke checks**: PATH is prepended with
    `/run/current-system/sw/bin` and the per-user profile, then it
    asserts:
    - the home-manager symlinks exist (`~/.zshrc`, `~/.zprofile`,
@@ -65,17 +74,16 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
 ## Scheduled jobs
 
 - [`update-flake-lock.yml`](../.github/workflows/update-flake-lock.yml)
-  opens a `flake: update inputs` PR every Monday (or on demand from the
-  Actions tab), so the inputs don't fall behind. It needs one of two
-  repo settings, or the PR is never opened (the job fails with "GitHub
-  Actions is not permitted to create or approve pull requests"):
-  - a fine-grained token for this repo (Contents + Pull requests: read
-    and write) as the `FLAKE_UPDATE_TOKEN` secret — preferred, since
-    PRs opened with it also get CI;
-  - or Settings → Actions → General → "Allow GitHub Actions to create
-    and approve pull requests"; the PR then opens with the default
-    token, which doesn't trigger `check.yml`, so run it on the branch
-    by hand.
+  opens two PRs every Monday (or on demand: Actions → update flake.lock
+  → Run workflow, or `gh workflow run update-flake-lock.yml`), so the
+  inputs don't fall behind: `flake: update nix-homebrew` on its own (one
+  maintainer, its activation runs as root, and a bump of it once broke
+  every rebuild) and `flake: update inputs` for the rest. Read the
+  nix-homebrew one before merging. Both are opened with
+  `FLAKE_UPDATE_TOKEN`, a fine-grained token for this repo (Contents +
+  Pull requests: read and write), so `check.yml` runs on them; the job
+  fails without it, and when it expires (renew it, same secret name).
+  The job's own token is read-only.
 - [Dependabot](../.github/dependabot.yml) proposes updates for the
   GitHub Actions, which are pinned to commit SHAs (the version is in the
   trailing comment).
@@ -113,8 +121,8 @@ and `../work/dock.nix`. Both take the runner setup in
 - `homebrew.casks = lib.mkForce [ ]` — casks are multi-GB and a few
   have DSL incompatibilities with the runner's Homebrew; brews alone
   exercise the brew-bundle path.
-- `homebrew.onActivation.cleanup = lib.mkForce "none"` — don't zap the
-  runner's pre-installed packages.
+- Homebrew is nix-homebrew's, cleanup `zap` included, as on the Macs:
+  the job moves the runner's own Homebrew aside first.
 - `homebrew.onActivation.upgrade = lib.mkForce false` — nothing to
   upgrade on a fresh runner; avoids unrelated upstream failures.
 - `username = "runner"`, home `/Users/runner`.
@@ -122,7 +130,11 @@ and `../work/dock.nix`. Both take the runner setup in
 ## What CI catches / misses
 
 Catches: Nix eval errors, package build failures, activation script
-errors, home-manager activation problems, brew formula issues.
+errors, home-manager activation problems, brew formula issues, and
+nix-homebrew's own `brew` (its launcher with the brew it pins): the
+smoke checks run it, and `tests/flake-lock.sh` fails if `brew-src` is
+overridden again, the mismatch that once broke every rebuild while CI
+stayed green.
 
 Misses:
 
@@ -131,11 +143,11 @@ Misses:
   major (now 27; moved off macOS 15 after a build that passed there
   failed on the Mac), but it's a fresh image: Keychain, existing
   Homebrew state and app security prompts only show up on the Mac.
-- **The `work` profile's activation** — the `work` host is evaluated
-  but never installed (its Claude Code setup needs DevAI and a Proton
-  Pass login), so `cc-work`, the gateway hooks and the work casks only
-  get exercised on the work Mac. `tests/gateway-check.sh` covers the
-  hook's logic.
+- **Anything behind a login** — `ci-work` installs the work profile, but
+  DevAI and Proton Pass aren't signed in, so `cc-work`, the gateway
+  check in a live session, the SSH agents and the `pass-cli` renders
+  only run on the Macs. `tests/gateway-check.sh` covers the hook's
+  logic.
 
 ## Maintenance couplings
 

@@ -9,8 +9,9 @@
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
 
     # Its bin/brew launcher is written for the brew it pins (brew-src), so
-    # never override that pin with an older brew: 6.0.13 under the 7.0.4
-    # launcher dies with `key not found: "HOMEBREW_ORIGINAL_BREW_FILE"`.
+    # don't override that pin (6.0.13 under the 7.0.4 launcher died with
+    # `key not found: "HOMEBREW_ORIGINAL_BREW_FILE"`); for a newer brew,
+    # update nix-homebrew. tests/flake-lock.sh fails on an override.
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
 
     home-manager = {
@@ -46,7 +47,6 @@
         ./modules/system.nix
         ./modules/environment.nix
         ./modules/homebrew.nix
-        ./modules/homebrew-trust.nix
       ];
 
       # A host's modules of one kind ("systemModules" or "homeModules"): its
@@ -100,9 +100,8 @@
             ]
             # nix-homebrew installs/manages the Homebrew prefix itself.
             # Hosts can opt out (manageHomebrew = false) to use a
-            # pre-existing Homebrew install — the CI runner ships one in
-            # a layout nix-homebrew's autoMigrate can't adopt (not a git
-            # checkout). brew bundle still runs either way.
+            # pre-existing Homebrew install; brew bundle still runs either
+            # way. None do: CI moves the runner's own Homebrew aside.
             ++ inputs.nixpkgs.lib.optionals (host.manageHomebrew or true) [
               nix-homebrew.darwinModules.nix-homebrew
               {
@@ -115,6 +114,7 @@
                   autoMigrate = true;
                 };
               }
+              ./modules/homebrew-trust.nix
             ]
             ++ [
               home-manager.darwinModules.home-manager

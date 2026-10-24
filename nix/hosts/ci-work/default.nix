@@ -6,9 +6,6 @@
   hostname = "ci-work";
   username = "runner";
 
-  # The runner's own Homebrew, as for `ci`.
-  manageHomebrew = false;
-
   profiles = [
     "dev"
     "work"

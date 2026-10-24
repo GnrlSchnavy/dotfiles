@@ -126,10 +126,23 @@ else
     print_success "Homebrew already installed"
 fi
 
-# Install Nix package manager
+# Install Nix package manager: a pinned release, its installer checked
+# against the SHA-256 the release publishes (install.sha256 next to it); the
+# installer pins the tarball it downloads in turn. Bump the two together.
+NIX_VERSION=2.35.3
+NIX_INSTALLER_SHA256=69d0fe8fba8fe88f94c98b09964691ac9950abc7ecbf2ba861dc0533cfd901e9
 print_step "Installing Nix package manager..."
 if ! command -v nix &> /dev/null; then
-    sh <(curl -L https://nixos.org/nix/install) --daemon
+    nix_installer="$(mktemp)"
+    curl --proto '=https' --tlsv1.2 -fsSL -o "$nix_installer" \
+        "https://releases.nixos.org/nix/nix-$NIX_VERSION/install"
+    if ! echo "$NIX_INSTALLER_SHA256  $nix_installer" | shasum -a 256 -c - >/dev/null; then
+        print_error "The Nix $NIX_VERSION installer doesn't match its pinned SHA-256; not running it"
+        rm -f "$nix_installer"
+        exit 1
+    fi
+    sh "$nix_installer" --daemon
+    rm -f "$nix_installer"
 
     # Source Nix for current session
     if [ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then

@@ -63,6 +63,13 @@ jq '.env = {"A": "1"}' "$tmp/owned.json" >"$tmp/owned2.json"
 run "$tmp/owned2.json"
 q '.env == {"A":"1","MINE":"keep"}'; check $? "an env key Nix no longer owns is removed"
 
+# replace: the value at a path is written outright, stale keys gone.
+jq '.mk = {"m": {"source": {"source": "github", "repo": "o/r"}, "mine": 1}}' "$s" >"$tmp/edit" && mv "$tmp/edit" "$s"
+jq '.replace = [{"path": ["mk", "m"], "value": {"source": {"source": "settings", "name": "m"}}}]' "$tmp/owned2.json" >"$tmp/owned3.json"
+run "$tmp/owned3.json"
+q '.mk.m == {"source": {"source": "settings", "name": "m"}}'; check $? "replace writes the value outright"
+q '.env.A == "1" and .model == "sonnet"'; check $? "replace leaves other keys alone"
+
 printf '{"env": {' >"$s"
 run "$tmp/owned2.json"; check $? "invalid JSON doesn't fail the rebuild"
 q '.env.A == "1" and .effortLevel == "high"'; check $? "invalid file is replaced from the seed"

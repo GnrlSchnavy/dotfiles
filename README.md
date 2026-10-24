@@ -149,7 +149,7 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 │   │   ├── environment.nix    ← system-wide env vars and aliases
 │   │   ├── nix.nix            ← nix daemon config (gc, optimise, settings)
 │   │   ├── homebrew.nix       ← Homebrew on, onActivation (cleanup = "zap")
-│   │   └── homebrew-trust.nix ← brew trust for declared third-party taps
+│   │   └── homebrew-trust.nix ← trust for declared third-party formulae and casks
 │   ├── home/                  ← shared home-manager (user-level) modules
 │   │   ├── default.nix        ← entrypoint, imports submodules
 │   │   ├── zsh.nix            ← .zshrc / .zprofile / .zshenv content

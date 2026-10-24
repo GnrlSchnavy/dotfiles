@@ -60,20 +60,49 @@ in
         CODEMEM_CONFIG = "${config.xdg.configHome}/codemem/${lane}.json";
       };
       set = {
-        extraKnownMarketplaces.codemem-marketplace.source = {
-          source = "github";
-          repo = "kunickiaj/codemem";
-        };
         enabledPlugins."codemem@codemem-marketplace" = true;
       };
+      # The marketplace is declared inline so the plugin's files (hooks, MCP
+      # launch command) are pinned to one upstream commit: upstream can't
+      # change what runs here until this pin is bumped, in a PR. Not pinned:
+      # the codemem npm package those hooks fetch with `npx -y`
+      # (docs/claude-code.md#codemem-memory). To bump: a release tag's commit
+      # (`git ls-remote https://github.com/kunickiaj/codemem 'refs/tags/vX^{}'`),
+      # sha and ref together. Replaced outright, so no key of the old github
+      # source lingers.
+      replace = [
+        {
+          path = [
+            "extraKnownMarketplaces"
+            "codemem-marketplace"
+          ];
+          value.source = {
+            source = "settings";
+            name = "codemem-marketplace";
+            owner.name = "Adam Kunicki";
+            plugins = [
+              {
+                name = "codemem";
+                description = "Persistent memory for Claude Code.";
+                source = {
+                  source = "git-subdir";
+                  url = "kunickiaj/codemem";
+                  path = "plugins/claude";
+                  ref = "v0.46.3";
+                  sha = "80e3126486ad5f4e2e9157e74360645b97266a5a";
+                };
+              }
+            ];
+          };
+        }
+      ];
     };
 
     # Fallback only: installs the plugin right away (e.g. when only
-    # `claude -p` has run so far).
+    # `claude -p` has run so far), from the pinned marketplace above.
     programs.zsh.initContent = lib.mkAfter ''
       codemem-setup() {
-        claude plugin marketplace add kunickiaj/codemem &&
-          claude plugin install codemem@codemem-marketplace
+        claude plugin install codemem@codemem-marketplace
       }
     '';
   };

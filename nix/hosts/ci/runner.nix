@@ -16,10 +16,9 @@
   # We still run brew bundle so we exercise the activation path,
   # but tune the actual workload to what's safe and useful in CI.
 
-  # Don't zap the runner's pre-installed Homebrew packages — they
-  # aren't part of our config and removing them mid-CI would slow
-  # the run and could break other workflow steps that rely on them.
-  homebrew.onActivation.cleanup = lib.mkForce "none";
+  # cleanup stays "zap", as on the Macs: the runner's own Homebrew is
+  # moved aside before the install, so the prefix holds only what this
+  # config installed.
 
   # Skip auto-upgrade — fresh runners have nothing to upgrade and
   # this avoids unrelated upstream regressions failing our CI.

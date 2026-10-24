@@ -7,12 +7,9 @@
   hostname = "ci";
   username = "runner";
 
-  # Use the runner's pre-installed Homebrew instead of letting
-  # nix-homebrew install/migrate its own. Since the July 2026 runner
-  # images, /opt/homebrew is no longer a git checkout, so autoMigrate
-  # fails with "does not look like a Homebrew checkout". brew bundle
-  # (homebrew.*) still runs against the existing install.
-  manageHomebrew = false;
+  # Homebrew is nix-homebrew's, as on the Macs: CI moves the runner's own
+  # /opt/homebrew aside first (it isn't a git checkout, so autoMigrate
+  # can't adopt it), then setup.sh installs Homebrew as on a new Mac.
 
   # CI mirrors m5 (its profiles and its dock) so we exercise the real config
   # end-to-end. Casks are force-dropped in runner.nix; brews still run.
