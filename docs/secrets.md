@@ -254,6 +254,10 @@ sealed-secrets-keys | kubectl apply -f -
 kubectl -n sealed-secrets rollout restart deployment/sealed-secrets
 ```
 
+`sealed-secrets-keys` is all or nothing: it reads and checks every key
+note before printing, so a failed read prints nothing (and exits 1)
+rather than a partial key set for `kubectl apply`.
+
 ## Ansible vault password
 
 `ANSIBLE_VAULT_PASSWORD_FILE` (personal profile) points every
