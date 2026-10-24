@@ -203,6 +203,12 @@ jobs:
             *) fail "no smoke checks for host $HOST" ;;
           esac
 
+          # The agent-log rotation rule parses (newsyslog -n: a dry run)
+          rot=/etc/newsyslog.d/dotfiles.conf
+          [ -e "$rot" ] || fail "$rot is missing"
+          out="$(sudo newsyslog -nv -f "$rot" 2>&1)" || fail "newsyslog: $out"
+          if grep -qiE 'malformed|illegal|error' <<<"$out"; then fail "newsyslog: $out"; fi
+
           # darwin-rebuild ships in the system profile
           command -v darwin-rebuild >/dev/null || fail "darwin-rebuild not on PATH"
 

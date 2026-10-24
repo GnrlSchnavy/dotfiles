@@ -62,8 +62,9 @@ hold credentials):
 - Homebrew package lists, macOS / nix-darwin versions, the repo commit
 
 Managed dotfiles are skipped: a rebuild recreates them. The newest five
-backups are kept (`BACKUP_KEEP=10 ./scripts/backup.sh` keeps more). Each
-has a README with the restore commands.
+backups are kept (`BACKUP_KEEP=10 ./scripts/backup.sh` keeps more); only
+its own timestamped folders count, so anything else you put in
+`~/.dotfiles-backups` stays. Each has a README with the restore commands.
 
 ```bash
 ./scripts/backup.sh

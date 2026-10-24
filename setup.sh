@@ -192,7 +192,7 @@ fi
 if [ -L ~/.zshrc ]; then
     print_success "Shell config (~/.zshrc) managed by home-manager"
 else
-    print_warning "~/.zshrc is not a symlink — home-manager activation may have failed"
+    print_warning "$HOME/.zshrc is not a symlink — home-manager activation may have failed"
 fi
 
 if command -v brew &> /dev/null; then

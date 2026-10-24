@@ -1,6 +1,18 @@
-{ lib, ... }:
+{ config, lib, ... }:
 
+let
+  user = config.system.primaryUser;
+  inherit (config.users.users.${user}) home;
+in
 {
+  # The Proton Pass SSH agents (nix/home/ssh.nix) restart every minute while
+  # pass-cli is logged out, each time adding to their log. macOS's newsyslog
+  # rotates those logs at 1 MB and keeps three.
+  environment.etc."newsyslog.d/dotfiles.conf".text = ''
+    # logfilename  [owner:group]  mode  count  size(KB)  when  flags
+    ${home}/Library/Logs/proton-pass-*.log  ${user}:staff  600  3  1024  *  GN
+  '';
+
   # nix-darwin can't turn on disk encryption, so every rebuild says so while
   # FileVault is off.
   system.activationScripts.postActivation.text = lib.mkAfter ''

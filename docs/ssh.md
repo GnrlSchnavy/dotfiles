@@ -251,6 +251,7 @@ delete the branch.
 
 | Symptom | Check |
 |---|---|
+| A huge agent log | Only while logged out: the agent restarts every minute. newsyslog rotates `~/Library/Logs/proton-pass-*.log` at 1 MB, three kept (`nix/modules/system.nix`) |
 | `Permission denied (publickey)` | Is the agent up? `SSH_AUTH_SOCK=~/.ssh/proton-pass-agent.sock ssh-add -l` (m5's git hosts: `proton-pass-git-agent.sock`). If not: `tail ~/Library/Logs/proton-pass-ssh-agent.log` (or `proton-pass-git-agent.log`) |
 | Log says not logged in / no session | `pass-cli login`, then `launchctl kickstart -k gui/$(id -u)/org.nix-community.home.proton-pass-ssh-agent` |
 | It broke right after a rebuild | A `pass-cli` upgrade hit the Keychain prompt: redo prerequisite 3 |

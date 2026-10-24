@@ -20,7 +20,7 @@ echo
 print_section "Repository"
 if [ -d "$HOME/.dotfiles" ]; then
     cd "$HOME/.dotfiles" || exit 1
-    print_success "~/.dotfiles found"
+    print_success "$HOME/.dotfiles found"
 
     if git rev-parse --git-dir > /dev/null 2>&1; then
         print_success "git repo valid"
@@ -34,7 +34,7 @@ if [ -d "$HOME/.dotfiles" ]; then
         print_error "not a git repo"
     fi
 else
-    print_error "~/.dotfiles not found"
+    print_error "$HOME/.dotfiles not found"
     exit 1
 fi
 
