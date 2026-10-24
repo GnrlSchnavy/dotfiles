@@ -58,14 +58,9 @@ cp -r nix/hosts/template "nix/hosts/$(scutil --get LocalHostName)"
 #    dock with: cp nix/hosts/m5/dock.nix nix/hosts/<your-hostname>/
 $EDITOR "nix/hosts/$(scutil --get LocalHostName)/default.nix"
 
-# 3. Register it in nix/flake.nix's `hosts` attrset:
-#    hosts = {
-#      m5 = import ./hosts/m5;
-#      <your-hostname> = import ./hosts/<your-hostname>;
-#    };
-
-# 4. Stage and commit (Nix flakes only see git-tracked files)
-git add nix/hosts/<your-hostname>/ nix/flake.nix
+# 3. Stage and commit (Nix flakes only see git-tracked files). No
+#    registration: nix/flake.nix picks up every folder in nix/hosts/.
+git add nix/hosts/<your-hostname>/
 git commit -m "host: add <your-hostname>"
 
 # Then run setup.

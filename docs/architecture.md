@@ -59,8 +59,9 @@ The `outputs` section defines:
   the host's inline `module` + the nvim package + nix-homebrew setup +
   home-manager (which imports `nix/home/` plus
   `hostModules "homeModules"`).
-- `hosts` attrset — registers `m5`, `work` and `ci`. Adding a host means
-  adding an entry here (see [hosts.md](hosts.md)).
+- `hosts` — every folder in `nix/hosts/` except `template` (today `m5`,
+  `work`, `ci`, `ci-work`), so adding a host is adding its folder (see
+  [hosts.md](hosts.md)); a descriptor's `hostname` must match its folder.
 - `checks` — every host's system, grouped by platform, plus the
   onboarding `template` (with m5's dock standing in for the one you'd
   copy). `nix flake check` ignores `darwinConfigurations` on its own, so

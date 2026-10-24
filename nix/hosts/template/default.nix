@@ -4,13 +4,10 @@
 #   1. cp -r nix/hosts/template nix/hosts/<your-hostname>
 #   2. Pick its profiles below (nix/profiles/README.md) and seed a dock:
 #        cp nix/hosts/m5/dock.nix nix/hosts/<your-hostname>/
-#   3. Edit the values below (hostname, username, arch if Intel).
-#   4. Register it in nix/flake.nix under the hosts attrset:
-#        hosts = {
-#          m5 = import ./hosts/m5;
-#          <your-hostname> = import ./hosts/<your-hostname>;
-#        };
-#   5. git add nix/hosts/<your-hostname>/  (flakes only read git-tracked files)
+#   3. Edit the values below (hostname, username, arch if Intel). The
+#      hostname must match the folder name; nix/flake.nix finds the folder
+#      itself, no registration needed.
+#   4. git add nix/hosts/<your-hostname>/  (flakes only read git-tracked files)
 {
   # The flake host name. Use `scutil --get LocalHostName`, or install with
   # DOTFILES_HOST=<name> ./setup.sh when the hostname is managed.

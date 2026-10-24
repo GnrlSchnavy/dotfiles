@@ -141,17 +141,26 @@
             ];
         };
 
-      hosts = {
-        # Personal Mac.
-        m5 = import ./hosts/m5;
-        # Client-issued work Mac.
-        work = import ./hosts/work;
-        # CI fresh-install test targets on the GitHub Actions xcode-27
-        # (macOS 27) runner (user "runner", /Users/runner): m5's profiles,
-        # and the work Mac's. Not intended for use on a real machine.
-        ci = import ./hosts/ci;
-        ci-work = import ./hosts/ci-work;
-      };
+      # Every folder in hosts/ is a host (template is only a copy source),
+      # so onboarding needs no registration here. A descriptor's hostname
+      # must match its folder.
+      hosts =
+        inputs.nixpkgs.lib.mapAttrs
+          (
+            name: _:
+            let
+              host = import ./hosts/${name};
+            in
+            assert inputs.nixpkgs.lib.assertMsg (
+              host.hostname == name
+            ) "nix/hosts/${name}: hostname is \"${host.hostname}\"; it must match the folder, \"${name}\"";
+            host
+          )
+          (
+            inputs.nixpkgs.lib.filterAttrs (name: type: type == "directory" && name != "template") (
+              builtins.readDir ./hosts
+            )
+          );
 
       # The Mac, plus Linux for the CI runner.
       forAllSystems =

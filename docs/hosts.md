@@ -98,21 +98,15 @@ An issuer naming Zscaler means that host is intercepted.
 2. Edit `nix/hosts/<hostname>/default.nix`: replace every
    `REPLACE_ME_*` (hostname, username, the `users.users.<name>.home`
    line), pick the `profiles`, set `nixpkgs.hostPlatform`
-   (`aarch64-darwin` unless Intel). Prune `dock.nix`.
-3. Register in `nix/flake.nix`:
-   ```nix
-   hosts = {
-     m5 = import ./hosts/m5;
-     work = import ./hosts/work;
-     ci = import ./hosts/ci;
-     ci-work = import ./hosts/ci-work;
-     <hostname> = import ./hosts/<hostname>;
-   };
-   ```
-4. `git add nix/hosts/<hostname>/ nix/flake.nix && git commit` —
-   **flakes only read git-tracked files**; setup fails without this.
-5. On the new machine: clone and run `./setup.sh`. It detects the
-   hostname, verifies the descriptor exists, installs Homebrew + Nix,
+   (`aarch64-darwin` unless Intel). Prune `dock.nix`. The `hostname`
+   must match the folder name; `nix/flake.nix` registers every folder in
+   `nix/hosts/` (except `template`) by itself, and a mismatch fails
+   evaluation with a message naming both.
+3. `git add nix/hosts/<hostname>/` — **flakes only read git-tracked
+   files**; setup.sh refuses an untracked descriptor. Ship it with
+   `git commit` and `dotpr` (`master` only takes PRs).
+4. On the new machine: clone and run `./setup.sh`. It detects the
+   hostname, verifies the descriptor exists and is tracked, installs Homebrew + Nix,
    moves conflicting `/etc` files aside and bootstraps nix-darwin, which
    also creates `~/.claude/settings.json` from the repo snapshot.
 

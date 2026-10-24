@@ -83,10 +83,10 @@ else
 fi
 
 # Detect host and verify a host descriptor exists for it.
-# nix/hosts/<hostname>/default.nix must exist before running setup.
-# To onboard a new Mac, copy nix/hosts/template/ to nix/hosts/<your-hostname>/,
-# edit username/hostname, register it in nix/flake.nix's hosts attrset, and
-# commit before running this script.
+# nix/hosts/<hostname>/default.nix must exist, git-tracked, before running
+# setup. To onboard a new Mac, copy nix/hosts/template/ to
+# nix/hosts/<your-hostname>/, edit username/hostname and `git add` it;
+# nix/flake.nix picks up every folder in nix/hosts/ by itself.
 HOSTNAME="${DOTFILES_HOST:-$(scutil --get LocalHostName)}"
 HOST_DESCRIPTOR="$TARGET_DIR/nix/hosts/$HOSTNAME/default.nix"
 print_step "Detected hostname: $HOSTNAME"
@@ -97,13 +97,15 @@ if [ ! -f "$HOST_DESCRIPTOR" ]; then
     echo "Before running setup, create a host descriptor for this machine:"
     echo "  1. cp -r $TARGET_DIR/nix/hosts/template $TARGET_DIR/nix/hosts/$HOSTNAME"
     echo "  2. Edit $TARGET_DIR/nix/hosts/$HOSTNAME/default.nix — set username, etc."
-    echo "  3. Register it in $TARGET_DIR/nix/flake.nix under the hosts attrset:"
-    echo "       hosts = {"
-    echo "         m5 = import ./hosts/m5;"
-    echo "         $HOSTNAME = import ./hosts/$HOSTNAME;"
-    echo "       };"
-    echo "  4. git add the new files (nix flakes only see git-tracked content)"
-    echo "  5. Re-run ./setup.sh"
+    echo "  3. git add the new files (nix flakes only see git-tracked content)"
+    echo "  4. Re-run ./setup.sh"
+    exit 1
+fi
+# Untracked, the flake wouldn't see it and the rebuild would fail with a
+# cryptic "attribute missing" error further down.
+if ! git -C "$TARGET_DIR" ls-files --error-unmatch "nix/hosts/$HOSTNAME/default.nix" >/dev/null 2>&1; then
+    print_error "nix/hosts/$HOSTNAME/default.nix isn't tracked by git, so the flake can't see it"
+    echo "  git -C $TARGET_DIR add nix/hosts/$HOSTNAME/   then re-run ./setup.sh"
     exit 1
 fi
 print_success "Host descriptor found at $HOST_DESCRIPTOR"
