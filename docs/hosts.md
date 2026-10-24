@@ -11,9 +11,9 @@ descriptor lists (see [nix/profiles/README.md](../nix/profiles/README.md)):
 
 | Host | Machine | User | Profiles | Notes |
 |---|---|---|---|---|
-| `m5` | Apple Silicon Mac, personal | `yvan` | `dev`, `personal` | No client work. Claude Code on Claude Max |
+| `m5` | Apple Silicon Mac, personal | `yvan` | `dev`, `personal` | No client work. Claude Code on Claude Max. Its host module keeps automatic security updates on and Remote Login off, and sets the lock-screen contact text |
 | `work` | Client-issued Mac (Ahold), managed by the client's device management | `pnl1ln25` | `dev`, `work` | Its LocalHostName is a client asset tag, so it's selected with `DOTFILES_HOST=work` (see below). Claude Code only through DevAI/TechNL |
-| `ci` | GitHub Actions `xcode-27` (macOS 27) runner | `runner` | `dev`, `personal` | Fresh-install test target only. Mirrors m5 (its profiles and `../m5/dock.nix`) with the CI overrides in `runner.nix` (casks forced to `[]`, cleanup `none`, no upgrade). Never use on a real machine |
+| `ci` | GitHub Actions `xcode-27` (macOS 27) runner | `runner` | `dev`, `personal` | Fresh-install test target only. Mirrors m5 (its profiles and `../m5/dock.nix`) with the CI overrides in `runner.nix` (casks forced to `[]`, no upgrade; Homebrew is nix-homebrew's, zap included). Never use on a real machine |
 | `ci-work` | GitHub Actions `xcode-27` (macOS 27) runner | `runner` | `dev`, `work` | Same, for the work Mac: its profiles and `../work/dock.nix`, with `../ci/runner.nix`. Never use on a real machine |
 | `template` | — | — | `dev`, `personal` | Copy source for onboarding; placeholders `REPLACE_ME_*`. Not a host, but `nix flake check` evaluates it (with m5's dock), so a change that breaks onboarding fails CI |
 

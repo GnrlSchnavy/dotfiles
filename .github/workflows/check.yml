@@ -178,7 +178,10 @@ jobs:
             "$s" >/dev/null || fail "$s: the sandbox may write outside its own caches"
 
           case "$HOST" in
-            ci) # personal profile: Max with the Bash sandbox, vault skills
+            ci) # personal profile: Max with the Bash sandbox, vault skills, firewall
+              fw=/usr/libexec/ApplicationFirewall/socketfilterfw
+              sudo "$fw" --getglobalstate | grep -q enabled || fail "the application firewall is off"
+              sudo "$fw" --getstealthmode | grep -qiE 'enabled|is on' || fail "stealth mode is off"
               jq -e --arg g "$HOME/.ssh/proton-pass-git-agent.sock" --arg a "$HOME/.ssh/proton-pass-agent.sock" \
                 '.sandbox.network.allowUnixSockets | index($g) and (index($a) | not)' \
                 "$s" >/dev/null || fail "$s: the sandbox must get the git SSH agent only"
@@ -231,6 +234,7 @@ jobs:
             *) fail "/opt/homebrew/bin/brew isn't nix-homebrew's launcher" ;;
           esac
           brew --version | grep -q '^Homebrew ' || fail "brew doesn't start: $(brew --version 2>&1 | tail -3)"
+          grep -q 'HOMEBREW_NO_ANALYTICS' "$(readlink /opt/homebrew/bin/brew)" || fail "brew's launcher doesn't turn analytics off"
 
           # Brew bundle should have left the declared formulas installed —
           # both from third-party taps, so this covers homebrew-trust.nix too

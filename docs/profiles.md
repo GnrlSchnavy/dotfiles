@@ -36,13 +36,15 @@ Not a profile: `nix/modules/` and `nix/home/` apply to every host.
 
 - **macOS defaults** (`modules/system.nix`): Touch ID for sudo, caps
   lock → escape, dark mode, fast key repeat, no autocorrect/smart quotes,
-  Finder in column view with path bar, screen locks immediately, lock
-  screen shows a contact email, guest login off.
+  Finder in column view with path bar, screen locks immediately, guest
+  login off, and a rebuild warning while FileVault is off. (m5's lock
+  screen shows a contact email: its host module.)
 - **Homebrew policy** (`modules/homebrew.nix`): `cleanup = "zap"` — what
   isn't declared for the host is uninstalled on rebuild; brew
   auto-updates and upgrades on every rebuild. Formulae and casks from
   third-party taps are trusted one by one, automatically
-  (`modules/homebrew-trust.nix`).
+  (`modules/homebrew-trust.nix`). Homebrew analytics are off
+  (`HOMEBREW_NO_ANALYTICS`, set in nix-homebrew's `brew` launcher).
 - **Nix itself** (`modules/nix.nix`): unfree packages allowed, weekly
   garbage collection of generations older than 30 days, store dedup.
 - **Shell** (`home/zsh.nix`, `modules/environment.nix`): zsh with
@@ -151,6 +153,14 @@ only Docker engine — there is no Docker Desktop.
 From nixpkgs: `ansible`, `nmap`, `stripe-cli`, `glab` (GitLab). From Homebrew: `clamav`
 (brew keeps freshclam's config and signature database writable; the Nix
 build doesn't).
+
+### Firewall
+
+`firewall.nix`: the macOS application firewall, re-applied on every
+rebuild. Apple's own signed software may accept connections; any other
+app that listens (`java` running a dev server, Spotify, Steam) gets one
+macOS prompt, and Deny keeps it unreachable from the network (`localhost`
+is unaffected). Stealth mode on.
 
 ### Git
 

@@ -27,5 +27,17 @@
     # Lost-device contact. This repo is public, so no phone number here;
     # the address is already public as the git identity.
     system.defaults.loginwindow.LoginwindowText = "Yvan Stemmerik · yvanstemmerik@gmail.com";
+
+    # Security updates stay automatic (check, download, install security
+    # responses and system data files) and Remote Login (sshd) stays off,
+    # re-applied on every rebuild. The absolute domain writes the system
+    # file; a bare one would go to root's own preferences.
+    system.defaults.CustomSystemPreferences."/Library/Preferences/com.apple.SoftwareUpdate" = {
+      AutomaticCheckEnabled = true;
+      AutomaticDownload = true;
+      CriticalUpdateInstall = true;
+      ConfigDataInstall = true;
+    };
+    services.openssh.enable = false;
   };
 }

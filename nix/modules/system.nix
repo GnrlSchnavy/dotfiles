@@ -1,6 +1,14 @@
-{ ... }:
+{ lib, ... }:
 
 {
+  # nix-darwin can't turn on disk encryption, so every rebuild says so while
+  # FileVault is off.
+  system.activationScripts.postActivation.text = lib.mkAfter ''
+    if ! fdesetup isactive >/dev/null 2>&1; then
+      echo "warning: FileVault is off; turn it on in System Settings → Privacy & Security" >&2
+    fi
+  '';
+
   # Touch ID for sudo (every rebuild needs it). reattach lets it work inside
   # tmux too. Without a sensor, sudo just asks for the password.
   security.pam.services.sudo_local = {
