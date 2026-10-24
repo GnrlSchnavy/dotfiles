@@ -112,9 +112,9 @@ descriptor; the flake adds them ahead of the host's own.
 
 | Profile | Used by | Adds |
 |---|---|---|
-| `dev` | every host | dev casks/brews, nixpkgs CLI basics, the Colima Docker engine |
-| `personal` | `m5`, `ci` | personal apps; SSH keys from Proton Pass (`SSH-git`, `SSH-personal`); Claude Code on Max, sandboxed, pushing through the git-only agent; vault skills; codemem lane `personal` |
-| `work` | `work` | work apps; work git identity; Claude Code via DevAI only (`cc-work`), gateway check, Ahold overlay; codemem lane `work`; `cc-tooling` |
+| `dev` | every host | dev casks/brews (chat apps and Tailscale included), nixpkgs CLI basics, the Colima Docker engine |
+| `personal` | `m5`, `ci` | personal apps; the application firewall; SSH keys from Proton Pass (`SSH-git`, `SSH-personal`); Claude Code on Max, sandboxed, pushing through the git-only agent; vault skills; codemem lane `personal` |
+| `work` | `work`, `ci-work` | work apps; work git identity; Claude Code via DevAI only (`cc-work`), gateway check, Ahold overlay; codemem lane `work`; `cc-tooling` |
 
 A host takes `dev` plus **exactly one** of `personal` / `work`: they set
 the same options (codemem's lane, git identity), and client content must

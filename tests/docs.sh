@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Doc drift: the directory map in docs/architecture.md must match the nix/
 # tree, both ways — every module is in the map, every mapped path exists.
-# Also every profile is in nix/profiles/README.md's table, and every cask
-# and brew a profile declares is named in docs/profiles.md.
+# Also every profile is in nix/profiles/README.md's table, every cask and
+# brew a profile declares is named in docs/profiles.md, and README.md's
+# layout and docs/hosts.md's table name every host and shared module.
 set -u
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
@@ -72,6 +73,21 @@ for f in nix/profiles/*/homebrew.nix; do
 done
 if [ -z "$missing" ]; then pass "every profile app and brew is in docs/profiles.md"
 else fail "missing from docs/profiles.md:$missing"; fi
+
+# README's layout tree names every host folder and every shared module, and
+# docs/hosts.md's table has a row for every host folder.
+tree="$(awk '/^## Repository layout/ { on = 1; next } on && /^```/ { if (seen) exit; seen = 1; next } seen' README.md)"
+missing=""
+for d in nix/hosts/*/; do
+  name="$(basename "$d")"
+  grep -qF -- "── $name/" <<<"$tree" || missing="$missing $d"
+  grep -qF -- "| \`$name\` |" docs/hosts.md || missing="$missing docs/hosts.md:$name"
+done
+while IFS= read -r f; do
+  grep -qF -- "── $(basename "$f") " <<<"$tree" || missing="$missing $f"
+done < <(git ls-files 'nix/home/*.nix' 'nix/modules/*.nix')
+if [ -z "$missing" ]; then pass "README's layout and docs/hosts.md name every host and shared module"
+else fail "missing from README.md's layout or docs/hosts.md:$missing"; fi
 
 # Every profile is in the profiles README table.
 missing=""
