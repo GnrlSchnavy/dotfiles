@@ -57,7 +57,8 @@ on every push/PR to `master` (plus manual dispatch). Two jobs:
      codemem declared (the merged keys); then per role —
      - both: the secret read-denies are merged in, the sandbox is forced
        on and writes only its own caches;
-     - `ci` (personal): the sandbox reaches only the git SSH agent,
+     - `ci` (personal): the application firewall and stealth mode are
+       on, the sandbox reaches only the git SSH agent,
        `~/.codemem/personal`
        exists, and the vault path was filled into the skills;
      - `ci-work` (work): the gateway-check hook is merged in and

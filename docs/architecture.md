@@ -143,6 +143,7 @@ nix/
 │   │   ├── default.nix
 │   │   ├── homebrew.nix   # personal apps (Proton, Signal, Slack, Steam, …)
 │   │   ├── packages.nix   # ansible, nmap, stripe-cli, feishin (pinned dmg)
+│   │   ├── firewall.nix   # application firewall + stealth mode
 │   │   ├── claude.nix     # Claude Max: sandbox, plugins, DOTFILES_LINT_PATH, codemem lane
 │   │   ├── ssh.nix        # SSH vaults SSH-git (GitHub, GitLab) and SSH-personal (homelab); keys in ssh/*.pub
 │   │   ├── sandbox-git.nix # git push from the Bash sandbox via the git-only agent

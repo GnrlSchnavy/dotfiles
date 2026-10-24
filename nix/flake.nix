@@ -112,6 +112,9 @@
                   enableRosetta = false;
                   user = host.username;
                   autoMigrate = true;
+                  # Set in the brew launcher itself, so it holds for
+                  # activation and the shell alike.
+                  extraEnv.HOMEBREW_NO_ANALYTICS = "1";
                 };
               }
               ./modules/homebrew-trust.nix
