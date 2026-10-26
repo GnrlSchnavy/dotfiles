@@ -6,6 +6,10 @@
 # on the work Mac the one agent (vault SSH-work: its two GitHub keys only).
 # Git in the sandbox reaches github.com over SSH tunnelled through the
 # sandbox proxy.
+#
+# The sandbox can't read ~/.ssh, so ssh gets its own config from the store:
+# the hosts that agent serves, their public keys (to pick the key) and
+# GitHub's pinned host key.
 {
   config,
   lib,
@@ -14,7 +18,36 @@
 }:
 
 let
-  socket = config.dotfiles.ssh.signingSocket;
+  cfg = config.dotfiles.ssh;
+  socket = cfg.signingSocket;
+
+  # GitHub's published host key (docs.github.com, "GitHub's SSH key
+  # fingerprints"); github.com is the only SSH host the sandbox may reach.
+  knownHosts = pkgs.writeText "claude-git-known-hosts" ''
+    github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+  '';
+
+  # ~/.ssh/config's hosts whose key the sandbox's agent serves.
+  sshConfig = pkgs.writeText "claude-git-ssh-config" (
+    lib.concatStrings (
+      lib.mapAttrsToList (
+        name: h:
+        ''
+          Host ${name}
+            IdentityFile ${h.publicKey}
+            IdentitiesOnly yes
+        ''
+        + lib.optionalString (h.hostName != null) "  HostName ${h.hostName}\n"
+        + lib.optionalString (h.user != null) "  User ${h.user}\n"
+      ) (lib.filterAttrs (_: h: h.git || cfg.gitVault == null) cfg.hosts)
+    )
+    + ''
+      Host *
+        IdentityAgent ${socket}
+        UserKnownHostsFile ${knownHosts}
+        StrictHostKeyChecking yes
+    ''
+  );
 
   # SSH command for git in sandboxed Bash: tunnels through the sandbox proxy
   # and uses the agent. Set per call by the git() function below, since the
@@ -23,7 +56,10 @@ let
   claudeGitSsh = pkgs.writeShellApplication {
     name = "claude-git-ssh";
     runtimeInputs = [ pkgs.nmap ]; # ncat
-    runtimeEnv.CLAUDE_SSH_AGENT_SOCK = socket;
+    runtimeEnv = {
+      CLAUDE_SSH_AGENT_SOCK = socket;
+      CLAUDE_SSH_CONFIG = sshConfig;
+    };
     text = builtins.readFile ../../system/bin/claude-git-ssh.sh;
   };
 in

@@ -130,6 +130,11 @@ stop plain `ssh` in the sandbox:
   the two GitHub keys. The socket list is owned outright (`set`), so a
   rebuild removes any socket the config no longer names. No key files,
   no passphrases.
+- **No `~/.ssh`.** The sandbox can't read `~/.ssh` (config, known_hosts,
+  the `.pub` files), so `claude-git-ssh` runs `ssh -F` with a config
+  from the store: the hosts that agent serves (aliases such as
+  `github-personal` included), their public keys from the repo, and
+  GitHub's pinned host key (`StrictHostKeyChecking yes`).
 
 Check it from a session with `SSH_AUTH_SOCK=<that socket> ssh-add -l`
 and `git ls-remote origin`. Not covered: `gh` (HTTPS API) and HTTPS remotes;
