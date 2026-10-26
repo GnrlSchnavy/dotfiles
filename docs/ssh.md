@@ -6,7 +6,8 @@ Mac's vault on a fixed socket, `~/.ssh/proton-pass-agent.sock`, and
 `~/.ssh/config` (written by home-manager) sends each host to that agent
 with the right key. m5 runs a second agent for its git-hosting keys
 (vault `SSH-git`, socket `~/.ssh/proton-pass-git-agent.sock`): the only
-one Claude Code's Bash sandbox may use.
+one Claude Code's Bash sandbox may use. The work Mac's one vault holds
+only GitHub keys, so its sandbox uses that agent.
 
 | Vault | Used by (profile) | Key (item title) | For |
 |---|---|---|---|
@@ -38,7 +39,7 @@ Why it's split like this:
 |---|---|
 | The agent (launchd, at login) and `~/.ssh/config` | [`nix/home/ssh.nix`](../nix/home/ssh.nix) — shared plumbing, no keys |
 | Vault, hosts and public keys, per profile | `nix/profiles/{personal,work}/ssh.nix` and `…/ssh/*.pub` |
-| Claude Code's sandbox pushing through the git agent (`SSH-git` only) | [`nix/profiles/personal/sandbox-git.nix`](../nix/profiles/personal/sandbox-git.nix) |
+| Claude Code's sandbox pushing through the git keys' agent (m5: `SSH-git`; work: `SSH-work`) | [`nix/home/sandbox-git.nix`](../nix/home/sandbox-git.nix) |
 | Work Mac: every `GnrlSchnavy` repo (these dotfiles too) goes via `github-personal` | [`nix/profiles/work/ssh.nix`](../nix/profiles/work/ssh.nix) |
 | Commit signing with the same keys | [`nix/home/git.nix`](../nix/home/git.nix) ([below](#commit-signing)) |
 

@@ -102,6 +102,46 @@ run `claude -p`.
 the sandbox (an unsandboxed Bash command on the work Mac) only the Read
 tool rules apply.
 
+### Git push/pull from the sandbox
+
+[`nix/home/sandbox-git.nix`](../nix/home/sandbox-git.nix), on every
+host, lets Claude `git push`, `pull` and `fetch` over SSH. Two things
+stop plain `ssh` in the sandbox:
+
+- **No route out.** Sandboxed commands have no DNS and only reach the
+  sandbox proxy. The sandbox sets its own `GIT_SSH_COMMAND` (`nc -X 5`
+  to its SOCKS port) without credentials, so the proxy refuses it, and
+  it overwrites any `GIT_SSH_COMMAND` from the settings env. So a
+  `git()` shell function (reaching Bash through the shell snapshot)
+  sets `GIT_SSH_COMMAND` per call to `claude-git-ssh`
+  ([`system/bin/claude-git-ssh.sh`](../system/bin/claude-git-ssh.sh))
+  when `$SANDBOX_RUNTIME` is set. That adds a `ProxyCommand` tunnelling
+  through the HTTP proxy with `ncat`, using the per-command credentials
+  in `$HTTP_PROXY` and `127.0.0.1` (the proxy refuses `localhost`).
+  Outside the sandbox `git` is untouched. Only `git` typed in Bash gets
+  this, not a git run from inside another program.
+- **Only fixed-path sockets, git keys only.** The sandbox allows unix
+  sockets by path. It gets the agent git signs through
+  (`dotfiles.ssh.signingSocket`, [docs/ssh.md](ssh.md)), which
+  `~/.ssh/config` already uses for the git hosts. On m5 that's the git
+  agent (`~/.ssh/proton-pass-git-agent.sock`, vault `SSH-git`); the
+  homelab key's agent isn't allowed. On the work Mac it's the one agent
+  (`~/.ssh/proton-pass-agent.sock`, vault `SSH-work`), which holds only
+  the two GitHub keys. The socket list is owned outright (`set`), so a
+  rebuild removes any socket the config no longer names. No key files,
+  no passphrases.
+
+Check it from a session with `SSH_AUTH_SOCK=<that socket> ssh-add -l`
+and `git ls-remote origin`. Not covered: `gh` (HTTPS API) and HTTPS remotes;
+`git.nix` rewrites `https://github.com` to SSH anyway.
+
+The trade-off: sandboxed commands can use the agent's keys (m5: GitHub
+and GitLab; work: GitHub work and personal) for any SSH host the
+allowlist lets through (today only `github.com`), push to any repo those
+keys can write to, and sign commits. These dotfiles'
+`master` is protected by a ruleset (PR + green CI), and `update.sh` shows
+pulled commits before applying them as root.
+
 ## Personal profile
 
 [`nix/profiles/personal/claude.nix`](../nix/profiles/personal/claude.nix):
@@ -146,43 +186,6 @@ the full lint, gitleaks on the staged changes included, before anything
 is pushed to this public repo. Without the variable (a session older than
 the rebuild) the hook refuses the commit; start a new session.
 
-### Git push/pull from the sandbox
-
-[`nix/profiles/personal/sandbox-git.nix`](../nix/profiles/personal/sandbox-git.nix)
-lets Claude `git push`, `pull` and `fetch` over SSH. Two things stop
-plain `ssh` in the sandbox:
-
-- **No route out.** Sandboxed commands have no DNS and only reach the
-  sandbox proxy. The sandbox sets its own `GIT_SSH_COMMAND` (`nc -X 5`
-  to its SOCKS port) without credentials, so the proxy refuses it, and
-  it overwrites any `GIT_SSH_COMMAND` from the settings env. So a
-  `git()` shell function (reaching Bash through the shell snapshot)
-  sets `GIT_SSH_COMMAND` per call to `claude-git-ssh`
-  ([`system/bin/claude-git-ssh.sh`](../system/bin/claude-git-ssh.sh))
-  when `$SANDBOX_RUNTIME` is set. That adds a `ProxyCommand` tunnelling
-  through the HTTP proxy with `ncat`, using the per-command credentials
-  in `$HTTP_PROXY` and `127.0.0.1` (the proxy refuses `localhost`).
-  Outside the sandbox `git` is untouched. Only `git` typed in Bash gets
-  this, not a git run from inside another program.
-- **Only fixed-path sockets, git keys only.** The sandbox allows unix
-  sockets by path. It gets the git agent's
-  (`~/.ssh/proton-pass-git-agent.sock`, vault `SSH-git`,
-  [docs/ssh.md](ssh.md)), which `~/.ssh/config` already uses for
-  `github.com` and `gitlab.com`; the homelab key's agent isn't allowed.
-  The socket list is owned outright (`set`), so a rebuild removes any
-  socket the config no longer names. No key files, no passphrases.
-
-Check it from a session with
-`SSH_AUTH_SOCK=~/.ssh/proton-pass-git-agent.sock ssh-add -l` and
-`git ls-remote origin`. Not covered: `gh` (HTTPS API) and HTTPS remotes;
-`git.nix` rewrites `https://github.com` to SSH anyway.
-
-The trade-off: sandboxed commands can use the GitHub and GitLab keys for
-any SSH host the allowlist lets through (today only `github.com`), push
-to any repo those keys can write to, and sign commits. These dotfiles'
-`master` is protected by a ruleset (PR + green CI), and `update.sh` shows
-pulled commits before applying them as root.
-
 ### Vault skills
 
 [`nix/profiles/personal/vault.nix`](../nix/profiles/personal/vault.nix)
@@ -209,7 +212,8 @@ GitHub Packages token). Requires Claude Code CLI **>= 2.1.285** (the
 
 Bash runs in the sandbox here too, forced on every rebuild like on m5
 (`allowUnsandboxedCommands: false`; prompts unchanged), with the same
-sandbox-only build caches, read denies and Docker access. kubectl reaches
+sandbox-only build caches, read denies, Docker access and git over SSH
+([above](#git-pushpull-from-the-sandbox)). kubectl reaches
 the AKS clusters through a wildcard (`*.hcp.westeurope.azmk8s.io`), since
 the cluster hostnames are client identifiers; it matches any AKS API
 server, so add your exact hosts with `/sandbox` (they survive rebuilds)

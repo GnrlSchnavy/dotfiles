@@ -1,9 +1,11 @@
 # Git push/pull from Claude Code's Bash sandbox.
 #
 # The sandbox only reaches unix sockets it allows by fixed path. It gets the
-# git agent's (vault SSH-git, nix/home/ssh.nix), which holds only the GitHub
-# and GitLab keys, and git in the sandbox reaches github.com over SSH
-# tunnelled through the sandbox proxy. The homelab key's agent stays out.
+# agent git signs through (nix/home/ssh.nix): on m5 the git agent (vault
+# SSH-git: GitHub and GitLab keys only, the homelab key's agent stays out),
+# on the work Mac the one agent (vault SSH-work: its two GitHub keys only).
+# Git in the sandbox reaches github.com over SSH tunnelled through the
+# sandbox proxy.
 {
   config,
   lib,
@@ -12,7 +14,7 @@
 }:
 
 let
-  socket = config.dotfiles.ssh.gitSocket;
+  socket = config.dotfiles.ssh.signingSocket;
 
   # SSH command for git in sandboxed Bash: tunnels through the sandbox proxy
   # and uses the agent. Set per call by the git() function below, since the
@@ -22,7 +24,7 @@ let
     name = "claude-git-ssh";
     runtimeInputs = [ pkgs.nmap ]; # ncat
     runtimeEnv.CLAUDE_SSH_AGENT_SOCK = socket;
-    text = builtins.readFile ../../../system/bin/claude-git-ssh.sh;
+    text = builtins.readFile ../../system/bin/claude-git-ssh.sh;
   };
 in
 {
@@ -35,7 +37,7 @@ in
 
   programs.zsh.initContent = lib.mkAfter ''
     # Claude's Bash sandbox: git over SSH through the proxy and the Proton
-    # Pass agent (nix/profiles/personal/sandbox-git.nix). A no-op elsewhere.
+    # Pass agent (nix/home/sandbox-git.nix). A no-op elsewhere.
     git() {
       if [[ -n $SANDBOX_RUNTIME ]]; then
         GIT_SSH_COMMAND=${claudeGitSsh}/bin/claude-git-ssh command git "$@"

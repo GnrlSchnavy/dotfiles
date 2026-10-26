@@ -20,6 +20,7 @@
     ./claude-code.nix
     ./codemem.nix
     ./ssh.nix
+    ./sandbox-git.nix
     ./backup.nix
   ];
 
