@@ -194,6 +194,8 @@ jobs:
               jq -e --arg h "$hook" '[.hooks.PreToolUse[].hooks[].command] | index($h)' \
                 "$s" >/dev/null || fail "$s lacks the gateway-check hook"
               jq -e '.skipWebFetchPreflight == true' "$s" >/dev/null || fail "$s lacks skipWebFetchPreflight"
+              jq -e --arg a "$HOME/.ssh/proton-pass-agent.sock" '.sandbox.network.allowUnixSockets | index($a)' \
+                "$s" >/dev/null || fail "$s: the sandbox must get the SSH agent (SSH-work holds git keys only)"
               [ -d ~/.codemem/work ] || fail "codemem dir missing"
               grep -q 'cc-work()' ~/.zshrc || fail "cc-work isn't defined in ~/.zshrc"
               for tool in cc-tooling m2-render az kubelogin; do

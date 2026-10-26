@@ -147,7 +147,6 @@ nix/
 │   │   ├── firewall.nix   # application firewall + stealth mode
 │   │   ├── claude.nix     # Claude Max: sandbox, plugins, DOTFILES_LINT_PATH, codemem lane
 │   │   ├── ssh.nix        # SSH vaults SSH-git (GitHub, GitLab) and SSH-personal (homelab); keys in ssh/*.pub
-│   │   ├── sandbox-git.nix # git push from the Bash sandbox via the git-only agent
 │   │   ├── kube.nix       # homelab: kube-render, sealed-secrets-backup/-keys; daily launchd agent
 │   │   ├── ansible.nix    # Ansible vault password from Proton Pass (ANSIBLE_VAULT_PASSWORD_FILE)
 │   │   ├── hass.nix       # `hass`: hass-cli with the Home Assistant url/token from Proton Pass
@@ -182,6 +181,7 @@ nix/
 │   ├── files.nix          # file-pointer dotfiles (.ideavimrc)
 │   ├── secrets.nix        # pass-get / pass-render / pass-check (Proton Pass)
 │   ├── ssh.nix            # dotfiles.ssh.{vault,gitVault,hosts}; Proton Pass SSH agents, ~/.ssh/config
+│   ├── sandbox-git.nix    # git push/pull from the Bash sandbox via the git-keys agent
 │   ├── claude-code.nix    # dotfiles.claude.{settings,instructions}; settings merge; agents/commands links
 │   ├── codemem.nix        # dotfiles.codemem.{lane,observer}; observer config, lane dir, plugin
 │   └── backup.nix         # launchd agent: scripts/backup.sh weekly (Mondays 12:00)

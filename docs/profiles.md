@@ -68,6 +68,10 @@ Not a profile: `nix/modules/` and `nix/home/` apply to every host.
   `/flow-plan`, `/flow-review`, `/flow-close`, `/search-web`); the global
   `CLAUDE.md`; the settings merge that writes each profile's owned keys
   into `~/.claude/settings.json` on every rebuild.
+- **Git push and pull from Claude's sandbox** (`home/sandbox-git.nix`):
+  the sandbox reaches `github.com` and may use the SSH agent holding the
+  git keys (m5: `SSH-git`; work: `SSH-work`, GitHub keys only), and a
+  `git()` wrapper sends sandboxed git over SSH through the sandbox proxy.
 - **codemem plumbing** (`home/codemem.nix`): persistent memory for
   Claude Code; the profile picks the lane and how memories are extracted.
   `codemem-setup` installs the plugin immediately if a session hasn't yet.
@@ -205,9 +209,6 @@ server URL and token from `Infra/Home Assistant`, fetched per call
   and GitHub (SSH); the Colima socket (so Claude can run `docker` and
   Testcontainers); localhost binding (tests reaching published ports).
   Secrets it never needs are unreadable ([claude-code.md](claude-code.md#secrets-claude-cant-read)).
-- **Git push and pull from the sandbox** (`sandbox-git.nix`): the sandbox
-  may use the git SSH agent's socket (GitHub and GitLab keys only), and a
-  `git()` wrapper sends sandboxed git over SSH through the sandbox proxy.
 - **Plugins**: codemem, superpowers, frontend-design, context7,
   code-review, code-simplifier, skill-creator, playwright, feature-dev,
   kotlin-lsp (clangd-lsp and swift-lsp off). Fetched by the first
@@ -306,8 +307,8 @@ proxy and model routing.
   feature flags are off; WebFetch's preflight (which sends the hostname
   to Anthropic) is skipped.
 - **Bash sandbox, always on**, as on m5: its own build caches, the Colima
-  socket, the read denies; the AKS hosts above, other hosts prompt per
-  domain.
+  socket, the read denies, git over SSH to GitHub; the AKS hosts above,
+  other hosts prompt per domain.
 - **No extra plugins** — only codemem. Add plugins in `claude.nix` if
   you want them there.
 - **codemem**: lane `work` (`~/.codemem/work`), memories extracted

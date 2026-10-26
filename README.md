@@ -155,6 +155,7 @@ After any edit: `git add` the change (flakes need it staged) and rebuild.
 │   │   ├── files.nix          ← file-pointer dotfiles (.ideavimrc)
 │   │   ├── secrets.nix        ← Proton Pass helpers (pass-get, pass-render)
 │   │   ├── ssh.nix            ← Proton Pass SSH agents + ~/.ssh/config
+│   │   ├── sandbox-git.nix    ← git push/pull from Claude's Bash sandbox
 │   │   ├── backup.nix         ← weekly scripts/backup.sh (launchd)
 │   │   ├── claude-code.nix    ← Claude Code plumbing: settings merge, CLAUDE.md, agents
 │   │   └── codemem.nix        ← codemem lane + observer config
