@@ -37,6 +37,12 @@ let
       ip = "192.168.20.18";
       user = "root";
     };
+    # Offsite backup box (rest-server, template-flux ansible/offsite/),
+    # at another location: reachable only over the tailnet.
+    backup-1 = {
+      ip = "100.64.0.24";
+      user = "yvan";
+    };
   };
 in
 {
