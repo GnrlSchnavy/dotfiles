@@ -21,10 +21,12 @@ let
   cfg = config.dotfiles.ssh;
   socket = cfg.signingSocket;
 
-  # GitHub's published host key (docs.github.com, "GitHub's SSH key
-  # fingerprints"); github.com is the only SSH host the sandbox may reach.
+  # Published host keys (docs.github.com, "GitHub's SSH key fingerprints";
+  # docs.gitlab.com/user/gitlab_com). github.com is allowed below on every
+  # host; gitlab.com only where the profile allows it (personal claude.nix).
   knownHosts = pkgs.writeText "claude-git-known-hosts" ''
     github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+    gitlab.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAfuCHKVTjquxvt6CM6tdG4SLp1Btn/nOeHHE5UOzRdf
   '';
 
   # ~/.ssh/config's hosts whose key the sandbox's agent serves.

@@ -36,6 +36,8 @@
         "registry.npmjs.org"
         "192.168.1.106:6443" # k3s API (kubectl/flux, via the sandbox proxy)
         "api.cloudflare.com" # wrangler
+        "api.github.com" # gh
+        "gitlab.com" # glab's API, and git over SSH to GitLab
       ];
     };
     set = {
@@ -44,6 +46,13 @@
       sandbox = {
         enabled = true;
         allowUnsandboxedCommands = false;
+        # gh and glab are Go, and on macOS Go verifies TLS through trustd,
+        # which Seatbelt blocks (x509: OSStatus -26276). This opens
+        # com.apple.trustd.agent to every sandboxed command: a narrow
+        # exfiltration path, per Claude Code. Not sandbox.excludedCommands:
+        # `gh alias set --shell` and extensions would run arbitrary code
+        # outside the sandbox.
+        enableWeakerNetworkIsolation = true;
       };
       # Declared rather than installed by hand: the first interactive session
       # fetches any enabled plugin it doesn't have yet. false disables an
