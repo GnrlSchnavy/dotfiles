@@ -134,16 +134,19 @@ stop plain `ssh` in the sandbox:
   the `.pub` files), so `claude-git-ssh` runs `ssh -F` with a config
   from the store: the hosts that agent serves (aliases such as
   `github-personal` included), their public keys from the repo, and
-  GitHub's pinned host key (`StrictHostKeyChecking yes`).
+  GitHub's and GitLab's pinned host keys (`StrictHostKeyChecking yes`).
 
 Check it from a session with `SSH_AUTH_SOCK=<that socket> ssh-add -l`
-and `git ls-remote origin`. Not covered: `gh` (HTTPS API) and HTTPS remotes;
-`git.nix` rewrites `https://github.com` to SSH anyway.
+and `git ls-remote origin`. Not covered: HTTPS remotes; `git.nix`
+rewrites `https://github.com` to SSH anyway. `gh` and `glab` work on
+the personal profile ([Bash sandbox](#bash-sandbox)).
 
 The trade-off: sandboxed commands can use the agent's keys (m5: GitHub
 and GitLab; work: GitHub work and personal) for any SSH host the
-allowlist lets through (today only `github.com`), push to any repo those
-keys can write to, and sign commits. These dotfiles'
+allowlist lets through (`github.com`; on m5 also `gitlab.com`), push to
+any repo those keys can write to, and sign commits; on m5, through `gh`
+and `glab`, they can do whatever those logins can, merging PRs and
+deleting repos included. These dotfiles'
 `master` is protected by a ruleset (PR + green CI), and `update.sh` shows
 pulled commits before applying them as root.
 
@@ -164,8 +167,8 @@ unset).
 
 Sandboxed commands can write only to the project folder, `$TMPDIR` and
 `~/.cache/claude-sandbox`, and reach without asking only Maven Central,
-Gradle, npm, the k3s API, the Cloudflare API and `github.com` (other
-hosts prompt per domain). Builds in the sandbox get their own npm,
+Gradle, npm, the k3s API, the Cloudflare API, `github.com`,
+`api.github.com` and `gitlab.com` (other hosts prompt per domain). Builds in the sandbox get their own npm,
 Gradle and Maven caches there (`~/.zshenv` sets `npm_config_cache`,
 `GRADLE_USER_HOME`, `MAVEN_USER_HOME` and `maven.repo.local` when
 `$SANDBOX_RUNTIME` is set): code the sandbox drops into `~/.m2`,
@@ -178,9 +181,14 @@ owned by `claude.nix` (`set`): a `/sandbox` change to them lasts until
 the next rebuild. The Docker socket ([below](#docker-colima)) and the git
 SSH agent's are the only unix sockets allowed; `network.allowLocalBinding: true` lets tests reach a
 container's published ports on `localhost` (otherwise Seatbelt only
-allows the sandbox proxy there). Known friction: Go CLIs such as `gh`
-don't work inside Seatbelt — run those yourself, or list them in
-`sandbox.excludedCommands` (fully unsandboxed).
+allows the sandbox proxy there). `gh` and `glab` work with the tokens
+they already hold. They are Go, which verifies TLS through macOS's
+trustd, and Seatbelt blocks that (`x509: OSStatus -26276`), so
+`sandbox.enableWeakerNetworkIsolation: true` opens
+`com.apple.trustd.agent` to sandboxed commands: a narrow exfiltration
+path by Claude Code's own account. Not `sandbox.excludedCommands`
+instead: `gh alias set --shell` and extensions would then run arbitrary
+code fully unsandboxed.
 
 Commits in this repo run the lint pre-commit hook, which normally gets
 its tools from `nix develop` — unreachable from the sandbox (no Nix

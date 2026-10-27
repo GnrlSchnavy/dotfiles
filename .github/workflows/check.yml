@@ -185,6 +185,8 @@ jobs:
               jq -e --arg g "$HOME/.ssh/proton-pass-git-agent.sock" --arg a "$HOME/.ssh/proton-pass-agent.sock" \
                 '.sandbox.network.allowUnixSockets | index($g) and (index($a) | not)' \
                 "$s" >/dev/null || fail "$s: the sandbox must get the git SSH agent only"
+              jq -e '.sandbox.enableWeakerNetworkIsolation == true' \
+                "$s" >/dev/null || fail "$s: gh and glab can't verify TLS in the sandbox"
               [ -d ~/.codemem/personal ] || fail "codemem dir missing"
               if grep -rq '@VAULT@' ~/.claude/skills/; then fail "vault path not filled in the skills"; fi
               ;;
