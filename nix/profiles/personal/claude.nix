@@ -53,6 +53,11 @@
         # `gh alias set --shell` and extensions would run arbitrary code
         # outside the sandbox.
         enableWeakerNetworkIsolation = true;
+        # kubectl/flux in Bash (the API is allowed above). Claude Code also
+        # applies the Read(~/.kube/**) deny (claude-code.nix) to the sandbox;
+        # this re-allows it there only. The Read tool stays denied. Owned
+        # outright (set), so the path leaves when this line does.
+        filesystem.allowRead = [ "~/.kube" ];
       };
       # Declared rather than installed by hand: the first interactive session
       # fetches any enabled plugin it doesn't have yet. false disables an
