@@ -135,31 +135,41 @@ hardcoded formula list in
 ## Orchestrator mode (T3 Code)
 
 When the user asks you to **orchestrate** a task from a T3 Code
-thread, act as orchestrator: never edit files yourself. (This is
-separate from the `/flow` agent workflow in
-[docs/agent-workflow.md](docs/agent-workflow.md), which runs inside a
-single Claude Code session.)
+thread, act as orchestrator: you (Opus) plan, dispatch and judge, but
+never edit files yourself. (This is separate from the `/flow` agent
+workflow in [docs/agent-workflow.md](docs/agent-workflow.md), which
+runs inside a single Claude Code session.)
 
-1. **Triage** (optional): dispatch a read-only survey to
-   `mistral-large-4` so you plan from facts, not guesses.
+Two delegates — Neon does the work, Vibe reviews it, so no change is
+judged by the model that wrote it:
+
+- **Neon** (Gemini 4 Neon via Antigravity) — triage, edits, tests →
+  target `{ providerInstanceId: "antigravity", model: "gemini-4-neon", options: [{ id: "thinking_level", value: "high" }] }`
+- **Vibe** (Mistral) — review →
+  target `{ providerInstanceId: "acpRegistry_mistral_vibe", model: "mistral-large-4", options: [{ id: "mode", value: "accept-edits" }, { id: "thinking", value: "high" }] }`
+
+If either is unavailable (`orchestrator_capabilities`), say so and
+stop — don't substitute another model unasked.
+
+1. **Triage** (optional): dispatch a read-only survey to Neon so you
+   plan from facts, not guesses.
 2. **Decompose** the goal into numbered, self-contained steps.
-3. **Dispatch** each step with one `delegate_task` (`mode: "async"`,
-   unique `clientRequestId`, short `title`):
+3. **Dispatch** each step to Neon with one `delegate_task`
+   (`mode: "async"`, unique `clientRequestId`, short `title`):
    - `task` must be self-contained — the child sees only this text:
      repo path, exact files, constraints, acceptance check (command +
      expected output), and a must-NOT list (no commits unless told,
      follow this file).
-   - Cheap edits / lookups / tests → target `{ providerInstanceId: "acpRegistry_mistral_vibe", model: "mistral-large-4", options: [{ id: "mode", value: "accept-edits" }, { id: "thinking", value: "high" }] }`
-   - Complex edits → target `{ providerInstanceId: "claudeAgent", model: "claude-sonnet-5-5", options: [{ id: "effort", value: "high" }] }`
-   - `role`: `research` | `implementation` | `test` | `review`;
+   - `role`: `research` | `implementation` | `test`;
      `isolation`: `shared` (sequential, this checkout) or `worktree`
      (parallel, own branch).
 4. **Wait**: the result's `next` says completion wakes the thread —
    end your turn after dispatching; never poll `task_status`, never
    sleep-loop. Read results with `t3_thread_read(childThreadId)`.
-5. **Review** every result with a *new* `delegate_task`
-   (`role: "review"`); never re-ask the same child via
-   `t3_thread_send`. Fix small findings yourself.
+5. **Review** every result with a *new* `delegate_task` to Vibe
+   (`role: "review"`; its `task` says report findings, edit nothing);
+   never re-ask the same child via `t3_thread_send`. Fix small
+   findings yourself.
 6. **Cleanup**: `task_cancel(taskId)` for finished delegates; never
    `t3_thread_interrupt` a `childThreadId`.
 7. **PRs**: `link_pull_request` (full URL, every layer);
